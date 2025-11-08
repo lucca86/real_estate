@@ -1,0 +1,1980 @@
+[03-Nov-2025 19:27:14 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:28:16 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:28:46 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:29:10 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:29:10 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:29:10 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:35:03 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:35:04 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:35:04 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:35:21 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:35:21 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:35:21 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:35:21 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] UPDATING PROPERTY 57
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Full params received: Array
+(
+    [title] => Amplia casa en barrio centrico
+    [content] => Descripción de la casa
+    [status] => publish
+    [sticky] => 1
+    [taxonomies] => Array
+        (
+            [es_types] => Array
+                (
+                    [0] => 136
+                )
+
+            [es_categories] => Array
+                (
+                    [0] => 134
+                )
+
+            [es_statuses] => Array
+                (
+                    [0] => 10
+                )
+
+            [es_features] => Array
+                (
+                    [0] => 140
+                    [1] => 57
+                )
+
+            [es_amenities] => Array
+                (
+                    [0] => 141
+                    [1] => 142
+                    [2] => 143
+                )
+
+            [es_labels] => Array
+                (
+                    [0] => 79
+                )
+
+        )
+
+    [meta] => Array
+        (
+            [_thumbnail_id] => 1715
+            [es_property_gallery] => Array
+                (
+                    [0] => 1715
+                )
+
+            [es_property_price] => 150000
+            [es_property_bedrooms] => 4
+            [es_property_bathrooms] => 3
+            [es_property_area] => 180
+            [es_property_lot_size] => 246
+            [es_property_year_built] => 1969
+            [es_property_parking] => 2
+            [es_property_price_per_sqft] => 77
+            [es_property_address] => Tte. Cnel. Cundom 1460, Corrientes, Corrientes, Argentina
+            [es_property_postal_code] => w3400
+            [es_property_latitude] => -27.48628
+            [es_property_longitude] => -58.83465
+            [es_property_address_components] => [{"long_name":"Tte. Cnel. Cundom 1460","short_name":"Tte. Cnel. Cundom 1460","types":["street_address"]},{"long_name":"Corrientes","short_name":"Corrientes","types":["locality","political"]},{"long_name":"Corrientes","short_name":"Corrientes","types":["administrative_area_level_1","political"]},{"long_name":"Argentina","short_name":"Argentina","types":["country","political"]},{"long_name":"w3400","short_name":"w3400","types":["postal_code"]}]
+            [es_property_keywords] => Amplia casa en barrio centrico, Tte. Cnel. Cundom 1460, Corrientes, Corrientes, Argentina, cmh2c6uk90003p4rg9l9m7ihy
+        )
+
+)
+
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Post exists: Amplia casa en barrio centrico (type: properties)
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Post updated successfully
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Post marked as sticky (featured)
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Processing meta fields...
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Saving meta fields for post 57: Array
+(
+    [_thumbnail_id] => 1715
+    [es_property_gallery] => Array
+        (
+            [0] => 1715
+        )
+
+    [es_property_price] => 150000
+    [es_property_bedrooms] => 4
+    [es_property_bathrooms] => 3
+    [es_property_area] => 180
+    [es_property_lot_size] => 246
+    [es_property_year_built] => 1969
+    [es_property_parking] => 2
+    [es_property_price_per_sqft] => 77
+    [es_property_address] => Tte. Cnel. Cundom 1460, Corrientes, Corrientes, Argentina
+    [es_property_postal_code] => w3400
+    [es_property_latitude] => -27.48628
+    [es_property_longitude] => -58.83465
+    [es_property_address_components] => [{"long_name":"Tte. Cnel. Cundom 1460","short_name":"Tte. Cnel. Cundom 1460","types":["street_address"]},{"long_name":"Corrientes","short_name":"Corrientes","types":["locality","political"]},{"long_name":"Corrientes","short_name":"Corrientes","types":["administrative_area_level_1","political"]},{"long_name":"Argentina","short_name":"Argentina","types":["country","political"]},{"long_name":"w3400","short_name":"w3400","types":["postal_code"]}]
+    [es_property_keywords] => Amplia casa en barrio centrico, Tte. Cnel. Cundom 1460, Corrientes, Corrientes, Argentina, cmh2c6uk90003p4rg9l9m7ihy
+)
+
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Updated meta _thumbnail_id = 1715 (result: success)
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Gallery array: Array
+(
+    [0] => 1715
+)
+
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Updated meta es_property_gallery = Array
+(
+    [0] => 1715
+)
+ (result: success)
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Updated meta es_property_price = 150000 (result: failed)
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Updated meta es_property_bedrooms = 4 (result: failed)
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Updated meta es_property_bathrooms = 3 (result: failed)
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Updated meta es_property_area = 180 (result: failed)
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Updated meta es_property_lot_size = 246 (result: failed)
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Updated meta es_property_year_built = 1969 (result: failed)
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Updated meta es_property_parking = 2 (result: failed)
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Updated meta es_property_price_per_sqft = 77 (result: failed)
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Updated meta es_property_address = Tte. Cnel. Cundom 1460, Corrientes, Corrientes, Argentina (result: failed)
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Updated meta es_property_postal_code = w3400 (result: failed)
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Updated meta es_property_latitude = -27.48628 (result: failed)
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Updated meta es_property_longitude = -58.83465 (result: failed)
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Updated meta es_property_address_components = [{"long_name":"Tte. Cnel. Cundom 1460","short_name":"Tte. Cnel. Cundom 1460","types":["street_address"]},{"long_name":"Corrientes","short_name":"Corrientes","types":["locality","political"]},{"long_name":"Corrientes","short_name":"Corrientes","types":["administrative_area_level_1","political"]},{"long_name":"Argentina","short_name":"Argentina","types":["country","political"]},{"long_name":"w3400","short_name":"w3400","types":["postal_code"]}] (result: failed)
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Updated meta es_property_keywords = Amplia casa en barrio centrico, Tte. Cnel. Cundom 1460, Corrientes, Corrientes, Argentina, cmh2c6uk90003p4rg9l9m7ihy (result: failed)
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Processing taxonomies...
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] ASSIGNING TAXONOMIES TO POST 57
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Taxonomies received: Array
+(
+    [es_types] => Array
+        (
+            [0] => 136
+        )
+
+    [es_categories] => Array
+        (
+            [0] => 134
+        )
+
+    [es_statuses] => Array
+        (
+            [0] => 10
+        )
+
+    [es_features] => Array
+        (
+            [0] => 140
+            [1] => 57
+        )
+
+    [es_amenities] => Array
+        (
+            [0] => 141
+            [1] => 142
+            [2] => 143
+        )
+
+    [es_labels] => Array
+        (
+            [0] => 79
+        )
+
+)
+
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Allowed taxonomies: Array
+(
+    [0] => es_types
+    [1] => es_categories
+    [2] => es_statuses
+    [3] => es_locations
+    [4] => es_features
+    [5] => es_amenities
+    [6] => es_labels
+)
+
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Processing taxonomy: es_types
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Terms to assign: Array
+(
+    [0] => 136
+)
+
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] ✓ Taxonomy es_types is allowed
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] ✗ ERROR: Taxonomy es_types does NOT exist in WordPress!
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Processing taxonomy: es_categories
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Terms to assign: Array
+(
+    [0] => 134
+)
+
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] ✓ Taxonomy es_categories is allowed
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] ✗ ERROR: Taxonomy es_categories does NOT exist in WordPress!
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Processing taxonomy: es_statuses
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Terms to assign: Array
+(
+    [0] => 10
+)
+
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] ✓ Taxonomy es_statuses is allowed
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] ✗ ERROR: Taxonomy es_statuses does NOT exist in WordPress!
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Processing taxonomy: es_features
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Terms to assign: Array
+(
+    [0] => 140
+    [1] => 57
+)
+
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] ✓ Taxonomy es_features is allowed
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] ✗ ERROR: Taxonomy es_features does NOT exist in WordPress!
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Processing taxonomy: es_amenities
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Terms to assign: Array
+(
+    [0] => 141
+    [1] => 142
+    [2] => 143
+)
+
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] ✓ Taxonomy es_amenities is allowed
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] ✗ ERROR: Taxonomy es_amenities does NOT exist in WordPress!
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Processing taxonomy: es_labels
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] Terms to assign: Array
+(
+    [0] => 79
+)
+
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] ✓ Taxonomy es_labels is allowed
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] ✗ ERROR: Taxonomy es_labels does NOT exist in WordPress!
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] TAXONOMY ASSIGNMENT COMPLETE
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] UPDATE COMPLETE
+[03-Nov-2025 19:37:07 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 19:37:12 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:37:12 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:37:12 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:37:12 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:37:12 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:37:12 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:37:32 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:37:45 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:37:45 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:37:45 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:43:31 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:43:31 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:43:31 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:46:18 UTC] PHP Deprecated:  preg_replace(): Passing null to parameter #3 ($subject) of type array|string is deprecated in /home/mahlerpropiedade/public_html/wp-admin/includes/plugin.php on line 2161
+[03-Nov-2025 19:48:16 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:48:16 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:48:16 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:48:16 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:48:16 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:48:16 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:48:16 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:48:16 UTC] [Estatik Bridge] Plugin activated - Taxonomies registered
+[03-Nov-2025 19:48:16 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:48:16 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:48:16 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:48:16 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:48:16 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:48:16 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:48:16 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:48:16 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:48:23 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:48:23 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:48:23 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:48:23 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:48:23 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:48:23 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:48:23 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:48:23 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:48:23 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:48:23 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:48:23 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:48:23 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:48:23 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:48:23 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:48:23 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:48:23 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:48:30 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:48:30 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:48:30 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:48:30 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:48:30 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:48:30 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:48:30 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:48:30 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:48:30 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:48:30 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:48:30 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:48:30 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:48:30 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:48:30 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:48:30 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:48:30 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:48:56 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:48:56 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:48:56 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:48:56 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:48:56 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:48:56 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:48:56 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:48:56 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:48:56 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:48:56 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:48:56 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:48:56 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:48:56 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:48:56 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:48:56 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:48:56 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:49:03 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:49:03 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:49:03 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:49:03 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:49:03 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:49:03 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:49:03 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:49:03 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:49:04 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:49:05 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:49:05 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:49:05 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:49:05 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:49:05 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:49:05 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:49:05 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:49:05 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:49:11 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:49:11 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:49:11 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:49:11 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:49:11 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:49:11 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:49:11 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:49:11 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:49:17 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:49:17 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:49:17 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:49:17 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:49:17 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:49:17 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:49:17 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:49:17 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:49:17 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:49:26 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:49:26 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:49:26 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:49:26 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:49:26 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:49:26 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:49:26 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:49:26 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:49:34 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:49:34 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:49:34 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:49:34 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:49:35 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:49:35 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:49:35 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:49:35 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:49:35 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:49:35 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:49:35 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:49:35 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:49:35 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:49:35 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:49:35 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:49:35 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:49:35 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:49:35 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:49:35 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:49:35 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:49:41 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:49:41 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:49:41 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:49:41 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:49:41 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:49:41 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:49:41 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:49:41 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:49:58 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:49:58 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:49:58 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:49:58 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:49:58 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:49:58 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:49:58 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:49:58 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:49:58 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:49:58 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:49:58 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:49:58 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:49:58 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:49:58 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:49:58 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:49:58 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:49:58 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:49:58 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:49:58 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:49:58 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:49:59 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:50:06 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:50:06 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:50:06 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:50:06 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:50:06 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:50:06 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:50:06 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:50:06 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:50:14 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:50:14 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:50:14 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:50:14 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:50:14 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:50:14 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:50:14 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:50:14 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:50:15 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:50:15 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:50:15 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:50:15 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:50:15 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:50:15 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:50:15 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:50:15 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:50:16 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:50:16 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:50:16 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:50:16 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:50:16 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:50:16 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:50:16 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:50:16 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:50:23 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:50:23 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:50:23 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:50:23 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:50:23 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:50:23 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:50:23 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:50:23 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:50:29 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:50:29 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:50:29 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:50:29 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:50:29 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:50:29 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:50:29 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:50:29 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:50:36 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:50:36 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:50:36 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:50:36 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:50:36 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:50:36 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:50:36 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:50:36 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:50:45 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:50:45 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:50:45 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:50:45 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:50:45 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:50:45 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:50:45 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:50:45 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:50:55 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:50:55 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:50:55 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:50:55 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:50:55 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:50:55 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:50:55 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:50:55 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:50:55 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:50:59 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:50:59 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:50:59 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:50:59 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:50:59 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:50:59 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:50:59 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:50:59 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:51:15 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:51:15 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:51:15 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:51:15 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:51:15 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:51:15 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:51:15 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:51:15 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:51:25 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:51:25 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:51:25 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:51:25 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:51:25 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:51:25 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:51:25 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:51:25 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:51:25 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:51:25 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:51:25 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:51:25 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:51:25 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:51:25 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:51:25 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:51:25 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:51:26 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:51:26 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:51:26 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:51:26 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:51:26 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:51:26 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:51:26 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:51:26 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:51:26 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:51:26 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:51:26 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:51:27 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:51:27 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:51:27 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:51:27 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:51:27 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:51:27 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:51:27 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:51:27 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:51:29 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:51:29 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:51:29 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:51:29 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:51:29 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:51:29 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:51:29 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:51:29 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:51:36 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:51:36 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:51:36 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:51:36 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:51:36 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:51:36 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:51:36 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:51:36 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:51:46 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:51:46 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:51:46 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:51:46 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:51:46 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:51:46 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:51:46 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:51:46 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:52:43 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:52:43 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:52:43 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:52:43 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:52:43 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:52:43 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:52:43 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:52:43 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:53:13 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:53:13 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:53:13 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:53:13 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:53:13 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:53:13 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:53:13 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:53:13 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:53:15 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:53:15 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:53:15 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:53:15 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:53:15 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:53:15 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:53:15 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:53:15 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:53:17 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:53:17 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:53:17 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:53:17 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:53:17 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:53:17 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:53:17 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:53:17 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:53:18 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:53:18 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:53:18 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:53:18 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:53:18 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:53:18 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:53:18 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:53:18 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:53:19 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:53:19 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:53:19 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:53:19 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:53:19 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:53:19 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:53:19 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:53:19 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:53:19 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:53:19 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:53:19 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:53:19 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:53:19 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:53:19 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:53:19 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:53:19 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] UPDATING PROPERTY 57
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Full params received: Array
+(
+    [title] => Amplia casa en barrio centrico
+    [content] => Descripción de la casa
+    [status] => publish
+    [sticky] => 
+    [taxonomies] => Array
+        (
+            [es_types] => Array
+                (
+                    [0] => 136
+                )
+
+            [es_categories] => Array
+                (
+                    [0] => 134
+                )
+
+            [es_statuses] => Array
+                (
+                    [0] => 10
+                )
+
+            [es_features] => Array
+                (
+                    [0] => 140
+                    [1] => 57
+                )
+
+            [es_amenities] => Array
+                (
+                    [0] => 141
+                    [1] => 142
+                    [2] => 143
+                )
+
+            [es_labels] => Array
+                (
+                    [0] => 161
+                )
+
+        )
+
+    [meta] => Array
+        (
+            [_thumbnail_id] => 1726
+            [es_property_gallery] => Array
+                (
+                    [0] => 1726
+                )
+
+            [es_property_price] => 150000
+            [es_property_bedrooms] => 4
+            [es_property_bathrooms] => 3
+            [es_property_area] => 180
+            [es_property_lot_size] => 246
+            [es_property_year_built] => 1969
+            [es_property_parking] => 2
+            [es_property_price_per_sqft] => 77
+            [es_property_address] => Tte. Cnel. Cundom 1460, Corrientes, Corrientes, Argentina
+            [es_property_postal_code] => w3400
+            [es_property_latitude] => -27.48628
+            [es_property_longitude] => -58.83465
+            [es_property_address_components] => [{"long_name":"Tte. Cnel. Cundom 1460","short_name":"Tte. Cnel. Cundom 1460","types":["street_address"]},{"long_name":"Corrientes","short_name":"Corrientes","types":["locality","political"]},{"long_name":"Corrientes","short_name":"Corrientes","types":["administrative_area_level_1","political"]},{"long_name":"Argentina","short_name":"Argentina","types":["country","political"]},{"long_name":"w3400","short_name":"w3400","types":["postal_code"]}]
+            [es_property_keywords] => Amplia casa en barrio centrico, Tte. Cnel. Cundom 1460, Corrientes, Corrientes, Argentina, cmh2c6uk90003p4rg9l9m7ihy
+        )
+
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Post exists: Amplia casa en barrio centrico (type: properties)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Post updated successfully
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Post unmarked as sticky
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Processing meta fields...
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Saving meta fields for post 57: Array
+(
+    [_thumbnail_id] => 1726
+    [es_property_gallery] => Array
+        (
+            [0] => 1726
+        )
+
+    [es_property_price] => 150000
+    [es_property_bedrooms] => 4
+    [es_property_bathrooms] => 3
+    [es_property_area] => 180
+    [es_property_lot_size] => 246
+    [es_property_year_built] => 1969
+    [es_property_parking] => 2
+    [es_property_price_per_sqft] => 77
+    [es_property_address] => Tte. Cnel. Cundom 1460, Corrientes, Corrientes, Argentina
+    [es_property_postal_code] => w3400
+    [es_property_latitude] => -27.48628
+    [es_property_longitude] => -58.83465
+    [es_property_address_components] => [{"long_name":"Tte. Cnel. Cundom 1460","short_name":"Tte. Cnel. Cundom 1460","types":["street_address"]},{"long_name":"Corrientes","short_name":"Corrientes","types":["locality","political"]},{"long_name":"Corrientes","short_name":"Corrientes","types":["administrative_area_level_1","political"]},{"long_name":"Argentina","short_name":"Argentina","types":["country","political"]},{"long_name":"w3400","short_name":"w3400","types":["postal_code"]}]
+    [es_property_keywords] => Amplia casa en barrio centrico, Tte. Cnel. Cundom 1460, Corrientes, Corrientes, Argentina, cmh2c6uk90003p4rg9l9m7ihy
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Updated meta _thumbnail_id = 1726 (result: success)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Gallery array: Array
+(
+    [0] => 1726
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Updated meta es_property_gallery = Array
+(
+    [0] => 1726
+)
+ (result: success)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Updated meta es_property_price = 150000 (result: failed)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Updated meta es_property_bedrooms = 4 (result: failed)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Updated meta es_property_bathrooms = 3 (result: failed)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Updated meta es_property_area = 180 (result: failed)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Updated meta es_property_lot_size = 246 (result: failed)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Updated meta es_property_year_built = 1969 (result: failed)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Updated meta es_property_parking = 2 (result: failed)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Updated meta es_property_price_per_sqft = 77 (result: failed)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Updated meta es_property_address = Tte. Cnel. Cundom 1460, Corrientes, Corrientes, Argentina (result: failed)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Updated meta es_property_postal_code = w3400 (result: failed)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Updated meta es_property_latitude = -27.48628 (result: failed)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Updated meta es_property_longitude = -58.83465 (result: failed)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Updated meta es_property_address_components = [{"long_name":"Tte. Cnel. Cundom 1460","short_name":"Tte. Cnel. Cundom 1460","types":["street_address"]},{"long_name":"Corrientes","short_name":"Corrientes","types":["locality","political"]},{"long_name":"Corrientes","short_name":"Corrientes","types":["administrative_area_level_1","political"]},{"long_name":"Argentina","short_name":"Argentina","types":["country","political"]},{"long_name":"w3400","short_name":"w3400","types":["postal_code"]}] (result: failed)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Updated meta es_property_keywords = Amplia casa en barrio centrico, Tte. Cnel. Cundom 1460, Corrientes, Corrientes, Argentina, cmh2c6uk90003p4rg9l9m7ihy (result: failed)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Processing taxonomies...
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ASSIGNING TAXONOMIES TO POST 57
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Taxonomies received: Array
+(
+    [es_types] => Array
+        (
+            [0] => 136
+        )
+
+    [es_categories] => Array
+        (
+            [0] => 134
+        )
+
+    [es_statuses] => Array
+        (
+            [0] => 10
+        )
+
+    [es_features] => Array
+        (
+            [0] => 140
+            [1] => 57
+        )
+
+    [es_amenities] => Array
+        (
+            [0] => 141
+            [1] => 142
+            [2] => 143
+        )
+
+    [es_labels] => Array
+        (
+            [0] => 161
+        )
+
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Allowed taxonomies: Array
+(
+    [0] => es_types
+    [1] => es_categories
+    [2] => es_statuses
+    [3] => es_locations
+    [4] => es_features
+    [5] => es_amenities
+    [6] => es_labels
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Processing taxonomy: es_types
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Terms to assign: Array
+(
+    [0] => 136
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ Taxonomy es_types is allowed
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ Taxonomy es_types exists in WordPress
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Term IDs (as integers): Array
+(
+    [0] => 136
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✗ ERROR: Term ID 136 not found in taxonomy es_types
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Calling wp_set_object_terms(57, [136], es_types)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ wp_set_object_terms returned: Array
+(
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ Verification - Terms now assigned to post: Array
+(
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ⚠ WARNING: Some terms were NOT assigned: Array
+(
+    [0] => 136
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ----------------------------------------
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Processing taxonomy: es_categories
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Terms to assign: Array
+(
+    [0] => 134
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ Taxonomy es_categories is allowed
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ Taxonomy es_categories exists in WordPress
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Term IDs (as integers): Array
+(
+    [0] => 134
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✗ ERROR: Term ID 134 not found in taxonomy es_categories
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Calling wp_set_object_terms(57, [134], es_categories)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ wp_set_object_terms returned: Array
+(
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ Verification - Terms now assigned to post: Array
+(
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ⚠ WARNING: Some terms were NOT assigned: Array
+(
+    [0] => 134
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ----------------------------------------
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Processing taxonomy: es_statuses
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Terms to assign: Array
+(
+    [0] => 10
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ Taxonomy es_statuses is allowed
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ Taxonomy es_statuses exists in WordPress
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Term IDs (as integers): Array
+(
+    [0] => 10
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✗ ERROR: Term ID 10 not found in taxonomy es_statuses
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Calling wp_set_object_terms(57, [10], es_statuses)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ wp_set_object_terms returned: Array
+(
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ Verification - Terms now assigned to post: Array
+(
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ⚠ WARNING: Some terms were NOT assigned: Array
+(
+    [0] => 10
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ----------------------------------------
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Processing taxonomy: es_features
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Terms to assign: Array
+(
+    [0] => 140
+    [1] => 57
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ Taxonomy es_features is allowed
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ Taxonomy es_features exists in WordPress
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Term IDs (as integers): Array
+(
+    [0] => 140
+    [1] => 57
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✗ ERROR: Term ID 140 not found in taxonomy es_features
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✗ ERROR: Term ID 57 not found in taxonomy es_features
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Calling wp_set_object_terms(57, [140, 57], es_features)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ wp_set_object_terms returned: Array
+(
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ Verification - Terms now assigned to post: Array
+(
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ⚠ WARNING: Some terms were NOT assigned: Array
+(
+    [0] => 140
+    [1] => 57
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ----------------------------------------
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Processing taxonomy: es_amenities
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Terms to assign: Array
+(
+    [0] => 141
+    [1] => 142
+    [2] => 143
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ Taxonomy es_amenities is allowed
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ Taxonomy es_amenities exists in WordPress
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Term IDs (as integers): Array
+(
+    [0] => 141
+    [1] => 142
+    [2] => 143
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✗ ERROR: Term ID 141 not found in taxonomy es_amenities
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✗ ERROR: Term ID 142 not found in taxonomy es_amenities
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✗ ERROR: Term ID 143 not found in taxonomy es_amenities
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Calling wp_set_object_terms(57, [141, 142, 143], es_amenities)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ wp_set_object_terms returned: Array
+(
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ Verification - Terms now assigned to post: Array
+(
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ⚠ WARNING: Some terms were NOT assigned: Array
+(
+    [0] => 141
+    [1] => 142
+    [2] => 143
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ----------------------------------------
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Processing taxonomy: es_labels
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Terms to assign: Array
+(
+    [0] => 161
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ Taxonomy es_labels is allowed
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ Taxonomy es_labels exists in WordPress
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Term IDs (as integers): Array
+(
+    [0] => 161
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✗ ERROR: Term ID 161 not found in taxonomy es_labels
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] Calling wp_set_object_terms(57, [161], es_labels)
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ wp_set_object_terms returned: Array
+(
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ✓ Verification - Terms now assigned to post: Array
+(
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ⚠ WARNING: Some terms were NOT assigned: Array
+(
+    [0] => 161
+)
+
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ----------------------------------------
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] TAXONOMY ASSIGNMENT COMPLETE
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] UPDATE COMPLETE
+[03-Nov-2025 19:53:20 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 19:53:39 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:53:39 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:53:39 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:53:39 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:53:39 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:53:39 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:53:39 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:53:39 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:53:39 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:53:39 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:53:39 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:53:47 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:53:47 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:53:47 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:53:47 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:53:47 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:53:47 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:53:47 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:53:47 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:54:43 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:54:43 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:54:43 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:54:43 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:54:43 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:54:43 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:54:43 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:54:43 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:54:44 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:54:44 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:55:12 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:55:12 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:55:12 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:55:12 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:55:12 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:55:12 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:55:12 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:55:12 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:55:14 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:55:14 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:55:14 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:55:14 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:55:14 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:55:14 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:55:14 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:55:14 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:55:41 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:55:41 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:55:41 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:55:41 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:55:41 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:55:41 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:55:41 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:55:41 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:55:41 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:55:41 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:55:47 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:55:47 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:55:47 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:55:47 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:55:47 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:55:47 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:55:47 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:55:47 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:56:13 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:56:13 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:56:13 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:56:13 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:56:13 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:56:13 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:56:13 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:56:13 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:56:13 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:56:13 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:56:13 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:56:13 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:56:13 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:56:13 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:56:13 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:56:13 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:56:28 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:56:28 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:56:28 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:56:28 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:56:28 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:56:28 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:56:28 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:56:28 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:57:15 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:57:15 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:57:15 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:57:15 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:57:15 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:57:15 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:57:15 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:57:15 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:57:31 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:57:31 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:57:31 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:57:31 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:57:31 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:57:31 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:57:31 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:57:31 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:57:32 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:57:32 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:57:32 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:57:32 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:57:32 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:57:32 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:57:32 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:57:32 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:57:34 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:57:34 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:57:34 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:57:34 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:57:34 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:57:34 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:57:34 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:57:34 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:57:35 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:57:40 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:57:40 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:57:40 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:57:40 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:57:40 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:57:40 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:57:40 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:57:40 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:57:46 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:57:46 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:57:46 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:57:46 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:57:46 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:57:46 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:57:46 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:57:46 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:58:01 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:58:01 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:58:01 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:58:01 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:58:01 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:58:01 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:58:01 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:58:01 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:58:14 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:58:14 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:58:14 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:58:14 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:58:14 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:58:14 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:58:14 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:58:14 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:58:14 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:58:15 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:58:15 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:58:15 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:58:15 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:58:15 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:58:15 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:58:15 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:58:15 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:58:17 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:58:17 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:58:17 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:58:17 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:58:17 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:58:17 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:58:17 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:58:17 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:59:21 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:59:21 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:59:21 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:59:21 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:59:21 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:59:21 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:59:21 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:59:21 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:59:21 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:59:21 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:59:21 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:59:21 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:59:21 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:59:21 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:59:21 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:59:21 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:59:42 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:59:42 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:59:42 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:59:42 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:59:42 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:59:42 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:59:42 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:59:42 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 19:59:42 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:59:42 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:59:42 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 19:59:43 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 19:59:43 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 19:59:43 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 19:59:43 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 19:59:43 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 19:59:43 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 19:59:43 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 19:59:43 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:00:17 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:00:17 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:00:17 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:00:17 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:00:17 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:00:17 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:00:17 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:00:17 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:00:18 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:00:18 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:00:18 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:00:18 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:00:18 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:00:18 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:00:18 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:00:18 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:01:19 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:01:19 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:01:19 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:01:19 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:01:19 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:01:19 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:01:19 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:01:19 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:02:20 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:02:20 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:02:20 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:02:20 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:02:20 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:02:20 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:02:20 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:02:20 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:02:20 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:02:20 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:02:20 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:02:20 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:02:20 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:02:20 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:02:20 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:02:20 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:02:50 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:02:50 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:02:50 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:02:50 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:02:50 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:02:50 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:02:50 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:02:50 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:02:54 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:02:54 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:02:54 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:02:54 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:02:54 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:02:54 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:02:54 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:02:54 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:03:09 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:03:09 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:03:09 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:03:09 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:03:09 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:03:09 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:03:09 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:03:09 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:03:20 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:03:20 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:03:20 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:03:20 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:03:20 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:03:20 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:03:20 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:03:20 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:03:25 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:03:25 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:03:25 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:03:25 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:03:25 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:03:25 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:03:25 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:03:25 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:03:44 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:03:44 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:03:44 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:03:44 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:03:44 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:03:44 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:03:44 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:03:44 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:04:21 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:04:21 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:04:21 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:04:21 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:04:21 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:04:21 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:04:21 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:04:21 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:04:50 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:04:50 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:04:50 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:04:50 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:04:50 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:04:50 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:04:50 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:04:50 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:14 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:14 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:14 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:14 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:14 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:14 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:14 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:14 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:14 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:14 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:14 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:14 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:14 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:14 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:14 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:14 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:22 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:22 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:22 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:22 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:22 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:22 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:22 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:22 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:24 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:24 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:24 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:24 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:24 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:24 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:24 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:24 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:27 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:27 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:27 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:27 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:27 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:27 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:27 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:27 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:27 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:27 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:27 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:27 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:27 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:27 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:27 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:27 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:28 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:29 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:05:29 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:05:29 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] UPDATING PROPERTY 57
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Full params received: Array
+(
+    [title] => Amplia casa en barrio centrico
+    [content] => Descripción de la casa
+    [status] => publish
+    [sticky] => 
+    [taxonomies] => Array
+        (
+            [es_types] => Array
+                (
+                    [0] => 136
+                )
+
+            [es_categories] => Array
+                (
+                    [0] => 134
+                )
+
+            [es_statuses] => Array
+                (
+                    [0] => 10
+                )
+
+            [es_features] => Array
+                (
+                    [0] => 140
+                    [1] => 57
+                    [2] => 163
+                )
+
+            [es_amenities] => Array
+                (
+                    [0] => 141
+                    [1] => 142
+                    [2] => 143
+                    [3] => 165
+                )
+
+            [es_labels] => Array
+                (
+                    [0] => 161
+                )
+
+        )
+
+    [meta] => Array
+        (
+            [_thumbnail_id] => 1729
+            [es_property_gallery] => Array
+                (
+                    [0] => 1729
+                )
+
+            [es_property_price] => 150000
+            [es_property_bedrooms] => 4
+            [es_property_bathrooms] => 3
+            [es_property_area] => 180
+            [es_property_lot_size] => 246
+            [es_property_year_built] => 1969
+            [es_property_parking] => 2
+            [es_property_price_per_sqft] => 77
+            [es_property_address] => Tte. Cnel. Cundom 1460, Corrientes, Corrientes, Argentina
+            [es_property_postal_code] => w3400
+            [es_property_latitude] => -27.48628
+            [es_property_longitude] => -58.83465
+            [es_property_address_components] => [{"long_name":"Tte. Cnel. Cundom 1460","short_name":"Tte. Cnel. Cundom 1460","types":["street_address"]},{"long_name":"Corrientes","short_name":"Corrientes","types":["locality","political"]},{"long_name":"Corrientes","short_name":"Corrientes","types":["administrative_area_level_1","political"]},{"long_name":"Argentina","short_name":"Argentina","types":["country","political"]},{"long_name":"w3400","short_name":"w3400","types":["postal_code"]}]
+            [es_property_keywords] => Amplia casa en barrio centrico, Tte. Cnel. Cundom 1460, Corrientes, Corrientes, Argentina, cmh2c6uk90003p4rg9l9m7ihy
+        )
+
+)
+
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Post exists: Amplia casa en barrio centrico (type: properties)
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Post updated successfully
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Post unmarked as sticky
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Processing meta fields...
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Saving meta fields for post 57: Array
+(
+    [_thumbnail_id] => 1729
+    [es_property_gallery] => Array
+        (
+            [0] => 1729
+        )
+
+    [es_property_price] => 150000
+    [es_property_bedrooms] => 4
+    [es_property_bathrooms] => 3
+    [es_property_area] => 180
+    [es_property_lot_size] => 246
+    [es_property_year_built] => 1969
+    [es_property_parking] => 2
+    [es_property_price_per_sqft] => 77
+    [es_property_address] => Tte. Cnel. Cundom 1460, Corrientes, Corrientes, Argentina
+    [es_property_postal_code] => w3400
+    [es_property_latitude] => -27.48628
+    [es_property_longitude] => -58.83465
+    [es_property_address_components] => [{"long_name":"Tte. Cnel. Cundom 1460","short_name":"Tte. Cnel. Cundom 1460","types":["street_address"]},{"long_name":"Corrientes","short_name":"Corrientes","types":["locality","political"]},{"long_name":"Corrientes","short_name":"Corrientes","types":["administrative_area_level_1","political"]},{"long_name":"Argentina","short_name":"Argentina","types":["country","political"]},{"long_name":"w3400","short_name":"w3400","types":["postal_code"]}]
+    [es_property_keywords] => Amplia casa en barrio centrico, Tte. Cnel. Cundom 1460, Corrientes, Corrientes, Argentina, cmh2c6uk90003p4rg9l9m7ihy
+)
+
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Updated meta _thumbnail_id = 1729 (result: success)
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Gallery array: Array
+(
+    [0] => 1729
+)
+
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Updated meta es_property_gallery = Array
+(
+    [0] => 1729
+)
+ (result: success)
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Updated meta es_property_price = 150000 (result: failed)
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Updated meta es_property_bedrooms = 4 (result: failed)
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Updated meta es_property_bathrooms = 3 (result: failed)
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Updated meta es_property_area = 180 (result: failed)
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Updated meta es_property_lot_size = 246 (result: failed)
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Updated meta es_property_year_built = 1969 (result: failed)
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Updated meta es_property_parking = 2 (result: failed)
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Updated meta es_property_price_per_sqft = 77 (result: failed)
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Updated meta es_property_address = Tte. Cnel. Cundom 1460, Corrientes, Corrientes, Argentina (result: failed)
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Updated meta es_property_postal_code = w3400 (result: failed)
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Updated meta es_property_latitude = -27.48628 (result: failed)
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Updated meta es_property_longitude = -58.83465 (result: failed)
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Updated meta es_property_address_components = [{"long_name":"Tte. Cnel. Cundom 1460","short_name":"Tte. Cnel. Cundom 1460","types":["street_address"]},{"long_name":"Corrientes","short_name":"Corrientes","types":["locality","political"]},{"long_name":"Corrientes","short_name":"Corrientes","types":["administrative_area_level_1","political"]},{"long_name":"Argentina","short_name":"Argentina","types":["country","political"]},{"long_name":"w3400","short_name":"w3400","types":["postal_code"]}] (result: failed)
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Updated meta es_property_keywords = Amplia casa en barrio centrico, Tte. Cnel. Cundom 1460, Corrientes, Corrientes, Argentina, cmh2c6uk90003p4rg9l9m7ihy (result: failed)
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Processing taxonomies...
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ASSIGNING TAXONOMIES TO POST 57
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Taxonomies received: Array
+(
+    [es_types] => Array
+        (
+            [0] => 136
+        )
+
+    [es_categories] => Array
+        (
+            [0] => 134
+        )
+
+    [es_statuses] => Array
+        (
+            [0] => 10
+        )
+
+    [es_features] => Array
+        (
+            [0] => 140
+            [1] => 57
+            [2] => 163
+        )
+
+    [es_amenities] => Array
+        (
+            [0] => 141
+            [1] => 142
+            [2] => 143
+            [3] => 165
+        )
+
+    [es_labels] => Array
+        (
+            [0] => 161
+        )
+
+)
+
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Allowed taxonomies: Array
+(
+    [0] => es_types
+    [1] => es_categories
+    [2] => es_statuses
+    [3] => es_locations
+    [4] => es_features
+    [5] => es_amenities
+    [6] => es_labels
+)
+
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Processing taxonomy: es_types
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Terms to assign: Array
+(
+    [0] => 136
+)
+
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ✓ Taxonomy es_types is allowed
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ✓ Taxonomy es_types exists in WordPress
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ⚠ Term ID 136 not found, will try to create it
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ⚠ No valid terms to assign for taxonomy: es_types
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Processing taxonomy: es_categories
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Terms to assign: Array
+(
+    [0] => 134
+)
+
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ✓ Taxonomy es_categories is allowed
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ✓ Taxonomy es_categories exists in WordPress
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ⚠ Term ID 134 not found, will try to create it
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ⚠ No valid terms to assign for taxonomy: es_categories
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Processing taxonomy: es_statuses
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Terms to assign: Array
+(
+    [0] => 10
+)
+
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ✓ Taxonomy es_statuses is allowed
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ✓ Taxonomy es_statuses exists in WordPress
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ⚠ Term ID 10 not found, will try to create it
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ⚠ No valid terms to assign for taxonomy: es_statuses
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Processing taxonomy: es_features
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Terms to assign: Array
+(
+    [0] => 140
+    [1] => 57
+    [2] => 163
+)
+
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ✓ Taxonomy es_features is allowed
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ✓ Taxonomy es_features exists in WordPress
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ⚠ Term ID 140 not found, will try to create it
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ⚠ Term ID 57 not found, will try to create it
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ⚠ Term ID 163 not found, will try to create it
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ⚠ No valid terms to assign for taxonomy: es_features
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Processing taxonomy: es_amenities
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Terms to assign: Array
+(
+    [0] => 141
+    [1] => 142
+    [2] => 143
+    [3] => 165
+)
+
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ✓ Taxonomy es_amenities is allowed
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ✓ Taxonomy es_amenities exists in WordPress
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ⚠ Term ID 141 not found, will try to create it
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ⚠ Term ID 142 not found, will try to create it
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ⚠ Term ID 143 not found, will try to create it
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ✓ Term ID 165 exists: Cine
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Calling wp_set_object_terms(57, [165], es_amenities)
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ✓ wp_set_object_terms returned: Array
+(
+    [0] => 165
+)
+
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ✓ Verification - Terms now assigned to post: Array
+(
+    [0] => 165
+)
+
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ✓ SUCCESS: All terms assigned correctly!
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ----------------------------------------
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Processing taxonomy: es_labels
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] Terms to assign: Array
+(
+    [0] => 161
+)
+
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ✓ Taxonomy es_labels is allowed
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ✓ Taxonomy es_labels exists in WordPress
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ⚠ Term ID 161 not found, will try to create it
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ⚠ No valid terms to assign for taxonomy: es_labels
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] TAXONOMY ASSIGNMENT COMPLETE
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] UPDATE COMPLETE
+[03-Nov-2025 20:05:29 UTC] [Estatik Bridge] ========================================
+[03-Nov-2025 20:05:30 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:30 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:30 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:30 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:30 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:30 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:30 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:30 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:31 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:31 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:31 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:31 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:31 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:31 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:31 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:31 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:31 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:05:34 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:34 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:34 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:34 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:34 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:34 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:34 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:34 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:41 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:41 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:41 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:41 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:41 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:41 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:41 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:41 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:41 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:05:41 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:05:41 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:05:44 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:44 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:44 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:44 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:44 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:44 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:44 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:44 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:45 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:45 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:45 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:45 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:45 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:45 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:45 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:45 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:45 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:45 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:45 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:45 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:45 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:45 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:45 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:45 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:46 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:46 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:46 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:46 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:46 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:46 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:46 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:46 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:46 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:05:46 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:05:46 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:05:47 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:47 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:47 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:47 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:47 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:47 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:47 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:47 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:50 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:50 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:50 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:50 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:50 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:50 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:50 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:50 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:05:59 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:05:59 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:05:59 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:06:00 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:06:00 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:06:00 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:06:00 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:06:00 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:06:00 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:06:00 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:06:00 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:06:01 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:06:01 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:06:01 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:06:01 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:06:01 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:06:01 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:06:03 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:06:03 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:06:03 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:06:03 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:06:03 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:06:03 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:06:03 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:06:03 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:06:12 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:06:12 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:06:12 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:06:12 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:06:12 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:06:12 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:06:12 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:06:12 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:06:12 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:06:14 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:06:14 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:06:14 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:06:14 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:06:14 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:06:14 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:06:14 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:06:14 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:06:17 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:06:17 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:06:17 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:06:17 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:06:17 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:06:17 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:06:17 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:06:17 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:06:29 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:06:29 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:06:29 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:06:29 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:06:29 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:06:29 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:06:29 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:06:29 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:06:36 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:06:36 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:06:36 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:06:36 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:06:37 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:06:37 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:06:37 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:06:37 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:06:37 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:06:37 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:06:37 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:06:37 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:06:40 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:06:40 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:06:40 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:06:40 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:06:40 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:06:40 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:06:40 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:06:40 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:06:44 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:06:44 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:06:44 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:06:44 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:06:44 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:06:44 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:06:44 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:06:44 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:06:45 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:06:45 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:06:45 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:06:45 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:06:45 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:06:45 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:06:45 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:06:45 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:06:45 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:07:00 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:07:00 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:07:00 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:07:00 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:07:00 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:07:00 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:07:00 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:07:00 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:07:00 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:07:00 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:07:00 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:07:00 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:07:00 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:07:00 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:07:00 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:07:00 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:07:05 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:07:05 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:07:05 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:07:05 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:07:05 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:07:05 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:07:05 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:07:05 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:07:05 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:07:05 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:07:05 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:07:05 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:07:05 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:07:05 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:07:05 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:07:05 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:07:05 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:07:05 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:07:05 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:07:06 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:07:06 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:07:06 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:07:17 UTC] [Estatik Bridge] Registered post type: properties
+[03-Nov-2025 20:07:17 UTC] [Estatik Bridge] Registered taxonomy: es_types
+[03-Nov-2025 20:07:17 UTC] [Estatik Bridge] Registered taxonomy: es_categories
+[03-Nov-2025 20:07:17 UTC] [Estatik Bridge] Registered taxonomy: es_statuses
+[03-Nov-2025 20:07:17 UTC] [Estatik Bridge] Registered taxonomy: es_features
+[03-Nov-2025 20:07:17 UTC] [Estatik Bridge] Registered taxonomy: es_amenities
+[03-Nov-2025 20:07:17 UTC] [Estatik Bridge] Registered taxonomy: es_labels
+[03-Nov-2025 20:07:17 UTC] [Estatik Bridge] Registered taxonomy: es_locations
+[03-Nov-2025 20:07:18 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
+[03-Nov-2025 20:07:18 UTC] PHP Notice:  La función Elementor\Controls_Manager::add_control_to_stack ha sido llamada <strong>de forma incorrecta</strong>. Cannot redeclare control with same name "eael_image_masking_upload_pro_message". Por favor, ve <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">depuración en WordPress</a> para más información. (Este mensaje fue añadido en la versión 1.0.0). in /home/mahlerpropiedade/public_html/wp-includes/functions.php on line 6121
