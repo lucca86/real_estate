@@ -5,7 +5,15 @@ import { cookies } from "next/headers"
 import { authenticator } from "otplib"
 import type { UserRole } from "@prisma/client"
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "your-secret-key-change-in-production")
+const jwtSecret = process.env.JWT_SECRET || "your-secret-key-change-in-production"
+
+if (process.env.NODE_ENV === "production" && jwtSecret === "your-secret-key-change-in-production") {
+  console.warn(
+    "[v0] WARNING: Using default JWT_SECRET in production. Please set a secure JWT_SECRET environment variable!",
+  )
+}
+
+const JWT_SECRET = new TextEncoder().encode(jwtSecret)
 
 export interface SessionUser {
   id: string
@@ -24,22 +32,31 @@ export async function verifyPassword(password: string, hashedPassword: string): 
 }
 
 export async function createSession(userId: string): Promise<string> {
-  const token = await new SignJWT({ userId })
-    .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime("7d")
-    .sign(JWT_SECRET)
+  try {
+    console.log("[v0] createSession: Creating JWT token for user:", userId)
 
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    const token = await new SignJWT({ userId })
+      .setProtectedHeader({ alg: "HS256" })
+      .setExpirationTime("7d")
+      .sign(JWT_SECRET)
 
-  await prisma.session.create({
-    data: {
-      userId,
-      token,
-      expiresAt,
-    },
-  })
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
 
-  return token
+    console.log("[v0] createSession: Saving session to database")
+    await prisma.session.create({
+      data: {
+        userId,
+        token,
+        expiresAt,
+      },
+    })
+
+    console.log("[v0] createSession: Session created successfully")
+    return token
+  } catch (error) {
+    console.error("[v0] createSession: Error creating session:", error)
+    throw new Error("Failed to create session")
+  }
 }
 
 export async function verifySession(token: string): Promise<SessionUser | null> {
