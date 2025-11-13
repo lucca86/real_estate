@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Simple</title>
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: Arial;
+            padding: 50px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+        }
+        button {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Página de Prueba Mínima</h1>
+    <p>Si puedes hacer click aquí y escribir en el input, entonces tu navegador funciona.</p>
+    
+    <input type="text" placeholder="Escribe algo aquí" id="testInput">
+    <button onclick="alert('El botón funciona!')">Haz Click Aquí</button>
+    
+    <script>
+        document.getElementById('testInput').addEventListener('input', function(e) {
+            console.log('Input funciona:', e.target.value);
+        });
+    </script>
+</body>
+</html>

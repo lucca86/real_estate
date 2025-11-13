@@ -1,40 +1,27 @@
 import "dotenv/config"
 import { neon } from "@neondatabase/serverless"
 import bcrypt from "bcryptjs"
-import readline from "readline"
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-})
-
-function question(prompt: string): Promise<string> {
-  return new Promise((resolve) => {
-    rl.question(prompt, resolve)
-  })
-}
-
-async function createAdmin() {
-  console.log("🔐 Creando Usuario Administrador\n")
+async function quickCreateAdmin() {
+  console.log("🔐 Creando Usuario Administrador por defecto\n")
 
   const databaseUrl = process.env.DATABASE_URL
 
   if (!databaseUrl) {
     console.error("❌ Error: DATABASE_URL no está configurada")
-    console.log("Por favor, configura tu archivo .env con la URL de Neon")
     process.exit(1)
   }
 
   try {
     const sql = neon(databaseUrl)
 
-    // Solicitar datos del administrador
-    const email = (await question("Email del administrador (admin@mahler.com): ")) || "admin@mahler.com"
-    const name = (await question("Nombre del administrador (Administrador): ")) || "Administrador"
-    const password = (await question("Contraseña (Admin123!): ")) || "Admin123!"
-    const phone = (await question("Teléfono (+54 9 379 1234567): ")) || "+54 9 379 1234567"
+    // Credenciales por defecto
+    const email = "admin@mahler.com"
+    const name = "Administrador"
+    const password = "Admin123!"
+    const phone = "+54 9 379 1234567"
 
-    console.log("\n🔒 Hasheando contraseña...")
+    console.log("🔒 Hasheando contraseña...")
     const hashedPassword = await bcrypt.hash(password, 10)
 
     console.log("💾 Creando usuario en la base de datos...")
@@ -43,7 +30,7 @@ async function createAdmin() {
     const id = "admin_" + Math.random().toString(36).substring(2, 15)
 
     // Insertar o actualizar usuario administrador
-    await sql`
+    const result = await sql`
       INSERT INTO "User" (
         id,
         email,
@@ -79,18 +66,15 @@ async function createAdmin() {
     `
 
     console.log("\n✅ Usuario administrador creado exitosamente!")
-    console.log("\n📋 Credenciales:")
+    console.log("\n📋 Credenciales por defecto:")
     console.log(`   Email: ${email}`)
     console.log(`   Contraseña: ${password}`)
     console.log(`   Rol: ADMIN`)
-    console.log("\n⚠️  IMPORTANTE: Guarda estas credenciales en un lugar seguro")
-    console.log("   y cambia la contraseña después del primer inicio de sesión.")
+    console.log("\n⚠️  IMPORTANTE: Cambia la contraseña después del primer inicio de sesión.")
   } catch (error) {
     console.error("\n❌ Error al crear usuario administrador:", error)
     process.exit(1)
-  } finally {
-    rl.close()
   }
 }
 
-createAdmin()
+quickCreateAdmin()

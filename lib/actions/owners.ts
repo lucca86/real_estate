@@ -10,9 +10,9 @@ const ownerSchema = z.object({
   phone: z.string().min(1, "El teléfono es requerido"),
   secondaryPhone: z.string().optional(),
   address: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  country: z.string().default("República Dominicana"),
+  cityId: z.string().optional(),
+  provinceId: z.string().optional(),
+  countryId: z.string().optional(),
   idNumber: z.string().optional(),
   taxId: z.string().optional(),
   notes: z.string().optional(),
@@ -30,6 +30,9 @@ export async function getOwners() {
     const owners = await db.owner.findMany({
       orderBy: { createdAt: "desc" },
       include: {
+        city: { select: { name: true } },
+        province: { select: { name: true } },
+        country: { select: { name: true } },
         _count: {
           select: { properties: true },
         },
@@ -47,6 +50,9 @@ export async function getOwnerById(id: string) {
     const owner = await db.owner.findUnique({
       where: { id },
       include: {
+        city: { select: { name: true } },
+        province: { select: { name: true } },
+        country: { select: { name: true } },
         properties: {
           select: {
             id: true,
@@ -78,25 +84,20 @@ export async function createOwner(formData: FormData) {
       phone: formData.get("phone") as string,
       secondaryPhone: formData.get("secondaryPhone") as string | undefined,
       address: formData.get("address") as string | undefined,
-      city: formData.get("city") as string | undefined,
-      state: formData.get("state") as string | undefined,
-      country: (formData.get("country") as string) || "República Dominicana",
+      cityId: formData.get("cityId") as string | undefined,
+      provinceId: formData.get("provinceId") as string | undefined,
+      countryId: formData.get("countryId") as string | undefined,
       idNumber: formData.get("idNumber") as string | undefined,
       taxId: formData.get("taxId") as string | undefined,
       notes: formData.get("notes") as string | undefined,
       isActive: formData.get("isActive") === "on" || formData.get("isActive") === "true",
     }
 
-    // Use quick schema if only basic fields are provided
-    const isQuickCreate = !data.secondaryPhone && !data.address && !data.city
+    const isQuickCreate = !data.secondaryPhone && !data.address && !data.cityId
     const validated = isQuickCreate ? quickOwnerSchema.parse(data) : ownerSchema.parse(data)
 
     const owner = await db.owner.create({
-      data: {
-        ...validated,
-        country: data.country,
-        isActive: data.isActive,
-      },
+      data: validated,
     })
 
     revalidatePath("/owners")

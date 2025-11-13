@@ -66,11 +66,11 @@
   --chart-3: oklch(0.7 0.16 140);
   --chart-4: oklch(0.75 0.14 80);
   --chart-5: oklch(0.8 0.12 40);
-  --sidebar: oklch(0.1 0.01 250);
-  --sidebar-foreground: oklch(0.95 0 0);
+  --sidebar: oklch(0.08 0.01 250);
+  --sidebar-foreground: oklch(0.85 0 0);
   --sidebar-primary: oklch(0.6 0.18 250);
-  --sidebar-primary-foreground: oklch(0.12 0 0);
-  --sidebar-accent: oklch(0.18 0.02 250);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.15 0.02 250);
   --sidebar-accent-foreground: oklch(0.95 0 0);
   --sidebar-border: oklch(0.2 0.02 250);
   --sidebar-ring: oklch(0.6 0.18 250);
@@ -122,16 +122,15 @@
     @apply border-border outline-ring/50;
   }
 
-  /* Prevent double scrollbar by ensuring only dashboard main has scroll */
-  html,
-  body {
-    @apply bg-background text-foreground;
+  /* Fixed overflow to allow proper interaction on all pages */
+  html {
     height: 100%;
-    overflow: hidden;
+    overflow: auto; /* Changed from hidden to auto */
   }
 
-  /* Allow scrolling only on root element for non-dashboard pages */
-  body:not(:has(.flex.h-screen)) {
-    overflow: auto;
+  body {
+    @apply bg-background text-foreground;
+    min-height: 100%;
+    overflow: visible; /* Ensure body allows interaction */
   }
 }

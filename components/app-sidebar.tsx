@@ -11,6 +11,7 @@ import {
   UserCircle,
   Calendar,
   Tag,
+  MapPin,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -21,11 +22,15 @@ import { signOut } from "@/lib/actions/auth"
 import type { SessionUser } from "@/lib/auth"
 
 interface AppSidebarProps {
-  user: SessionUser
+  user: SessionUser | null
 }
 
 export function AppSidebar({ user }: AppSidebarProps) {
   const pathname = usePathname()
+
+  if (!user) {
+    return null
+  }
 
   const navigation = [
     {
@@ -83,6 +88,12 @@ export function AppSidebar({ user }: AppSidebarProps) {
       roles: ["ADMIN", "SUPERVISOR"],
     },
     {
+      name: "Ubicaciones",
+      href: "/locations",
+      icon: MapPin,
+      roles: ["ADMIN", "SUPERVISOR"],
+    },
+    {
       name: "Configuración",
       href: "/settings",
       icon: Settings,
@@ -96,8 +107,16 @@ export function AppSidebar({ user }: AppSidebarProps) {
     await signOut()
   }
 
+  const initials = user.name
+    ? user.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+    : "U"
+
   return (
-    <div className="flex h-full w-64 flex-col border-r border-border bg-sidebar">
+    <div className="flex h-full w-64 flex-col border-r bg-sidebar">
       {/* Logo */}
       <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
         <Home className="h-6 w-6 text-sidebar-primary" />
@@ -105,22 +124,22 @@ export function AppSidebar({ user }: AppSidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 p-4">
+      <nav className="flex-1 space-y-1 overflow-y-auto p-4">
         {filteredNavigation.map((item) => {
-          const isActive = pathname === item.href
+          const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
           return (
             <Link
               key={item.name}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
                 isActive
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
                   : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
               )}
             >
-              <item.icon className="h-5 w-5" />
-              {item.name}
+              <item.icon className="h-5 w-5 shrink-0" />
+              <span>{item.name}</span>
             </Link>
           )
         })}
@@ -129,21 +148,20 @@ export function AppSidebar({ user }: AppSidebarProps) {
       {/* User Section */}
       <div className="border-t border-sidebar-border p-4">
         <div className="flex items-center gap-3 rounded-lg bg-sidebar-accent p-3">
-          <Avatar className="h-9 w-9">
+          <Avatar className="h-9 w-9 shrink-0">
             <AvatarImage src={user.avatar || undefined} alt={user.name} />
-            <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground">
-              {user.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .toUpperCase()}
-            </AvatarFallback>
+            <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground">{initials}</AvatarFallback>
           </Avatar>
           <div className="flex-1 overflow-hidden">
             <p className="truncate text-sm font-medium text-sidebar-accent-foreground">{user.name}</p>
             <p className="truncate text-xs text-muted-foreground">{user.role}</p>
           </div>
-          <Button variant="ghost" size="icon" onClick={handleSignOut} className="h-8 w-8">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleSignOut}
+            className="h-8 w-8 shrink-0 hover:bg-sidebar-primary/10"
+          >
             <LogOut className="h-4 w-4" />
             <span className="sr-only">Cerrar sesión</span>
           </Button>

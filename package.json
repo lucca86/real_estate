@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
+    "check:env": "tsx scripts/check-env.ts",
     "setup:env": "tsx scripts/setup-env.ts",
     "env:check": "tsx scripts/env-check.ts",
     "setup:local": "tsx scripts/setup-local-dev.ts",
@@ -24,6 +25,8 @@
     "db:reset": "tsx scripts/reset-neon-db.ts",
     "admin:create": "tsx scripts/create-admin.ts",
     "admin:quick": "tsx scripts/quick-create-admin.ts",
+    "admin:reset": "tsx scripts/reset-admin-password.ts",
+    "admin:verify": "tsx scripts/verify-admin-login.ts",
     "prisma:generate": "prisma generate"
   },
   "dependencies": {

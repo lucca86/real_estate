@@ -1,3 +1,4 @@
+import "dotenv/config"
 import { neon } from "@neondatabase/serverless"
 import fs from "fs"
 import path from "path"

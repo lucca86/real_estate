@@ -14,29 +14,30 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Sidebar for desktop */}
-      <aside className="hidden md:block">
+    <div className="relative flex h-screen w-full overflow-hidden bg-background">
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex md:w-64 md:shrink-0 md:flex-col md:border-r">
         <AppSidebar user={user} />
       </aside>
 
-      {/* Mobile sidebar */}
+      {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden"
+            className="fixed inset-0 z-40 bg-black/80 md:hidden"
             onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
           />
-          <aside className="fixed inset-y-0 left-0 z-50 md:hidden">
+          <aside className="fixed inset-y-0 left-0 z-50 w-64 md:hidden">
             <AppSidebar user={user} />
           </aside>
         </>
       )}
 
-      {/* Main content */}
+      {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        <AppHeader user={user} onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-        <main className="flex-1 overflow-y-auto bg-background p-6">{children}</main>
+        <AppHeader user={user} onMenuClick={() => setSidebarOpen((prev) => !prev)} />
+        <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">{children}</main>
       </div>
     </div>
   )

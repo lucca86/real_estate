@@ -2,7 +2,6 @@ import { Suspense } from "react"
 import { getAppointments } from "@/lib/actions/appointments"
 import { getCurrentUser } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import { DashboardLayout } from "@/components/dashboard-layout"
 import { AppointmentsCalendar } from "@/components/appointments-calendar"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
@@ -19,7 +18,7 @@ export default async function AppointmentsPage() {
 
   if (!result.success || !result.data) {
     return (
-      <DashboardLayout user={user}>
+      <>
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold">Citas</h1>
@@ -29,14 +28,20 @@ export default async function AppointmentsPage() {
         <div className="text-center py-12">
           <p className="text-muted-foreground">Error al cargar las citas</p>
         </div>
-      </DashboardLayout>
+      </>
     )
   }
 
-  const appointments = result.data
+  const transformedAppointments = result.data.map((appointment) => ({
+    ...appointment,
+    property: {
+      ...appointment.property,
+      city: appointment.property.city?.name || "",
+    },
+  }))
 
   return (
-    <DashboardLayout user={user}>
+    <>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold">Citas</h1>
@@ -51,8 +56,8 @@ export default async function AppointmentsPage() {
       </div>
 
       <Suspense fallback={<div>Cargando calendario...</div>}>
-        <AppointmentsCalendar appointments={appointments} />
+        <AppointmentsCalendar appointments={transformedAppointments} />
       </Suspense>
-    </DashboardLayout>
+    </>
   )
 }

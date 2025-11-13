@@ -60,7 +60,13 @@ export async function signIn(formData: FormData) {
     }
 
     console.log("[v0] signIn: Creating session")
-    const token = await createSession(user.id)
+    const token = await createSession(user.id, {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      avatar: user.avatar,
+    })
     await setSessionCookie(token)
 
     console.log("[v0] signIn: Login successful, redirecting to dashboard")

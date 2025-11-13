@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { db } from "@/lib/db"
 import { z } from "zod"
-import { PropertyType, TransactionType } from "@prisma/client"
+import { TransactionType } from "@prisma/client"
 
 const clientSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
@@ -11,12 +11,12 @@ const clientSchema = z.object({
   phone: z.string().min(1, "El teléfono es requerido"),
   secondaryPhone: z.string().optional(),
   address: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  country: z.string().default("República Dominicana"),
+  cityId: z.string().optional(),
+  provinceId: z.string().optional(),
+  countryId: z.string().optional(),
   occupation: z.string().optional(),
   budget: z.number().optional(),
-  preferredPropertyType: z.nativeEnum(PropertyType).optional(),
+  preferredPropertyTypeId: z.string().optional(),
   preferredTransactionType: z.nativeEnum(TransactionType).optional(),
   notes: z.string().optional(),
   source: z.string().optional(),
@@ -28,6 +28,9 @@ export async function getClients() {
     const clients = await db.client.findMany({
       orderBy: { createdAt: "desc" },
       include: {
+        city: { select: { name: true } },
+        province: { select: { name: true } },
+        country: { select: { name: true } },
         _count: {
           select: { appointments: true },
         },
@@ -45,6 +48,10 @@ export async function getClientById(id: string) {
     const client = await db.client.findUnique({
       where: { id },
       include: {
+        city: { select: { name: true } },
+        province: { select: { name: true } },
+        country: { select: { name: true } },
+        preferredPropertyType: { select: { name: true } },
         appointments: {
           include: {
             property: {

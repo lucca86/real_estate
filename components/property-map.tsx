@@ -1,100 +1,128 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { isValidCoordinate, normalizeCoordinate } from "@/lib/map-utils"
+import { useRouter } from "next/navigation"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { isValidCoordinate, normalizeCoordinate, CORRIENTES_CENTER } from "@/lib/map-utils"
 
-interface PropertyMapProps {
-  latitude: number
-  longitude: number
+interface Property {
+  id: string
   title: string
   address: string
+  city: string
+  latitude: number | null
+  longitude: number | null
+  price: number
+  currency: string
+  propertyType: string
+  status: string
+  images: string[]
 }
 
-export function PropertyMap({ latitude, longitude, title, address }: PropertyMapProps) {
+interface PropertiesMapProps {
+  properties: Property[]
+  defaultCenter?: [number, number]
+  defaultZoom?: number
+}
+
+export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, defaultZoom = 13 }: PropertiesMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
+  const markersRef = useRef<any[]>([])
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
+
+  const validProperties = properties
+    .map((p) => {
+      if (!p.latitude || !p.longitude) return null
+
+      if (isValidCoordinate(p.latitude, p.longitude)) {
+        return p
+      }
+
+      const normalized = normalizeCoordinate(p.latitude, p.longitude)
+      if (normalized) {
+        return {
+          ...p,
+          latitude: normalized.lat,
+          longitude: normalized.lng,
+        }
+      }
+
+      return null
+    })
+    .filter((p): p is Property => p !== null)
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return
 
     const initTimeout = setTimeout(async () => {
       try {
-        console.log("[v0] PropertyMap: Starting initialization...")
-        console.log("[v0] PropertyMap: Raw coordinates:", [latitude, longitude])
-
-        let validLat = latitude
-        let validLng = longitude
-
-        if (!isValidCoordinate(latitude, longitude)) {
-          console.warn("[v0] PropertyMap: Invalid coordinates detected, attempting to fix...")
-          const normalized = normalizeCoordinate(latitude, longitude)
-
-          if (!normalized) {
-            setError("Coordenadas inválidas para esta propiedad")
-            setIsLoading(false)
-            return
-          }
-
-          validLat = normalized.lat
-          validLng = normalized.lng
-          console.log("[v0] PropertyMap: Using normalized coordinates:", [validLat, validLng])
+        if (validProperties.length === 0) {
+          setError("No se encontraron propiedades con coordenadas válidas")
+          setIsLoading(false)
+          return
         }
 
         const L = await import("leaflet")
-        console.log("[v0] PropertyMap: Leaflet imported")
 
         if (!mapRef.current) {
-          console.error("[v0] PropertyMap: Container not found")
           setError("Map container not found")
           return
         }
 
-        const { offsetHeight, offsetWidth } = mapRef.current
-        console.log("[v0] PropertyMap: Container size:", { width: offsetWidth, height: offsetHeight })
+        let center: [number, number] = defaultCenter
+        const zoom = defaultZoom
 
-        if (offsetHeight === 0 || offsetWidth === 0) {
-          console.error("[v0] PropertyMap: Container has no dimensions")
-          setError("Container has no dimensions")
-          return
+        if (validProperties.length > 0) {
+          const bounds = L.latLngBounds(validProperties.map((p) => [p.latitude!, p.longitude!]))
+          center = [bounds.getCenter().lat, bounds.getCenter().lng]
         }
 
-        console.log("[v0] PropertyMap: Creating map at", [validLat, validLng])
         const map = L.map(mapRef.current, {
-          center: [validLat, validLng],
-          zoom: 15,
+          center,
+          zoom,
           scrollWheelZoom: true,
           zoomControl: true,
           preferCanvas: false,
         })
 
         mapInstanceRef.current = map
-        console.log("[v0] PropertyMap: Map created")
 
-        console.log("[v0] PropertyMap: Adding tile layer...")
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
           maxZoom: 19,
           minZoom: 1,
         }).addTo(map)
 
-        console.log("[v0] PropertyMap: Tile layer added")
+        if (validProperties.length > 0) {
+          const bounds = L.latLngBounds(validProperties.map((p) => [p.latitude!, p.longitude!]))
+          map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 })
+        }
 
-        console.log("[v0] PropertyMap: Adding marker...")
-        const marker = L.marker([validLat, validLng]).addTo(map)
-        marker.bindPopup(`<strong>${title}</strong><br>${address}`)
-        console.log("[v0] PropertyMap: Marker added")
+        validProperties.forEach((property) => {
+          const lat = property.latitude!
+          const lng = property.longitude!
+
+          const marker = L.marker([lat, lng])
+
+          marker.on("click", () => {
+            setSelectedProperty(property)
+            map.setView([lat, lng], 16, { animate: true })
+          })
+
+          marker.addTo(map)
+          markersRef.current.push(marker)
+        })
 
         setTimeout(() => {
           map.invalidateSize()
-          console.log("[v0] PropertyMap: Size invalidated")
           setIsLoading(false)
         }, 300)
-
-        console.log("[v0] PropertyMap: Initialization complete")
       } catch (err) {
-        console.error("[v0] PropertyMap: Error:", err)
         setError("Error initializing map")
         setIsLoading(false)
       }
@@ -102,27 +130,80 @@ export function PropertyMap({ latitude, longitude, title, address }: PropertyMap
 
     return () => {
       clearTimeout(initTimeout)
+      markersRef.current.forEach((marker) => marker.remove())
+      markersRef.current = []
+
       if (mapInstanceRef.current) {
-        console.log("[v0] PropertyMap: Cleaning up")
         mapInstanceRef.current.remove()
         mapInstanceRef.current = null
       }
     }
-  }, [latitude, longitude, title, address])
+  }, [properties, validProperties, defaultCenter, defaultZoom])
+
+  const typeLabels: Record<string, string> = {
+    CASA: "Casa",
+    APARTAMENTO: "Apartamento",
+    TERRENO: "Terreno",
+    LOCAL_COMERCIAL: "Local Comercial",
+    OFICINA: "Oficina",
+    BODEGA: "Bodega",
+  }
+
+  const statusLabels: Record<string, string> = {
+    DISPONIBLE: "Disponible",
+    RESERVADO: "Reservado",
+    VENDIDO: "Vendido",
+    ALQUILADO: "Alquilado",
+  }
 
   return (
-    <div className="relative h-[400px] w-full overflow-hidden rounded-lg border border-border">
+    <div className="relative h-[600px] w-full">
       {isLoading && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-muted/50">
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-muted/50 rounded-lg">
           <div className="text-sm text-muted-foreground">Cargando mapa...</div>
         </div>
       )}
       {error && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-destructive/10">
+        <div className="absolute top-4 left-1/2 z-10 -translate-x-1/2 rounded-lg bg-destructive/10 px-4 py-2">
           <div className="text-sm text-destructive">{error}</div>
         </div>
       )}
-      <div ref={mapRef} className="h-full w-full" />
+      <div ref={mapRef} className="h-full w-full rounded-lg border border-border" />
+
+      {selectedProperty && (
+        <Card className="absolute bottom-4 left-4 right-4 z-1000 max-w-md shadow-lg md:left-auto">
+          <CardContent className="p-4">
+            <div className="flex gap-4">
+              {selectedProperty.images[0] && (
+                <img
+                  src={selectedProperty.images[0] || "/placeholder.svg"}
+                  alt={selectedProperty.title}
+                  className="h-24 w-24 rounded-lg object-cover"
+                />
+              )}
+              <div className="flex-1 space-y-2">
+                <h3 className="font-semibold text-balance line-clamp-2">{selectedProperty.title}</h3>
+                <p className="text-sm text-muted-foreground line-clamp-1">{selectedProperty.address}</p>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">{typeLabels[selectedProperty.propertyType]}</Badge>
+                  <Badge variant="outline">{statusLabels[selectedProperty.status]}</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-lg font-bold text-primary">
+                    ${selectedProperty.price.toLocaleString()} {selectedProperty.currency}
+                  </span>
+                  <button
+                    onClick={() => router.push(`/catalog/${selectedProperty.id}`)}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Ver detalles
+                  </button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
