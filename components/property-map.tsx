@@ -207,3 +207,5 @@ export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, d
     </div>
   )
 }
+
+export { PropertiesMap as PropertyMap }

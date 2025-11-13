@@ -16,7 +16,7 @@ import { createProperty, updateProperty } from "@/lib/actions/properties"
 import { geocodeAddress } from "@/lib/geocoding"
 import { generatePropertyTitle } from "@/lib/actions/ai-property-title"
 import { useToast } from "@/hooks/use-toast"
-import { PropertyMap } from "@/components/property-map"
+import { PropertiesMap } from "@/components/property-map"
 import { CreateOwnerDialog } from "@/components/create-owner-dialog"
 import { getCountries, getProvinces, getCities, getNeighborhoods } from "@/lib/actions/locations"
 import type { Property } from "@prisma/client"
@@ -681,11 +681,24 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
           {mapCoordinates && (
             <div className="space-y-2">
               <Label>Vista Previa del Mapa</Label>
-              <PropertyMap
-                latitude={mapCoordinates.lat}
-                longitude={mapCoordinates.lng}
-                title={editProperty?.title || "Nueva Propiedad"}
-                address={editProperty?.address || "Ubicación de la propiedad"}
+              <PropertiesMap
+                properties={[
+                  {
+                    id: editProperty?.id || "preview",
+                    title: editProperty?.title || "Nueva Propiedad",
+                    address: editProperty?.address || "Ubicación de la propiedad",
+                    latitude: mapCoordinates.lat,
+                    longitude: mapCoordinates.lng,
+                    price: editProperty?.price || 0,
+                    currency: editProperty?.currency || "USD",
+                    propertyType: propertyTypes.find((t) => t.id === editProperty?.propertyTypeId)?.name || "Sin tipo",
+                    city: cities.find((c) => c.id === editProperty?.cityId)?.name || "Sin ciudad",
+                    images: editProperty?.images || [],
+                    status: editProperty?.status || "ACTIVO",
+                  },
+                ]}
+                defaultCenter={[mapCoordinates.lat, mapCoordinates.lng]}
+                defaultZoom={15}
               />
               <p className="text-xs text-muted-foreground">
                 El mapa muestra la ubicación exacta basada en las coordenadas ingresadas
