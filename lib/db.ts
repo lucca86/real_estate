@@ -17,33 +17,30 @@ const getDatabaseUrl = () => {
     throw new Error("Database URL not configured. Please set DATABASE_URL in your environment variables.")
   }
 
+  console.log("[v0] Found database URL, processing...")
+
   try {
     const urlObj = new URL(url)
 
-    // Remove channel_binding parameter as it causes connection issues with Prisma
     if (urlObj.searchParams.has("channel_binding")) {
       urlObj.searchParams.delete("channel_binding")
       console.log("[v0] Removed channel_binding parameter from database URL")
     }
 
-    // Ensure sslmode is set to require
-    if (!urlObj.searchParams.has("sslmode")) {
-      urlObj.searchParams.set("sslmode", "require")
+    urlObj.searchParams.set("sslmode", "require")
+
+    if (url.includes("-pooler")) {
+      urlObj.searchParams.set("pgbouncer", "true")
+      console.log("[v0] Added pgbouncer=true for pooled connection")
     }
 
-    // Add connection pool parameters for better performance
-    if (!urlObj.searchParams.has("connection_limit")) {
-      urlObj.searchParams.set("connection_limit", "20")
-    }
-    if (!urlObj.searchParams.has("pool_timeout")) {
-      urlObj.searchParams.set("pool_timeout", "10")
-    }
-
-    console.log("[v0] Database URL configured for Neon with optimized parameters")
-    return urlObj.toString()
+    const finalUrl = urlObj.toString()
+    console.log("[v0] Database URL configured successfully")
+    return finalUrl
   } catch (error) {
     console.error("[v0] Error processing database URL:", error)
-    throw new Error("Invalid database URL format")
+    // If URL parsing fails, use original URL without modifications
+    return url
   }
 }
 
