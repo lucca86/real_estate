@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { db } from "@/lib/db"
+import { db, getSqlClient } from "@/lib/db"
 import { z } from "zod"
 
 const ownerSchema = z.object({
@@ -40,7 +40,43 @@ export async function getOwners() {
     })
     return { success: true, data: owners }
   } catch (error) {
-    console.error("[getOwners] Error:", error)
+    console.error("[getOwners] Prisma error, trying direct SQL:", error)
+    
+    if (process.env.NODE_ENV === 'production') {
+      try {
+        const sql = getSqlClient()
+        const result = await sql`
+          SELECT 
+            o.*,
+            c.name as city_name,
+            p.name as province_name,
+            co.name as country_name,
+            COUNT(pr.id)::int as properties_count
+          FROM "Owner" o
+          LEFT JOIN "City" c ON o."cityId" = c.id
+          LEFT JOIN "Province" p ON o."provinceId" = p.id
+          LEFT JOIN "Country" co ON o."countryId" = co.id
+          LEFT JOIN "Property" pr ON pr."ownerId" = o.id
+          GROUP BY o.id, c.name, p.name, co.name
+          ORDER BY o."createdAt" DESC
+        `
+        
+        const owners = result.map((row: any) => ({
+          ...row,
+          city: row.city_name ? { name: row.city_name } : null,
+          province: row.province_name ? { name: row.province_name } : null,
+          country: row.country_name ? { name: row.country_name } : null,
+          _count: { properties: row.properties_count || 0 }
+        }))
+        
+        console.log("[getOwners] Successfully fetched via direct SQL")
+        return { success: true, data: owners }
+      } catch (sqlError) {
+        console.error("[getOwners] SQL fallback error:", sqlError)
+        return { success: false, error: "Error al obtener propietarios" }
+      }
+    }
+    
     return { success: false, error: "Error al obtener propietarios" }
   }
 }
@@ -71,7 +107,50 @@ export async function getOwnerById(id: string) {
 
     return { success: true, data: owner }
   } catch (error) {
-    console.error("[getOwnerById] Error:", error)
+    console.error("[getOwnerById] Prisma error, trying direct SQL:", error)
+    
+    if (process.env.NODE_ENV === 'production') {
+      try {
+        const sql = getSqlClient()
+        const ownerResult = await sql`
+          SELECT 
+            o.*,
+            c.name as city_name,
+            p.name as province_name,
+            co.name as country_name
+          FROM "Owner" o
+          LEFT JOIN "City" c ON o."cityId" = c.id
+          LEFT JOIN "Province" p ON o."provinceId" = p.id
+          LEFT JOIN "Country" co ON o."countryId" = co.id
+          WHERE o.id = ${id}
+        `
+        
+        if (ownerResult.length === 0) {
+          return { success: false, error: "Propietario no encontrado" }
+        }
+        
+        const propertiesResult = await sql`
+          SELECT id, title, status, price, images
+          FROM "Property"
+          WHERE "ownerId" = ${id}
+        `
+        
+        const owner = {
+          ...ownerResult[0],
+          city: ownerResult[0].city_name ? { name: ownerResult[0].city_name } : null,
+          province: ownerResult[0].province_name ? { name: ownerResult[0].province_name } : null,
+          country: ownerResult[0].country_name ? { name: ownerResult[0].country_name } : null,
+          properties: propertiesResult
+        }
+        
+        console.log("[getOwnerById] Successfully fetched via direct SQL")
+        return { success: true, data: owner }
+      } catch (sqlError) {
+        console.error("[getOwnerById] SQL fallback error:", sqlError)
+        return { success: false, error: "Error al obtener propietario" }
+      }
+    }
+    
     return { success: false, error: "Error al obtener propietario" }
   }
 }
