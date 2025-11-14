@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { jwtVerify } from "jose"
+import { updateSession } from "@/lib/supabase/middleware"
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "your-secret-key-change-in-production")
 
@@ -23,32 +24,11 @@ async function verifyTokenWithTimeout(token: string, timeout = 2000): Promise<bo
 }
 
 export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl
-  const token = request.cookies.get("session")?.value
-
-  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route))
-  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route))
-
-  let isValidToken = false
-  if (token) {
-    isValidToken = await verifyTokenWithTimeout(token)
-  }
-
-  // Redirect to login if accessing protected route without valid token
-  if (!isPublicRoute && !isValidToken) {
-    console.log("[v0] Redirecting to login - no valid token")
-    return NextResponse.redirect(new URL("/login", request.url))
-  }
-
-  // Redirect to dashboard if accessing auth routes with valid token
-  if (isAuthRoute && isValidToken) {
-    console.log("[v0] Redirecting to dashboard - already authenticated")
-    return NextResponse.redirect(new URL("/dashboard", request.url))
-  }
-
-  return NextResponse.next()
+  return await updateSession(request)
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 }
