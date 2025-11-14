@@ -8,12 +8,12 @@ async function findUserByEmail(email: string) {
   try {
     const supabase = await createClient()
     const { data: userData, error: userError } = await supabase
-      .from("User")
-      .select("id, email, password, isActive")
+      .from("users")
+      .select("id, email, password, is_active")
       .eq("email", email)
       .single()
 
-    if (userError || !userData || !userData.isActive) {
+    if (userError || !userData || !userData.is_active) {
       return null
     }
 
@@ -30,7 +30,6 @@ export async function signIn(formData: FormData) {
 
     const email = formData.get("email") as string
     const password = formData.get("password") as string
-    const twoFactorCode = formData.get("twoFactorCode") as string | null
 
     if (!email || !password) {
       console.log("[v0] signIn: Missing email or password")
@@ -41,7 +40,7 @@ export async function signIn(formData: FormData) {
 
     const user = await findUserByEmail(email)
 
-    if (!user || !user.isActive) {
+    if (!user || !user.is_active) {
       console.log("[v0] signIn: User not found or inactive")
       return { error: "Credenciales inválidas" }
     }
@@ -55,48 +54,37 @@ export async function signIn(formData: FormData) {
     }
 
     const supabase = await createClient()
-
-    const { data: userData, error: userError } = await supabase
-      .from("User")
-      .select("id, email, password, isActive")
-      .eq("email", email)
-      .single()
-
-    if (userError || !userData || !userData.isActive) {
-      return { error: "Credenciales inválidas" }
-    }
-
-    const isValidPasswordSupabase = await compare(password, userData.password)
-
-    if (!isValidPasswordSupabase) {
-      return { error: "Credenciales inválidas" }
-    }
-
+    
+    // Try to sign in with Supabase Auth
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
 
     if (signInError) {
+      // If auth user doesn't exist, create it
+      console.log("[v0] signIn: Auth user doesn't exist, creating...")
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/dashboard`,
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}/dashboard`,
         },
       })
 
       if (signUpError) {
-        console.error("[signIn] Error creating auth user:", signUpError)
+        console.error("[v0] signIn: Error creating auth user:", signUpError)
         return { error: "Error al iniciar sesión" }
       }
 
+      // Retry sign in
       const { error: retryError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (retryError) {
+        console.error("[v0] signIn: Error on retry:", retryError)
         return { error: "Error al iniciar sesión" }
       }
     }
@@ -127,9 +115,9 @@ export async function getSession() {
   if (!user) return null
 
   const { data: userData } = await supabase
-    .from("User")
-    .select("id, email, name, role, avatar")
-    .eq("id", user.id)
+    .from("users")
+    .select("id, email, name, role")
+    .eq("email", user.email)
     .single()
 
   if (!userData) return null
@@ -139,6 +127,5 @@ export async function getSession() {
     email: userData.email,
     name: userData.name,
     role: userData.role,
-    avatar: userData.avatar,
   }
 }

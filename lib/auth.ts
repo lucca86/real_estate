@@ -1,26 +1,13 @@
 import { createClient } from "@/lib/supabase/server"
 import { hash, compare } from "bcryptjs"
-import { SignJWT, jwtVerify } from "jose"
-import { cookies } from "next/headers"
 import { authenticator } from "otplib"
 import type { UserRole } from "@prisma/client"
-
-const jwtSecret = process.env.JWT_SECRET || "your-secret-key-change-in-production"
-
-if (process.env.NODE_ENV === "production" && jwtSecret === "your-secret-key-change-in-production") {
-  console.warn(
-    "[v0] WARNING: Using default JWT_SECRET in production. Please set a secure JWT_SECRET environment variable!",
-  )
-}
-
-const JWT_SECRET = new TextEncoder().encode(jwtSecret)
 
 export interface SessionUser {
   id: string
   email: string
   name: string
   role: UserRole
-  avatar?: string | null
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -41,12 +28,12 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     }
 
     const { data: userData, error: userError } = await supabase
-      .from("User")
-      .select("id, email, name, role, avatar, isActive")
-      .eq("id", user.id)
+      .from("users")
+      .select("id, email, name, role, is_active")
+      .eq("email", user.email)
       .single()
 
-    if (userError || !userData || !userData.isActive) {
+    if (userError || !userData || !userData.is_active) {
       return null
     }
 
@@ -55,7 +42,6 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       email: userData.email,
       name: userData.name,
       role: userData.role as UserRole,
-      avatar: userData.avatar,
     }
   } catch (error) {
     console.error("[getCurrentUser] Error:", error)
