@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client"
+import { neon } from "@neondatabase/serverless"
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
@@ -17,39 +18,36 @@ const getDatabaseUrl = () => {
     throw new Error("Database URL not configured. Please set DATABASE_URL in your environment variables.")
   }
 
-  console.log("[v0] Found database URL, processing...")
-  console.log("[v0] Database URL uses pooler:", url.includes("-pooler"))
+  if (process.env.NODE_ENV === "production") {
+    console.log("[v0] Production mode: processing database URL")
+    try {
+      const urlObj = new URL(url)
 
-  try {
-    const urlObj = new URL(url)
+      if (urlObj.searchParams.has("channel_binding")) {
+        urlObj.searchParams.delete("channel_binding")
+      }
 
-    if (urlObj.searchParams.has("channel_binding")) {
-      urlObj.searchParams.delete("channel_binding")
-      console.log("[v0] Removed channel_binding parameter from database URL")
+      urlObj.searchParams.set("sslmode", "require")
+
+      if (url.includes("-pooler")) {
+        urlObj.searchParams.set("pgbouncer", "true")
+        urlObj.searchParams.set("connect_timeout", "15")
+      }
+
+      return urlObj.toString()
+    } catch (error) {
+      console.error("[v0] Error processing database URL:", error)
+      return url
     }
-
-    urlObj.searchParams.set("sslmode", "require")
-
-    if (url.includes("-pooler")) {
-      urlObj.searchParams.set("pgbouncer", "true")
-      urlObj.searchParams.set("connect_timeout", "10")
-      console.log("[v0] Added pgbouncer=true and connect_timeout=10 for pooled connection")
-    }
-
-    const finalUrl = urlObj.toString()
-    console.log("[v0] Database URL configured successfully")
-    return finalUrl
-  } catch (error) {
-    console.error("[v0] Error processing database URL:", error)
-    // If URL parsing fails, use original URL without modifications
-    return url
   }
+
+  return url
 }
 
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error", "warn"],
+    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["warn"],
     datasources: {
       db: {
         url: getDatabaseUrl(),
@@ -63,6 +61,41 @@ export const prisma =
 export const db = prisma
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma
+
+export async function safePrismaQuery<T>(
+  operation: () => Promise<T>,
+  fallbackSql?: () => Promise<T>,
+): Promise<T> {
+  try {
+    return await operation()
+  } catch (error) {
+    // Only use fallback in production
+    if (process.env.NODE_ENV === "production" && fallbackSql) {
+      console.log("[v0] Prisma query failed in production, using SQL fallback")
+      try {
+        return await fallbackSql()
+      } catch (fallbackError) {
+        console.error("[v0] SQL fallback also failed:", fallbackError)
+        throw error // Throw original error
+      }
+    }
+    throw error
+  }
+}
+
+export function getSqlClient() {
+  const url =
+    process.env.DATABASE_URL ||
+    process.env.real_estate_DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.real_estate_POSTGRES_URL
+
+  if (!url) {
+    throw new Error("Database URL not configured")
+  }
+
+  return neon(url)
+}
 
 let isShuttingDown = false
 
