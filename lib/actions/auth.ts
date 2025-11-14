@@ -11,6 +11,54 @@ import {
 } from "@/lib/auth"
 import { redirect } from 'next/navigation'
 import { cookies } from "next/headers"
+import { neon } from '@neondatabase/serverless'
+
+async function findUserByEmail(email: string) {
+  try {
+    return await prisma.user.findUnique({
+      where: { email },
+    })
+  } catch (prismaError) {
+    console.error("[v0] Prisma query failed, trying direct SQL:", prismaError)
+    
+    try {
+      const databaseUrl = 
+        process.env.DATABASE_URL ||
+        process.env.real_estate_DATABASE_URL ||
+        process.env.POSTGRES_URL ||
+        process.env.real_estate_POSTGRES_URL
+      
+      if (!databaseUrl) {
+        throw new Error("No database URL found")
+      }
+      
+      const sql = neon(databaseUrl)
+      const users = await sql`
+        SELECT * FROM "User" WHERE email = ${email} LIMIT 1
+      `
+      
+      if (users.length === 0) return null
+      
+      const user = users[0]
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        password: user.password,
+        role: user.role,
+        avatar: user.avatar,
+        isActive: user.isActive,
+        twoFactorEnabled: user.twoFactorEnabled,
+        twoFactorSecret: user.twoFactorSecret,
+        createdAt: new Date(user.createdAt),
+        updatedAt: new Date(user.updatedAt),
+      }
+    } catch (sqlError) {
+      console.error("[v0] Direct SQL also failed:", sqlError)
+      throw prismaError // Throw original error
+    }
+  }
+}
 
 export async function signIn(formData: FormData) {
   try {
@@ -27,9 +75,7 @@ export async function signIn(formData: FormData) {
 
     console.log("[v0] signIn: Looking up user with email:", email)
 
-    const user = await prisma.user.findUnique({
-      where: { email },
-    })
+    const user = await findUserByEmail(email)
 
     if (!user || !user.isActive) {
       console.log("[v0] signIn: User not found or inactive")
@@ -79,12 +125,10 @@ export async function signIn(formData: FormData) {
       console.error("[v0] signIn: Error message:", error.message)
       console.error("[v0] signIn: Error stack:", error.stack)
       
-      // Handle redirect errors (these are expected)
       if (error.message.includes("NEXT_REDIRECT")) {
         throw error
       }
 
-      // Log database connection errors
       if (
         error.message.includes("database") || 
         error.message.includes("prisma") ||
