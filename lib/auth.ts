@@ -87,15 +87,22 @@ export async function verifySession(token: string): Promise<SessionUser | null> 
 
 export async function getCurrentUser(): Promise<SessionUser | null> {
   try {
+    console.log("[v0] getCurrentUser: Starting")
     const cookieStore = await cookies()
     const token = cookieStore.get("session")?.value
 
+    console.log("[v0] getCurrentUser: Token present:", !!token)
+
     if (!token) {
+      console.log("[v0] getCurrentUser: No token found")
       return null
     }
 
-    return await verifySession(token)
+    const user = await verifySession(token)
+    console.log("[v0] getCurrentUser: User verified:", !!user)
+    return user
   } catch (error) {
+    console.error("[v0] getCurrentUser: Error getting current user:", error)
     return null
   }
 }
