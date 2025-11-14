@@ -76,7 +76,9 @@
     "child_process": "1.0.2",
     "util": "0.12.5",
     "dotenv": "17.2.3",
-    "@supabase/ssr": "0.7.0"
+    "@supabase/ssr": "0.7.0",
+    "@supabase/supabase-js": "2.81.1",
+    "crypto": "1.0.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

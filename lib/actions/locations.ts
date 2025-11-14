@@ -1,7 +1,8 @@
 "use server"
 
-import { prisma } from "@/lib/db"
+import { createServerClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+
 
 // Country actions
 export async function createCountry(formData: FormData) {
@@ -14,18 +15,23 @@ export async function createCountry(formData: FormData) {
   }
 
   try {
-    const country = await prisma.country.create({
-      data: {
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+      .from('Country')
+      .insert({
         name,
         code: code.toUpperCase(),
         isActive,
-      },
-    })
+      })
+      .select()
+      .single()
+
+    if (error) throw error
 
     revalidatePath("/locations")
-    return country
+    return data
   } catch (error: any) {
-    console.error("[v0] Error creating country:", error)
+    console.error("[createCountry] Error:", error)
     throw new Error(error.message || "Error al crear el país")
   }
 }
@@ -40,19 +46,24 @@ export async function updateCountry(id: string, formData: FormData) {
   }
 
   try {
-    const country = await prisma.country.update({
-      where: { id },
-      data: {
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+      .from('Country')
+      .update({
         name,
         code: code.toUpperCase(),
         isActive,
-      },
-    })
+      })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
 
     revalidatePath("/locations")
-    return country
+    return data
   } catch (error: any) {
-    console.error("[v0] Error updating country:", error)
+    console.error("[updateCountry] Error:", error)
     throw new Error(error.message || "Error al actualizar el país")
   }
 }
@@ -68,18 +79,19 @@ export async function createProvince(formData: FormData) {
   }
 
   try {
-    const province = await prisma.province.create({
-      data: {
-        name,
-        countryId,
-        isActive,
-      },
-    })
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+      .from('Province')
+      .insert({ name, countryId, isActive })
+      .select()
+      .single()
+
+    if (error) throw error
 
     revalidatePath("/locations")
-    return province
+    return data
   } catch (error: any) {
-    console.error("[v0] Error creating province:", error)
+    console.error("[createProvince] Error:", error)
     throw new Error(error.message || "Error al crear la provincia")
   }
 }
@@ -94,19 +106,20 @@ export async function updateProvince(id: string, formData: FormData) {
   }
 
   try {
-    const province = await prisma.province.update({
-      where: { id },
-      data: {
-        name,
-        countryId,
-        isActive,
-      },
-    })
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+      .from('Province')
+      .update({ name, countryId, isActive })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
 
     revalidatePath("/locations")
-    return province
+    return data
   } catch (error: any) {
-    console.error("[v0] Error updating province:", error)
+    console.error("[updateProvince] Error:", error)
     throw new Error(error.message || "Error al actualizar la provincia")
   }
 }
@@ -122,18 +135,19 @@ export async function createCity(formData: FormData) {
   }
 
   try {
-    const city = await prisma.city.create({
-      data: {
-        name,
-        provinceId,
-        isActive,
-      },
-    })
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+      .from('City')
+      .insert({ name, provinceId, isActive })
+      .select()
+      .single()
+
+    if (error) throw error
 
     revalidatePath("/locations")
-    return city
+    return data
   } catch (error: any) {
-    console.error("[v0] Error creating city:", error)
+    console.error("[createCity] Error:", error)
     throw new Error(error.message || "Error al crear la ciudad")
   }
 }
@@ -148,19 +162,20 @@ export async function updateCity(id: string, formData: FormData) {
   }
 
   try {
-    const city = await prisma.city.update({
-      where: { id },
-      data: {
-        name,
-        provinceId,
-        isActive,
-      },
-    })
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+      .from('City')
+      .update({ name, provinceId, isActive })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
 
     revalidatePath("/locations")
-    return city
+    return data
   } catch (error: any) {
-    console.error("[v0] Error updating city:", error)
+    console.error("[updateCity] Error:", error)
     throw new Error(error.message || "Error al actualizar la ciudad")
   }
 }
@@ -176,18 +191,19 @@ export async function createNeighborhood(formData: FormData) {
   }
 
   try {
-    const neighborhood = await prisma.neighborhood.create({
-      data: {
-        name,
-        cityId,
-        isActive,
-      },
-    })
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+      .from('Neighborhood')
+      .insert({ name, cityId, isActive })
+      .select()
+      .single()
+
+    if (error) throw error
 
     revalidatePath("/locations")
-    return neighborhood
+    return data
   } catch (error: any) {
-    console.error("[v0] Error creating neighborhood:", error)
+    console.error("[createNeighborhood] Error:", error)
     throw new Error(error.message || "Error al crear el barrio")
   }
 }
@@ -202,19 +218,20 @@ export async function updateNeighborhood(id: string, formData: FormData) {
   }
 
   try {
-    const neighborhood = await prisma.neighborhood.update({
-      where: { id },
-      data: {
-        name,
-        cityId,
-        isActive,
-      },
-    })
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+      .from('Neighborhood')
+      .update({ name, cityId, isActive })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
 
     revalidatePath("/locations")
-    return neighborhood
+    return data
   } catch (error: any) {
-    console.error("[v0] Error updating neighborhood:", error)
+    console.error("[updateNeighborhood] Error:", error)
     throw new Error(error.message || "Error al actualizar el barrio")
   }
 }
@@ -222,24 +239,19 @@ export async function updateNeighborhood(id: string, formData: FormData) {
 // Delete action for all location types
 export async function deleteLocation(type: "country" | "province" | "city" | "neighborhood", id: string) {
   try {
-    switch (type) {
-      case "country":
-        await prisma.country.delete({ where: { id } })
-        break
-      case "province":
-        await prisma.province.delete({ where: { id } })
-        break
-      case "city":
-        await prisma.city.delete({ where: { id } })
-        break
-      case "neighborhood":
-        await prisma.neighborhood.delete({ where: { id } })
-        break
-    }
+    const supabase = await createServerClient()
+    const table = type.charAt(0).toUpperCase() + type.slice(1)
+    
+    const { error } = await supabase
+      .from(table)
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
 
     revalidatePath("/locations")
   } catch (error: any) {
-    console.error(`[v0] Error deleting ${type}:`, error)
+    console.error(`[deleteLocation] Error deleting ${type}:`, error)
     throw new Error(error.message || `Error al eliminar el ${type}`)
   }
 }
@@ -247,78 +259,71 @@ export async function deleteLocation(type: "country" | "province" | "city" | "ne
 // Get functions for cascading location selects
 export async function getCountries() {
   try {
-    const countries = await prisma.country.findMany({
-      where: { isActive: true },
-      orderBy: { name: "asc" },
-      select: {
-        id: true,
-        name: true,
-        code: true,
-      },
-    })
-    return countries
-  } catch (error: any) {
-    console.error("[v0] Error fetching countries:", error)
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+      .from('Country')
+      .select('id, name, code')
+      .eq('isActive', true)
+      .order('name', { ascending: true })
+
+    if (error) throw error
+    return data || []
+  } catch (error) {
+    console.error("[getCountries] Error:", error)
     return []
   }
 }
 
 export async function getProvinces(countryId: string) {
   try {
-    const provinces = await prisma.province.findMany({
-      where: {
-        countryId,
-        isActive: true,
-      },
-      orderBy: { name: "asc" },
-      select: {
-        id: true,
-        name: true,
-      },
-    })
-    return provinces
-  } catch (error: any) {
-    console.error("[v0] Error fetching provinces:", error)
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+      .from('Province')
+      .select('id, name')
+      .eq('countryId', countryId)
+      .eq('isActive', true)
+      .order('name', { ascending: true })
+
+    if (error) throw error
+    return data || []
+  } catch (error) {
+    console.error("[getProvinces] Error:", error)
     return []
   }
 }
 
 export async function getCities(provinceId: string) {
   try {
-    const cities = await prisma.city.findMany({
-      where: {
-        provinceId,
-        isActive: true,
-      },
-      orderBy: { name: "asc" },
-      select: {
-        id: true,
-        name: true,
-      },
-    })
-    return cities
-  } catch (error: any) {
-    console.error("[v0] Error fetching cities:", error)
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+      .from('City')
+      .select('id, name')
+      .eq('provinceId', provinceId)
+      .eq('isActive', true)
+      .order('name', { ascending: true })
+
+    if (error) throw error
+    return data || []
+  } catch (error) {
+    console.error("[getCities] Error:", error)
     return []
   }
 }
 
 export async function getNeighborhoods(cityId: string) {
   try {
-    const neighborhoods = await prisma.neighborhood.findMany({
-      where: {
-        cityId,
-        isActive: true,
-      },
-      orderBy: { name: "asc" },
-      select: {
-        id: true,
-        name: true,
-      },
-    })
-    return neighborhoods
-  } catch (error: any) {
-    console.error("[v0] Error fetching neighborhoods:", error)
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+      .from('Neighborhood')
+      .select('id, name')
+      .eq('cityId', cityId)
+      .eq('isActive', true)
+      .order('name', { ascending: true })
+
+    if (error) throw error
+    return data || []
+  } catch (error) {
+    console.error("[getNeighborhoods] Error:", error)
     return []
   }
 }

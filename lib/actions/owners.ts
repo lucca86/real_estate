@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { db, getSqlClient } from "@/lib/db"
+import { createServerClient } from "@/lib/supabase/server"
 import { z } from "zod"
 
 const ownerSchema = z.object({
@@ -27,130 +27,48 @@ const quickOwnerSchema = z.object({
 
 export async function getOwners() {
   try {
-    const owners = await db.owner.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        city: { select: { name: true } },
-        province: { select: { name: true } },
-        country: { select: { name: true } },
-        _count: {
-          select: { properties: true },
-        },
-      },
-    })
+    const supabase = await createServerClient()
+    
+    const { data: owners, error } = await supabase
+      .from('owners')
+      .select(`
+        *,
+        city:cities(name),
+        province:provinces(name),
+        country:countries(name)
+      `)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
     return { success: true, data: owners }
   } catch (error) {
-    console.error("[getOwners] Prisma error, trying direct SQL:", error)
-    
-    if (process.env.NODE_ENV === 'production') {
-      try {
-        const sql = getSqlClient()
-        const result = await sql`
-          SELECT 
-            o.*,
-            c.name as city_name,
-            p.name as province_name,
-            co.name as country_name,
-            COUNT(pr.id)::int as properties_count
-          FROM "Owner" o
-          LEFT JOIN "City" c ON o."cityId" = c.id
-          LEFT JOIN "Province" p ON o."provinceId" = p.id
-          LEFT JOIN "Country" co ON o."countryId" = co.id
-          LEFT JOIN "Property" pr ON pr."ownerId" = o.id
-          GROUP BY o.id, c.name, p.name, co.name
-          ORDER BY o."createdAt" DESC
-        `
-        
-        const owners = result.map((row: any) => ({
-          ...row,
-          city: row.city_name ? { name: row.city_name } : null,
-          province: row.province_name ? { name: row.province_name } : null,
-          country: row.country_name ? { name: row.country_name } : null,
-          _count: { properties: row.properties_count || 0 }
-        }))
-        
-        console.log("[getOwners] Successfully fetched via direct SQL")
-        return { success: true, data: owners }
-      } catch (sqlError) {
-        console.error("[getOwners] SQL fallback error:", sqlError)
-        return { success: false, error: "Error al obtener propietarios" }
-      }
-    }
-    
+    console.error("[getOwners] Error:", error)
     return { success: false, error: "Error al obtener propietarios" }
   }
 }
 
 export async function getOwnerById(id: string) {
   try {
-    const owner = await db.owner.findUnique({
-      where: { id },
-      include: {
-        city: { select: { name: true } },
-        province: { select: { name: true } },
-        country: { select: { name: true } },
-        properties: {
-          select: {
-            id: true,
-            title: true,
-            status: true,
-            price: true,
-            images: true,
-          },
-        },
-      },
-    })
+    const supabase = await createServerClient()
+    
+    const { data: owner, error } = await supabase
+      .from('owners')
+      .select(`
+        *,
+        city:cities(name),
+        province:provinces(name),
+        country:countries(name)
+      `)
+      .eq('id', id)
+      .single()
 
-    if (!owner) {
-      return { success: false, error: "Propietario no encontrado" }
-    }
+    if (error) throw error
+    if (!owner) return { success: false, error: "Propietario no encontrado" }
 
     return { success: true, data: owner }
   } catch (error) {
-    console.error("[getOwnerById] Prisma error, trying direct SQL:", error)
-    
-    if (process.env.NODE_ENV === 'production') {
-      try {
-        const sql = getSqlClient()
-        const ownerResult = await sql`
-          SELECT 
-            o.*,
-            c.name as city_name,
-            p.name as province_name,
-            co.name as country_name
-          FROM "Owner" o
-          LEFT JOIN "City" c ON o."cityId" = c.id
-          LEFT JOIN "Province" p ON o."provinceId" = p.id
-          LEFT JOIN "Country" co ON o."countryId" = co.id
-          WHERE o.id = ${id}
-        `
-        
-        if (ownerResult.length === 0) {
-          return { success: false, error: "Propietario no encontrado" }
-        }
-        
-        const propertiesResult = await sql`
-          SELECT id, title, status, price, images
-          FROM "Property"
-          WHERE "ownerId" = ${id}
-        `
-        
-        const owner = {
-          ...ownerResult[0],
-          city: ownerResult[0].city_name ? { name: ownerResult[0].city_name } : null,
-          province: ownerResult[0].province_name ? { name: ownerResult[0].province_name } : null,
-          country: ownerResult[0].country_name ? { name: ownerResult[0].country_name } : null,
-          properties: propertiesResult
-        }
-        
-        console.log("[getOwnerById] Successfully fetched via direct SQL")
-        return { success: true, data: owner }
-      } catch (sqlError) {
-        console.error("[getOwnerById] SQL fallback error:", sqlError)
-        return { success: false, error: "Error al obtener propietario" }
-      }
-    }
-    
+    console.error("[getOwnerById] Error:", error)
     return { success: false, error: "Error al obtener propietario" }
   }
 }
@@ -163,59 +81,74 @@ export async function createOwner(formData: FormData) {
       phone: formData.get("phone") as string,
       secondaryPhone: formData.get("secondaryPhone") as string | undefined,
       address: formData.get("address") as string | undefined,
-      cityId: formData.get("cityId") as string | undefined,
-      provinceId: formData.get("provinceId") as string | undefined,
-      countryId: formData.get("countryId") as string | undefined,
+      city_id: formData.get("cityId") as string | undefined,
+      province_id: formData.get("provinceId") as string | undefined,
+      country_id: formData.get("countryId") as string | undefined,
       idNumber: formData.get("idNumber") as string | undefined,
       taxId: formData.get("taxId") as string | undefined,
       notes: formData.get("notes") as string | undefined,
-      isActive: formData.get("isActive") === "on" || formData.get("isActive") === "true",
+      is_active: formData.get("isActive") === "on" || formData.get("isActive") === "true",
     }
 
-    const isQuickCreate = !data.secondaryPhone && !data.address && !data.cityId
-    const validated = isQuickCreate ? quickOwnerSchema.parse(data) : ownerSchema.parse(data)
+    const supabase = await createServerClient()
+    const { data: owner, error} = await supabase
+      .from('owners')
+      .insert(data)
+      .select()
+      .single()
 
-    const owner = await db.owner.create({
-      data: validated,
-    })
+    if (error) throw error
 
     revalidatePath("/owners")
     return { success: true, owner: { id: owner.id, name: owner.name } }
   } catch (error) {
     console.error("[createOwner] Error:", error)
-    if (error instanceof z.ZodError) {
-      return { success: false, error: error.errors[0].message }
-    }
     return { success: false, error: "Error al crear propietario" }
   }
 }
 
-export async function updateOwner(id: string, data: z.infer<typeof ownerSchema>) {
+export async function updateOwner(id: string, formData: FormData) {
   try {
-    const validated = ownerSchema.parse(data)
+    const data = {
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      phone: formData.get("phone") as string,
+      address: formData.get("address") as string | undefined,
+      city_id: formData.get("cityId") as string | undefined,
+      province_id: formData.get("provinceId") as string | undefined,
+      country_id: formData.get("countryId") as string | undefined,
+      notes: formData.get("notes") as string | undefined,
+      is_active: formData.get("isActive") === "on",
+    }
 
-    const owner = await db.owner.update({
-      where: { id },
-      data: validated,
-    })
+    const supabase = await createServerClient()
+    const { data: owner, error } = await supabase
+      .from('owners')
+      .update(data)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
 
     revalidatePath("/owners")
     revalidatePath(`/owners/${id}`)
     return { success: true, data: owner }
   } catch (error) {
     console.error("[updateOwner] Error:", error)
-    if (error instanceof z.ZodError) {
-      return { success: false, error: error.errors[0].message }
-    }
     return { success: false, error: "Error al actualizar propietario" }
   }
 }
 
 export async function deleteOwner(id: string) {
   try {
-    await db.owner.delete({
-      where: { id },
-    })
+    const supabase = await createServerClient()
+    const { error } = await supabase
+      .from('owners')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
 
     revalidatePath("/owners")
     return { success: true }

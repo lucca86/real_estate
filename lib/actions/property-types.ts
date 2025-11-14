@@ -1,9 +1,8 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { db } from "@/lib/db"
+import { createServerClient } from "@/lib/supabase/server"
 import { z } from "zod"
-import type { PropertyType } from "@prisma/client"
 
 const propertyTypeSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
@@ -11,60 +10,76 @@ const propertyTypeSchema = z.object({
   isActive: z.boolean().default(true),
 })
 
-type PropertyTypeWithCount = PropertyType & {
-  _count: {
-    properties: number
-  }
-}
-
-export async function getPropertyTypes(): Promise<PropertyTypeWithCount[]> {
+export async function getPropertyTypes() {
   try {
-    const propertyTypes = await db.propertyType.findMany({
-      orderBy: { name: "asc" },
-      include: {
-        _count: {
-          select: { properties: true },
-        },
-      },
-    })
-    return propertyTypes
+    const supabase = await createServerClient()
+    
+    const { data: propertyTypes, error } = await supabase
+      .from('PropertyType')
+      .select(`
+        *,
+        properties:Property(count)
+      `)
+      .order('name', { ascending: true })
+
+    if (error) throw error
+
+    const formatted = propertyTypes?.map(pt => ({
+      ...pt,
+      _count: { properties: pt.properties?.length || 0 }
+    }))
+
+    return formatted || []
   } catch (error) {
-    console.error("[v0] Error fetching property types:", error)
+    console.error("[getPropertyTypes] Error:", error)
     throw new Error("Error al obtener los tipos de propiedad")
   }
 }
 
-export async function getActivePropertyTypes(): Promise<PropertyType[]> {
+export async function getActivePropertyTypes() {
   try {
-    const propertyTypes = await db.propertyType.findMany({
-      where: { isActive: true },
-      orderBy: { name: "asc" },
-    })
-    return propertyTypes
+    const supabase = await createServerClient()
+    
+    const { data, error } = await supabase
+      .from('PropertyType')
+      .select('*')
+      .eq('isActive', true)
+      .order('name', { ascending: true })
+
+    if (error) throw error
+    return data || []
   } catch (error) {
-    console.error("[v0] Error fetching active property types:", error)
+    console.error("[getActivePropertyTypes] Error:", error)
     throw new Error("Error al obtener los tipos de propiedad activos")
   }
 }
 
-export async function getPropertyTypeById(id: string): Promise<PropertyTypeWithCount | null> {
+export async function getPropertyTypeById(id: string) {
   try {
-    const propertyType = await db.propertyType.findUnique({
-      where: { id },
-      include: {
-        _count: {
-          select: { properties: true },
-        },
-      },
-    })
-    return propertyType
+    const supabase = await createServerClient()
+    
+    const { data, error } = await supabase
+      .from('PropertyType')
+      .select(`
+        *,
+        properties:Property(count)
+      `)
+      .eq('id', id)
+      .single()
+
+    if (error) throw error
+
+    return {
+      ...data,
+      _count: { properties: data?.properties?.length || 0 }
+    }
   } catch (error) {
-    console.error("[v0] Error fetching property type:", error)
+    console.error("[getPropertyTypeById] Error:", error)
     throw new Error("Error al obtener el tipo de propiedad")
   }
 }
 
-export async function createPropertyType(formData: FormData): Promise<PropertyType> {
+export async function createPropertyType(formData: FormData) {
   try {
     const data = {
       name: formData.get("name") as string,
@@ -73,15 +88,20 @@ export async function createPropertyType(formData: FormData): Promise<PropertyTy
     }
 
     const validated = propertyTypeSchema.parse(data)
+    const supabase = await createServerClient()
 
-    const propertyType = await db.propertyType.create({
-      data: validated,
-    })
+    const { data: propertyType, error } = await supabase
+      .from('PropertyType')
+      .insert(validated)
+      .select()
+      .single()
+
+    if (error) throw error
 
     revalidatePath("/property-types")
     return propertyType
   } catch (error) {
-    console.error("[v0] Error creating property type:", error)
+    console.error("[createPropertyType] Error:", error)
     if (error instanceof z.ZodError) {
       throw new Error(error.errors[0].message)
     }
@@ -89,7 +109,7 @@ export async function createPropertyType(formData: FormData): Promise<PropertyTy
   }
 }
 
-export async function updatePropertyType(id: string, formData: FormData): Promise<PropertyType> {
+export async function updatePropertyType(id: string, formData: FormData) {
   try {
     const data = {
       name: formData.get("name") as string,
@@ -98,17 +118,22 @@ export async function updatePropertyType(id: string, formData: FormData): Promis
     }
 
     const validated = propertyTypeSchema.parse(data)
+    const supabase = await createServerClient()
 
-    const propertyType = await db.propertyType.update({
-      where: { id },
-      data: validated,
-    })
+    const { data: propertyType, error } = await supabase
+      .from('PropertyType')
+      .update(validated)
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw error
 
     revalidatePath("/property-types")
     revalidatePath(`/property-types/${id}/edit`)
     return propertyType
   } catch (error) {
-    console.error("[v0] Error updating property type:", error)
+    console.error("[updatePropertyType] Error:", error)
     if (error instanceof z.ZodError) {
       throw new Error(error.errors[0].message)
     }
@@ -116,35 +141,36 @@ export async function updatePropertyType(id: string, formData: FormData): Promis
   }
 }
 
-export async function deletePropertyType(id: string): Promise<void> {
+export async function deletePropertyType(id: string) {
   try {
-    // Check if property type has associated properties
-    const propertyType = await db.propertyType.findUnique({
-      where: { id },
-      include: {
-        _count: {
-          select: { properties: true },
-        },
-      },
-    })
+    const supabase = await createServerClient()
+    
+    const { data: propertyType } = await supabase
+      .from('PropertyType')
+      .select('*, properties:Property(count)')
+      .eq('id', id)
+      .single()
 
     if (!propertyType) {
       throw new Error("Tipo de propiedad no encontrado")
     }
 
-    if (propertyType._count.properties > 0) {
+    if ((propertyType.properties?.length || 0) > 0) {
       throw new Error(
-        `No se puede eliminar este tipo de propiedad porque tiene ${propertyType._count.properties} propiedad(es) asociada(s)`,
+        `No se puede eliminar este tipo de propiedad porque tiene ${propertyType.properties?.length} propiedad(es) asociada(s)`
       )
     }
 
-    await db.propertyType.delete({
-      where: { id },
-    })
+    const { error } = await supabase
+      .from('PropertyType')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
 
     revalidatePath("/property-types")
   } catch (error) {
-    console.error("[v0] Error deleting property type:", error)
+    console.error("[deletePropertyType] Error:", error)
     if (error instanceof Error) {
       throw error
     }
