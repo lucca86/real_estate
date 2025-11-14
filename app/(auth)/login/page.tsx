@@ -1,6 +1,8 @@
 import { LoginForm } from "@/components/login-form"
-import { Home } from "lucide-react"
+import { Home } from 'lucide-react'
 import Link from "next/link"
+
+export const dynamic = 'force-dynamic'
 
 export default function LoginPage() {
   return (

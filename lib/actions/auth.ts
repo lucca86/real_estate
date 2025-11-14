@@ -3,13 +3,19 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from 'next/navigation'
 import { compare } from "bcryptjs"
+import { cookies } from "next/headers"
+import { SignJWT } from "jose"
+
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
+)
 
 async function findUserByEmail(email: string) {
   try {
     const supabase = await createClient()
     const { data: userData, error: userError } = await supabase
       .from("users")
-      .select("id, email, password, is_active")
+      .select("id, email, name, password, role, is_active")
       .eq("email", email)
       .single()
 
@@ -26,70 +32,45 @@ async function findUserByEmail(email: string) {
 
 export async function signIn(formData: FormData) {
   try {
-    console.log("[v0] signIn: Starting login process")
-
     const email = formData.get("email") as string
     const password = formData.get("password") as string
 
     if (!email || !password) {
-      console.log("[v0] signIn: Missing email or password")
       return { error: "Email y contraseña son requeridos" }
     }
-
-    console.log("[v0] signIn: Looking up user with email:", email)
 
     const user = await findUserByEmail(email)
 
     if (!user || !user.is_active) {
-      console.log("[v0] signIn: User not found or inactive")
       return { error: "Credenciales inválidas" }
     }
 
-    console.log("[v0] signIn: Verifying password")
     const isValidPassword = await compare(password, user.password)
 
     if (!isValidPassword) {
-      console.log("[v0] signIn: Invalid password")
       return { error: "Credenciales inválidas" }
     }
 
-    const supabase = await createClient()
-    
-    // Try to sign in with Supabase Auth
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    const token = await new SignJWT({
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+    })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("7d")
+      .sign(JWT_SECRET)
+
+    // Set session cookie
+    const cookieStore = await cookies()
+    cookieStore.set("session", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: "/",
     })
 
-    if (signInError) {
-      // If auth user doesn't exist, create it
-      console.log("[v0] signIn: Auth user doesn't exist, creating...")
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}/dashboard`,
-        },
-      })
-
-      if (signUpError) {
-        console.error("[v0] signIn: Error creating auth user:", signUpError)
-        return { error: "Error al iniciar sesión" }
-      }
-
-      // Retry sign in
-      const { error: retryError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (retryError) {
-        console.error("[v0] signIn: Error on retry:", retryError)
-        return { error: "Error al iniciar sesión" }
-      }
-    }
-
-    console.log("[v0] signIn: Login successful, redirecting to dashboard")
     redirect("/dashboard")
   } catch (error) {
     console.error("[v0] signIn: Error during login:", error)
@@ -103,29 +84,37 @@ export async function signIn(formData: FormData) {
 }
 
 export async function signOut() {
-  const supabase = await createClient()
-  await supabase.auth.signOut()
+  const cookieStore = await cookies()
+  cookieStore.delete("session")
   redirect("/login")
 }
 
 export async function getSession() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) return null
+  try {
+    const cookieStore = await cookies()
+    const token = cookieStore.get("session")?.value
 
-  const { data: userData } = await supabase
-    .from("users")
-    .select("id, email, name, role")
-    .eq("email", user.email)
-    .single()
+    if (!token) return null
 
-  if (!userData) return null
+    const { jwtVerify } = await import("jose")
+    const { payload } = await jwtVerify(token, JWT_SECRET)
 
-  return {
-    id: userData.id,
-    email: userData.email,
-    name: userData.name,
-    role: userData.role,
+    const supabase = await createClient()
+    const { data: userData } = await supabase
+      .from("users")
+      .select("id, email, name, role, is_active")
+      .eq("id", payload.userId as string)
+      .single()
+
+    if (!userData || !userData.is_active) return null
+
+    return {
+      id: userData.id,
+      email: userData.email,
+      name: userData.name,
+      role: userData.role,
+    }
+  } catch (error) {
+    return null
   }
 }

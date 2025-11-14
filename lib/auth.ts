@@ -1,7 +1,13 @@
 import { createClient } from "@/lib/supabase/server"
+import { cookies } from "next/headers"
+import { jwtVerify } from "jose"
 import { hash, compare } from "bcryptjs"
 import { authenticator } from "otplib"
 import type { UserRole } from "@prisma/client"
+
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
+)
 
 export interface SessionUser {
   id: string
@@ -20,17 +26,20 @@ export async function verifyPassword(password: string, hashedPassword: string): 
 
 export async function getCurrentUser(): Promise<SessionUser | null> {
   try {
-    const supabase = await createClient()
-    const { data: { user }, error } = await supabase.auth.getUser()
-    
-    if (error || !user) {
+    const cookieStore = await cookies()
+    const token = cookieStore.get("session")?.value
+
+    if (!token) {
       return null
     }
 
+    const { payload } = await jwtVerify(token, JWT_SECRET)
+
+    const supabase = await createClient()
     const { data: userData, error: userError } = await supabase
       .from("users")
       .select("id, email, name, role, is_active")
-      .eq("email", user.email)
+      .eq("id", payload.userId as string)
       .single()
 
     if (userError || !userData || !userData.is_active) {
