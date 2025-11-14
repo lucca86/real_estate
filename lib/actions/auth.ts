@@ -27,14 +27,6 @@ export async function signIn(formData: FormData) {
 
     console.log("[v0] signIn: Looking up user with email:", email)
 
-    try {
-      await prisma.$connect()
-      console.log("[v0] signIn: Database connection successful")
-    } catch (connError) {
-      console.error("[v0] signIn: Failed to connect to database:", connError)
-      return { error: "Error de conexión a la base de datos. Por favor, intenta de nuevo." }
-    }
-
     const user = await prisma.user.findUnique({
       where: { email },
     })
