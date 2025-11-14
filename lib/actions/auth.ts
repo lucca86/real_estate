@@ -9,7 +9,7 @@ import {
   getCurrentUser,
   verifyTwoFactorToken,
 } from "@/lib/auth"
-import { redirect } from "next/navigation"
+import { redirect } from 'next/navigation'
 import { cookies } from "next/headers"
 
 export async function signIn(formData: FormData) {
@@ -26,6 +26,14 @@ export async function signIn(formData: FormData) {
     }
 
     console.log("[v0] signIn: Looking up user with email:", email)
+
+    try {
+      await prisma.$connect()
+      console.log("[v0] signIn: Database connection successful")
+    } catch (connError) {
+      console.error("[v0] signIn: Failed to connect to database:", connError)
+      return { error: "Error de conexión a la base de datos. Por favor, intenta de nuevo." }
+    }
 
     const user = await prisma.user.findUnique({
       where: { email },
@@ -74,16 +82,24 @@ export async function signIn(formData: FormData) {
   } catch (error) {
     console.error("[v0] signIn: Error during login:", error)
 
-    // Check specific error types
     if (error instanceof Error) {
+      console.error("[v0] signIn: Error type:", error.constructor.name)
+      console.error("[v0] signIn: Error message:", error.message)
+      console.error("[v0] signIn: Error stack:", error.stack)
+      
       // Handle redirect errors (these are expected)
       if (error.message.includes("NEXT_REDIRECT")) {
         throw error
       }
 
       // Log database connection errors
-      if (error.message.includes("database") || error.message.includes("prisma")) {
-        console.error("[v0] signIn: Database connection error:", error.message)
+      if (
+        error.message.includes("database") || 
+        error.message.includes("prisma") ||
+        error.message.includes("connect") ||
+        error.message.includes("timeout")
+      ) {
+        console.error("[v0] signIn: Database connection error detected")
         return { error: "Error de conexión a la base de datos. Por favor, intenta de nuevo." }
       }
     }

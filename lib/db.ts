@@ -18,6 +18,7 @@ const getDatabaseUrl = () => {
   }
 
   console.log("[v0] Found database URL, processing...")
+  console.log("[v0] Database URL uses pooler:", url.includes("-pooler"))
 
   try {
     const urlObj = new URL(url)
@@ -31,7 +32,8 @@ const getDatabaseUrl = () => {
 
     if (url.includes("-pooler")) {
       urlObj.searchParams.set("pgbouncer", "true")
-      console.log("[v0] Added pgbouncer=true for pooled connection")
+      urlObj.searchParams.set("connect_timeout", "10")
+      console.log("[v0] Added pgbouncer=true and connect_timeout=10 for pooled connection")
     }
 
     const finalUrl = urlObj.toString()
@@ -47,12 +49,15 @@ const getDatabaseUrl = () => {
 export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error", "warn"],
     datasources: {
       db: {
         url: getDatabaseUrl(),
       },
     },
+    ...(process.env.NODE_ENV === "production" && {
+      errorFormat: "minimal",
+    }),
   })
 
 export const db = prisma
