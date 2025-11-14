@@ -1,62 +1,26 @@
 "use server"
 
-import { prisma } from "@/lib/db"
-import {
-  verifyPassword,
-  createSession,
-  setSessionCookie,
-  clearSessionCookie,
-  getCurrentUser,
-  verifyTwoFactorToken,
-} from "@/lib/auth"
+import { createClient } from "@/lib/supabase/server"
 import { redirect } from 'next/navigation'
-import { cookies } from "next/headers"
-import { neon } from '@neondatabase/serverless'
+import { compare } from "bcryptjs"
 
 async function findUserByEmail(email: string) {
   try {
-    return await prisma.user.findUnique({
-      where: { email },
-    })
-  } catch (prismaError) {
-    console.error("[v0] Prisma query failed, trying direct SQL:", prismaError)
-    
-    try {
-      const databaseUrl = 
-        process.env.DATABASE_URL ||
-        process.env.real_estate_DATABASE_URL ||
-        process.env.POSTGRES_URL ||
-        process.env.real_estate_POSTGRES_URL
-      
-      if (!databaseUrl) {
-        throw new Error("No database URL found")
-      }
-      
-      const sql = neon(databaseUrl)
-      const users = await sql`
-        SELECT * FROM "User" WHERE email = ${email} LIMIT 1
-      `
-      
-      if (users.length === 0) return null
-      
-      const user = users[0]
-      return {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        password: user.password,
-        role: user.role,
-        avatar: user.avatar,
-        isActive: user.isActive,
-        twoFactorEnabled: user.twoFactorEnabled,
-        twoFactorSecret: user.twoFactorSecret,
-        createdAt: new Date(user.createdAt),
-        updatedAt: new Date(user.updatedAt),
-      }
-    } catch (sqlError) {
-      console.error("[v0] Direct SQL also failed:", sqlError)
-      throw prismaError // Throw original error
+    const supabase = await createClient()
+    const { data: userData, error: userError } = await supabase
+      .from("User")
+      .select("id, email, password, isActive")
+      .eq("email", email)
+      .single()
+
+    if (userError || !userData || !userData.isActive) {
+      return null
     }
+
+    return userData
+  } catch (error) {
+    console.error("[v0] findUserByEmail: Error during lookup:", error)
+    return null
   }
 }
 
@@ -83,61 +47,67 @@ export async function signIn(formData: FormData) {
     }
 
     console.log("[v0] signIn: Verifying password")
-    const isValidPassword = await verifyPassword(password, user.password)
+    const isValidPassword = await compare(password, user.password)
 
     if (!isValidPassword) {
       console.log("[v0] signIn: Invalid password")
       return { error: "Credenciales inválidas" }
     }
 
-    // Check 2FA if enabled
-    if (user.twoFactorEnabled && user.twoFactorSecret) {
-      if (!twoFactorCode) {
-        console.log("[v0] signIn: 2FA required but not provided")
-        return { requiresTwoFactor: true }
-      }
+    const supabase = await createClient()
 
-      const isValidToken = verifyTwoFactorToken(twoFactorCode, user.twoFactorSecret)
+    const { data: userData, error: userError } = await supabase
+      .from("User")
+      .select("id, email, password, isActive")
+      .eq("email", email)
+      .single()
 
-      if (!isValidToken) {
-        console.log("[v0] signIn: Invalid 2FA code")
-        return { error: "Código de autenticación inválido", requiresTwoFactor: true }
-      }
+    if (userError || !userData || !userData.isActive) {
+      return { error: "Credenciales inválidas" }
     }
 
-    console.log("[v0] signIn: Creating session")
-    const token = await createSession(user.id, {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      avatar: user.avatar,
+    const isValidPasswordSupabase = await compare(password, userData.password)
+
+    if (!isValidPasswordSupabase) {
+      return { error: "Credenciales inválidas" }
+    }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     })
-    await setSessionCookie(token)
+
+    if (signInError) {
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/dashboard`,
+        },
+      })
+
+      if (signUpError) {
+        console.error("[signIn] Error creating auth user:", signUpError)
+        return { error: "Error al iniciar sesión" }
+      }
+
+      const { error: retryError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (retryError) {
+        return { error: "Error al iniciar sesión" }
+      }
+    }
 
     console.log("[v0] signIn: Login successful, redirecting to dashboard")
     redirect("/dashboard")
   } catch (error) {
     console.error("[v0] signIn: Error during login:", error)
 
-    if (error instanceof Error) {
-      console.error("[v0] signIn: Error type:", error.constructor.name)
-      console.error("[v0] signIn: Error message:", error.message)
-      console.error("[v0] signIn: Error stack:", error.stack)
-      
-      if (error.message.includes("NEXT_REDIRECT")) {
-        throw error
-      }
-
-      if (
-        error.message.includes("database") || 
-        error.message.includes("prisma") ||
-        error.message.includes("connect") ||
-        error.message.includes("timeout")
-      ) {
-        console.error("[v0] signIn: Database connection error detected")
-        return { error: "Error de conexión a la base de datos. Por favor, intenta de nuevo." }
-      }
+    if (error instanceof Error && error.message.includes("NEXT_REDIRECT")) {
+      throw error
     }
 
     return { error: "Ocurrió un error al iniciar sesión. Por favor, intenta de nuevo." }
@@ -145,21 +115,30 @@ export async function signIn(formData: FormData) {
 }
 
 export async function signOut() {
-  const cookieStore = await cookies()
-  const token = cookieStore.get("session")?.value
-
-  if (token) {
-    await prisma.session
-      .delete({
-        where: { token },
-      })
-      .catch(() => {})
-  }
-
-  await clearSessionCookie()
+  const supabase = await createClient()
+  await supabase.auth.signOut()
   redirect("/login")
 }
 
 export async function getSession() {
-  return getCurrentUser()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) return null
+
+  const { data: userData } = await supabase
+    .from("User")
+    .select("id, email, name, role, avatar")
+    .eq("id", user.id)
+    .single()
+
+  if (!userData) return null
+
+  return {
+    id: userData.id,
+    email: userData.email,
+    name: userData.name,
+    role: userData.role,
+    avatar: userData.avatar,
+  }
 }
