@@ -13,6 +13,7 @@ const JWT_SECRET = new TextEncoder().encode(
 async function findUserByEmail(email: string) {
   try {
     const supabase = await createClient()
+    
     const { data: userData, error: userError } = await supabase
       .from("users")
       .select("id, email, name, password, role, is_active")
@@ -25,7 +26,7 @@ async function findUserByEmail(email: string) {
 
     return userData
   } catch (error) {
-    console.error("[v0] findUserByEmail: Error during lookup:", error)
+    console.error("[v0] findUserByEmail error:", error)
     return null
   }
 }
@@ -41,10 +42,10 @@ export async function signIn(formData: FormData) {
 
     const user = await findUserByEmail(email)
 
-    if (!user || !user.is_active) {
+    if (!user) {
       return { error: "Credenciales inválidas" }
     }
-
+    
     const isValidPassword = await compare(password, user.password)
 
     if (!isValidPassword) {
@@ -61,7 +62,6 @@ export async function signIn(formData: FormData) {
       .setExpirationTime("7d")
       .sign(JWT_SECRET)
 
-    // Set session cookie
     const cookieStore = await cookies()
     cookieStore.set("session", token, {
       httpOnly: true,
@@ -71,16 +71,16 @@ export async function signIn(formData: FormData) {
       path: "/",
     })
 
-    redirect("/dashboard")
   } catch (error) {
-    console.error("[v0] signIn: Error during login:", error)
-
     if (error instanceof Error && error.message.includes("NEXT_REDIRECT")) {
       throw error
     }
 
+    console.error("[v0] signIn error:", error)
     return { error: "Ocurrió un error al iniciar sesión. Por favor, intenta de nuevo." }
   }
+
+  redirect("/dashboard")
 }
 
 export async function signOut() {
