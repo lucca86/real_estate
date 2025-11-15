@@ -71,16 +71,11 @@ export async function signIn(formData: FormData) {
       path: "/",
     })
 
+    return { success: true }
   } catch (error) {
-    if (error instanceof Error && error.message.includes("NEXT_REDIRECT")) {
-      throw error
-    }
-
     console.error("[v0] signIn error:", error)
     return { error: "Ocurrió un error al iniciar sesión. Por favor, intenta de nuevo." }
   }
-
-  redirect("/dashboard")
 }
 
 export async function signOut() {
