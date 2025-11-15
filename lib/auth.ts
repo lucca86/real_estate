@@ -40,9 +40,10 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       .from("users")
       .select("id, email, name, role, is_active")
       .eq("id", payload.userId as string)
+      .eq("is_active", true)
       .single()
 
-    if (userError || !userData || !userData.is_active) {
+    if (userError || !userData) {
       return null
     }
 

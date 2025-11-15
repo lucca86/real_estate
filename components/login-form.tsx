@@ -8,13 +8,10 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 
 export function LoginForm() {
   const [error, setError] = React.useState<string | null>(null)
-  const [requiresTwoFactor, setRequiresTwoFactor] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
-  const router = useRouter()
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -24,29 +21,17 @@ export function LoginForm() {
     const formData = new FormData(event.currentTarget)
 
     try {
-      console.log("[v0] Calling signIn...")
       const result = await signIn(formData)
-      console.log("[v0] signIn result:", result)
 
       if (result?.error) {
-        console.log("[v0] Error in result:", result.error)
         setError(result.error)
-        if (result.requiresTwoFactor) {
-          setRequiresTwoFactor(true)
-        }
-      } else if (result?.requiresTwoFactor) {
-        console.log("[v0] Two factor required")
-        setRequiresTwoFactor(true)
       } else if (result?.success) {
-        console.log("[v0] Success! Redirecting to dashboard...")
-        router.push("/dashboard")
-        router.refresh()
+        window.location.href = "/dashboard"
+        return
       } else {
-        console.log("[v0] Unexpected result format:", result)
         setError("Respuesta inesperada del servidor")
       }
     } catch (err) {
-      console.log("[v0] Exception caught:", err)
       setError("Ocurrió un error al iniciar sesión")
     } finally {
       setIsLoading(false)
@@ -76,24 +61,6 @@ export function LoginForm() {
             <Label htmlFor="password">Contraseña</Label>
             <Input id="password" name="password" type="password" required disabled={isLoading} />
           </div>
-
-          {requiresTwoFactor && (
-            <div className="space-y-2">
-              <Label htmlFor="twoFactorCode">Código de Autenticación</Label>
-              <Input
-                id="twoFactorCode"
-                name="twoFactorCode"
-                type="text"
-                placeholder="000000"
-                maxLength={6}
-                required
-                disabled={isLoading}
-              />
-              <p className="text-xs text-muted-foreground">
-                Ingresa el código de 6 dígitos de tu aplicación de autenticación
-              </p>
-            </div>
-          )}
         </CardContent>
         <CardFooter>
           <Button type="submit" className="w-full" disabled={isLoading}>

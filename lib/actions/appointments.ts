@@ -2,8 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
-import { db } from "@/lib/db"
-import { AppointmentStatus } from "@prisma/client"
+import { createServerClient } from "@/lib/supabase/server"
 import { sendAppointmentNotifications } from "@/lib/email-notifications"
 
 // Esquema de validación para citas
@@ -17,7 +16,7 @@ const appointmentSchema = z.object({
     .min(15, "La duración mínima es 15 minutos")
     .max(480, "La duración máxima es 8 horas")
     .default(60),
-  status: z.nativeEnum(AppointmentStatus).default("PENDIENTE"),
+  status: z.enum(["PENDIENTE", "CONFIRMADA", "COMPLETADA", "CANCELADA", "NO_ASISTIO"]).default("PENDIENTE"),
   notes: z.string().optional(),
 })
 
@@ -121,38 +120,34 @@ async function checkScheduleConflict(
   const dayEnd = new Date(scheduledAt)
   dayEnd.setHours(23, 59, 59, 999)
 
-  const existingAppointments = await db.appointment.findMany({
-    where: {
-      agentId,
-      id: excludeAppointmentId ? { not: excludeAppointmentId } : undefined,
-      status: { in: ["PENDIENTE", "CONFIRMADA"] },
-      scheduledAt: {
-        gte: dayStart,
-        lte: dayEnd,
-      },
-    },
-    include: {
-      property: { select: { title: true } },
-      client: { select: { name: true } },
-    },
-  })
+  const supabase = await createServerClient()
+  let query = supabase
+    .from('appointments')
+    .select(`
+      *,
+      property:properties(title),
+      client:clients(name)
+    `)
+    .eq('agent_id', agentId)
+    .in('status', ['PENDIENTE', 'CONFIRMADA'])
+    .gte('scheduled_at', dayStart.toISOString())
+    .lte('scheduled_at', dayEnd.toISOString())
 
-  console.log("[v0] Found existing appointments:", existingAppointments.length)
+  if (excludeAppointmentId) {
+    query = query.neq('id', excludeAppointmentId)
+  }
 
-  for (const existing of existingAppointments) {
-    const existingEnd = new Date(existing.scheduledAt.getTime() + existing.duration * 60000)
-    const hasOverlap = scheduledAt < existingEnd && endTime > existing.scheduledAt
+  const { data: existingAppointments } = await query
 
-    console.log("[v0] Checking overlap:", {
-      existing: existing.scheduledAt.toISOString(),
-      existingEnd: existingEnd.toISOString(),
-      new: scheduledAt.toISOString(),
-      newEnd: endTime.toISOString(),
-      hasOverlap,
-    })
+  console.log("[v0] Found existing appointments:", existingAppointments?.length || 0)
+
+  for (const existing of existingAppointments || []) {
+    const existingStart = new Date(existing.scheduled_at)
+    const existingEnd = new Date(existingStart.getTime() + existing.duration * 60000)
+    const hasOverlap = scheduledAt < existingEnd && endTime > existingStart
 
     if (hasOverlap) {
-      const timeStr = existing.scheduledAt.toLocaleTimeString("es-AR", {
+      const timeStr = existingStart.toLocaleTimeString("es-AR", {
         hour: "2-digit",
         minute: "2-digit",
       })
@@ -211,11 +206,17 @@ export async function createAppointment(data: AppointmentInput) {
     }
     console.log("[v0] ✓ No conflicts found")
 
-    const [property, client, agent] = await Promise.all([
-      db.property.findUnique({ where: { id: validated.propertyId } }),
-      db.client.findUnique({ where: { id: validated.clientId } }),
-      db.user.findUnique({ where: { id: validated.agentId } }),
+    const supabase = await createServerClient()
+    
+    const [propertyResult, clientResult, agentResult] = await Promise.all([
+      supabase.from('properties').select('*').eq('id', validated.propertyId).single(),
+      supabase.from('clients').select('*').eq('id', validated.clientId).single(),
+      supabase.from('users').select('*').eq('id', validated.agentId).single(),
     ])
+
+    const property = propertyResult.data
+    const client = clientResult.data
+    const agent = agentResult.data
 
     if (!property) {
       console.log("[v0] ✗ Property not found")
@@ -233,28 +234,33 @@ export async function createAppointment(data: AppointmentInput) {
 
     console.log("[v0] Creating appointment in database...")
 
-    const appointment = await db.appointment.create({
-      data: {
-        propertyId: validated.propertyId,
-        clientId: validated.clientId,
-        agentId: validated.agentId,
-        scheduledAt,
+    const { data: appointment, error } = await supabase
+      .from('appointments')
+      .insert({
+        property_id: validated.propertyId,
+        client_id: validated.clientId,
+        agent_id: validated.agentId,
+        scheduled_at: scheduledAt.toISOString(),
         duration: validated.duration,
         status: validated.status,
         notes: validated.notes,
-      },
-      include: {
-        property: true,
-        client: true,
-        agent: { select: { id: true, name: true, email: true } },
-      },
-    })
+      })
+      .select(`
+        *,
+        property:properties!appointments_property_id_fkey(*),
+        client:clients!appointments_client_id_fkey(*),
+        agent:users!appointments_agent_id_fkey(id, name, email)
+      `)
+      .single()
+
+    if (error || !appointment) {
+      console.error('[v0] Error creating appointment:', error)
+      return { success: false, error: "Error al crear la cita" }
+    }
 
     console.log("[v0] ✓✓✓ APPOINTMENT CREATED SUCCESSFULLY ✓✓✓")
-    console.log("[v0] Appointment ID:", appointment.id)
 
     if (client.email && agent.email) {
-      console.log("[v0] Sending notifications...")
       await sendAppointmentNotifications({
         appointmentId: appointment.id,
         propertyTitle: property.title,
@@ -275,7 +281,6 @@ export async function createAppointment(data: AppointmentInput) {
     console.error("[v0] ✗✗✗ ERROR CREATING APPOINTMENT ✗✗✗")
     console.error("[v0] Error details:", error)
     if (error instanceof z.ZodError) {
-      console.error("[v0] Zod validation errors:", JSON.stringify(error.errors, null, 2))
       return { success: false, error: error.errors[0].message }
     }
     return { success: false, error: "Error al crear la cita" }
@@ -287,55 +292,31 @@ export async function getAppointments(filters?: {
   agentId?: string
   clientId?: string
   propertyId?: string
-  status?: AppointmentStatus
+  status?: "PENDIENTE" | "CONFIRMADA" | "COMPLETADA" | "CANCELADA" | "NO_ASISTIO"
   startDate?: string
   endDate?: string
 }) {
   try {
-    const where: any = {}
+    const supabase = await createServerClient()
+    
+    let query = supabase
+      .from('appointments')
+      .select(`
+        *,
+        property:properties(id, title, address, city, images),
+        client:clients(id, name, email, phone),
+        agent:users(id, name, email, phone)
+      `)
+      .order('scheduled_at', { ascending: true })
 
-    if (filters?.agentId) where.agentId = filters.agentId
-    if (filters?.clientId) where.clientId = filters.clientId
-    if (filters?.propertyId) where.propertyId = filters.propertyId
-    if (filters?.status) where.status = filters.status
+    if (filters?.agentId) query = query.eq('agent_id', filters.agentId)
+    if (filters?.clientId) query = query.eq('client_id', filters.clientId)
+    if (filters?.propertyId) query = query.eq('property_id', filters.propertyId)
+    if (filters?.status) query = query.eq('status', filters.status)
+    if (filters?.startDate) query = query.gte('scheduled_at', filters.startDate)
+    if (filters?.endDate) query = query.lte('scheduled_at', filters.endDate)
 
-    if (filters?.startDate || filters?.endDate) {
-      where.scheduledAt = {}
-      if (filters.startDate) where.scheduledAt.gte = new Date(filters.startDate)
-      if (filters.endDate) where.scheduledAt.lte = new Date(filters.endDate)
-    }
-
-    const appointments = await db.appointment.findMany({
-      where,
-      include: {
-        property: {
-          select: {
-            id: true,
-            title: true,
-            address: true,
-            city: true,
-            images: true,
-          },
-        },
-        client: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-          },
-        },
-        agent: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-          },
-        },
-      },
-      orderBy: { scheduledAt: "asc" },
-    })
+    const { data: appointments } = await query
 
     return { success: true, data: appointments }
   } catch (error) {
@@ -347,14 +328,17 @@ export async function getAppointments(filters?: {
 // Obtener una cita por ID
 export async function getAppointmentById(id: string) {
   try {
-    const appointment = await db.appointment.findUnique({
-      where: { id },
-      include: {
-        property: true,
-        client: true,
-        agent: { select: { id: true, name: true, email: true, phone: true } },
-      },
-    })
+    const supabase = await createServerClient()
+    const { data: appointment } = await supabase
+      .from('appointments')
+      .select(`
+        *,
+        property:properties!appointments_property_id_fkey(id, title, address, city, images),
+        client:clients!appointments_client_id_fkey(id, name, email, phone),
+        agent:users!appointments_agent_id_fkey(id, name, email, phone)
+      `)
+      .eq('id', id)
+      .single()
 
     if (!appointment) {
       return { success: false, error: "Cita no encontrada" }
@@ -372,23 +356,26 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
   try {
     console.log("[v0] Updating appointment:", id, data)
 
-    const existing = await db.appointment.findUnique({
-      where: { id },
-      include: {
-        property: true,
-        client: true,
-        agent: { select: { id: true, name: true, email: true } },
-      },
-    })
+    const supabase = await createServerClient()
+    const { data: existing } = await supabase
+      .from('appointments')
+      .select(`
+        *,
+        property:properties!appointments_property_id_fkey(id, title, address, city, images),
+        client:clients!appointments_client_id_fkey(id, name, email, phone),
+        agent:users!appointments_agent_id_fkey(id, name, email, phone)
+      `)
+      .eq('id', id)
+      .single()
 
     if (!existing) {
       return { success: false, error: "Cita no encontrada" }
     }
 
     if (data.scheduledAt || data.duration) {
-      const scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : existing.scheduledAt
+      const scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : existing.scheduled_at
       const duration = data.duration ?? existing.duration
-      const agentId = data.agentId ?? existing.agentId
+      const agentId = data.agentId ?? existing.agent_id
 
       const workHoursCheck = isWithinWorkHours(scheduledAt)
       if (!workHoursCheck.valid) {
@@ -411,43 +398,50 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
     }
 
     const updateData: any = {}
-    if (data.propertyId) updateData.propertyId = data.propertyId
-    if (data.clientId) updateData.clientId = data.clientId
-    if (data.agentId) updateData.agentId = data.agentId
-    if (data.scheduledAt) updateData.scheduledAt = new Date(data.scheduledAt)
+    if (data.propertyId) updateData.property_id = data.propertyId
+    if (data.clientId) updateData.client_id = data.clientId
+    if (data.agentId) updateData.agent_id = data.agentId
+    if (data.scheduledAt) updateData.scheduled_at = new Date(data.scheduledAt).toISOString()
     if (data.duration) updateData.duration = data.duration
     if (data.status) updateData.status = data.status
     if (data.notes !== undefined) updateData.notes = data.notes
 
-    const appointment = await db.appointment.update({
-      where: { id },
-      data: updateData,
-      include: {
-        property: true,
-        client: true,
-        agent: { select: { id: true, name: true, email: true } },
-      },
-    })
+    const { data: updatedAppointment, error } = await supabase
+      .from('appointments')
+      .update(updateData)
+      .eq('id', id)
+      .select(`
+        *,
+        property:properties!appointments_property_id_fkey(id, title, address, city, images),
+        client:clients!appointments_client_id_fkey(id, name, email, phone),
+        agent:users!appointments_agent_id_fkey(id, name, email)
+      `)
+      .single()
 
-    console.log("[v0] Appointment updated successfully:", appointment.id)
+    if (error || !updatedAppointment) {
+      console.error("[v0] Error updating appointment:", error)
+      return { success: false, error: "Error al actualizar la cita" }
+    }
 
-    if (data.scheduledAt && appointment.client.email && appointment.agent.email) {
+    console.log("[v0] Appointment updated successfully:", updatedAppointment.id)
+
+    if (data.scheduledAt && updatedAppointment.client.email && updatedAppointment.agent.email) {
       await sendAppointmentNotifications({
-        appointmentId: appointment.id,
-        propertyTitle: appointment.property.title,
-        propertyAddress: `${appointment.property.address}, ${appointment.property.city}`,
-        clientName: appointment.client.name,
-        clientEmail: appointment.client.email,
-        agentName: appointment.agent.name,
-        agentEmail: appointment.agent.email,
-        scheduledAt: appointment.scheduledAt,
-        duration: appointment.duration,
-        notes: appointment.notes || undefined,
+        appointmentId: updatedAppointment.id,
+        propertyTitle: updatedAppointment.property.title,
+        propertyAddress: `${updatedAppointment.property.address}, ${updatedAppointment.property.city}`,
+        clientName: updatedAppointment.client.name,
+        clientEmail: updatedAppointment.client.email,
+        agentName: updatedAppointment.agent.name,
+        agentEmail: updatedAppointment.agent.email,
+        scheduledAt: updatedAppointment.scheduled_at,
+        duration: updatedAppointment.duration,
+        notes: updatedAppointment.notes || undefined,
       })
     }
 
     revalidatePath("/appointments")
-    return { success: true, data: appointment }
+    return { success: true, data: updatedAppointment }
   } catch (error) {
     console.error("[v0] Error updating appointment:", error)
     return { success: false, error: "Error al actualizar la cita" }
@@ -457,7 +451,14 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
 // Eliminar una cita
 export async function deleteAppointment(id: string) {
   try {
-    await db.appointment.delete({ where: { id } })
+    const supabase = await createServerClient()
+    const { error } = await supabase.from('appointments').delete().eq('id', id)
+
+    if (error) {
+      console.error("[v0] Error deleting appointment:", error)
+      return { success: false, error: "Error al eliminar la cita" }
+    }
+
     revalidatePath("/appointments")
     return { success: true }
   } catch (error) {
@@ -467,17 +468,25 @@ export async function deleteAppointment(id: string) {
 }
 
 // Cambiar el estado de una cita
-export async function updateAppointmentStatus(id: string, status: AppointmentStatus) {
+export async function updateAppointmentStatus(id: string, status: "PENDIENTE" | "CONFIRMADA" | "COMPLETADA" | "CANCELADA" | "NO_ASISTIO") {
   try {
-    const appointment = await db.appointment.update({
-      where: { id },
-      data: { status },
-      include: {
-        property: true,
-        client: true,
-        agent: { select: { id: true, name: true, email: true } },
-      },
-    })
+    const supabase = await createServerClient()
+    const { data: appointment, error } = await supabase
+      .from('appointments')
+      .update({ status })
+      .eq('id', id)
+      .select(`
+        *,
+        property:properties!appointments_property_id_fkey(id, title, address, city, images),
+        client:clients!appointments_client_id_fkey(id, name, email, phone),
+        agent:users!appointments_agent_id_fkey(id, name, email)
+      `)
+      .single()
+
+    if (error || !appointment) {
+      console.error("[v0] Error updating appointment status:", error)
+      return { success: false, error: "Error al actualizar el estado de la cita" }
+    }
 
     revalidatePath("/appointments")
     return { success: true, data: appointment }

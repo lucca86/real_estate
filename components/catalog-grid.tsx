@@ -1,7 +1,7 @@
-import { prisma } from "@/lib/db"
+import { createServerClient } from "@/lib/supabase/server"
 import { CatalogPropertyCard } from "./catalog-property-card"
 import { Card, CardContent } from "@/components/ui/card"
-import { Building2 } from "lucide-react"
+import { Building2 } from 'lucide-react'
 
 interface CatalogGridProps {
   searchParams: { [key: string]: string | string[] | undefined }
@@ -18,59 +18,66 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
   const bedrooms = searchParams.bedrooms as string
   const bathrooms = searchParams.bathrooms as string
 
-  const where: any = {
-    published: true,
-  }
+  const supabase = await createServerClient()
+  
+  let query = supabase
+    .from('properties')
+    .select(`
+      *,
+      owner:owners!properties_owner_id_fkey(name, phone)
+    `)
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
 
   if (search) {
-    where.OR = [
-      { title: { contains: search, mode: "insensitive" } },
-      { description: { contains: search, mode: "insensitive" } },
-    ]
+    query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
   }
 
   if (propertyType) {
-    where.propertyType = propertyType
+    query = query.eq('property_type', propertyType)
   }
 
   if (transactionType) {
-    where.transactionType = transactionType
+    query = query.eq('transaction_type', transactionType)
   }
 
   if (status) {
-    where.status = status
+    query = query.eq('status', status)
   }
 
   if (city) {
-    where.city = { contains: city, mode: "insensitive" }
+    query = query.ilike('city', `%${city}%`)
   }
 
-  if (minPrice || maxPrice) {
-    where.price = {}
-    if (minPrice) where.price.gte = Number.parseFloat(minPrice)
-    if (maxPrice) where.price.lte = Number.parseFloat(maxPrice)
+  if (minPrice) {
+    query = query.gte('price', Number.parseFloat(minPrice))
+  }
+
+  if (maxPrice) {
+    query = query.lte('price', Number.parseFloat(maxPrice))
   }
 
   if (bedrooms) {
-    where.bedrooms = { gte: Number.parseInt(bedrooms) }
+    query = query.gte('bedrooms', Number.parseInt(bedrooms))
   }
 
   if (bathrooms) {
-    where.bathrooms = { gte: Number.parseInt(bathrooms) }
+    query = query.gte('bathrooms', Number.parseInt(bathrooms))
   }
 
-  const properties = await prisma.property.findMany({
-    where,
-    orderBy: [{ propertyLabel: "desc" }, { createdAt: "desc" }],
-    include: {
-      createdBy: {
-        select: {
-          name: true,
-          phone: true,
-        },
-      },
-    },
-  })
+  const { data: properties, error } = await query
+
+  if (error || !properties) {
+    console.error('[v0] Error fetching catalog:', error)
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+          <Building2 className="h-16 w-16 text-muted-foreground/50" />
+          <h3 className="mt-4 text-lg font-semibold">Error al cargar propiedades</h3>
+        </CardContent>
+      </Card>
+    )
+  }
 
   if (properties.length === 0) {
     return (

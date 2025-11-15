@@ -1,11 +1,11 @@
 import { getCurrentUser } from "@/lib/auth"
-import { redirect } from "next/navigation"
+import { redirect } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, Globe, MapPin, Building2, Home } from "lucide-react"
+import { Plus, Globe, MapPin, Building2, Home } from 'lucide-react'
 import Link from "next/link"
-import { prisma } from "@/lib/db"
+import { createServerClient } from "@/lib/supabase/server"
 import { LocationTable } from "@/components/location-table"
 
 export default async function LocationsPage() {
@@ -19,43 +19,19 @@ export default async function LocationsPage() {
     redirect("/dashboard")
   }
 
-  const [countries, provinces, cities, neighborhoods] = await Promise.all([
-    prisma.country.findMany({
-      orderBy: { name: "asc" },
-      include: {
-        _count: {
-          select: { provinces: true, properties: true },
-        },
-      },
-    }),
-    prisma.province.findMany({
-      orderBy: { name: "asc" },
-      include: {
-        country: { select: { name: true } },
-        _count: {
-          select: { cities: true, properties: true },
-        },
-      },
-    }),
-    prisma.city.findMany({
-      orderBy: { name: "asc" },
-      include: {
-        province: { select: { name: true } },
-        _count: {
-          select: { neighborhoods: true, properties: true },
-        },
-      },
-    }),
-    prisma.neighborhood.findMany({
-      orderBy: { name: "asc" },
-      include: {
-        city: { select: { name: true } },
-        _count: {
-          select: { properties: true },
-        },
-      },
-    }),
+  const supabase = await createServerClient()
+
+  const [countriesResult, provincesResult, citiesResult, neighborhoodsResult] = await Promise.all([
+    supabase.from('countries').select('*').order('name', { ascending: true }),
+    supabase.from('provinces').select('*, country:countries!provinces_country_id_fkey(name)').order('name', { ascending: true }),
+    supabase.from('cities').select('*, province:provinces!cities_province_id_fkey(name)').order('name', { ascending: true }),
+    supabase.from('neighborhoods').select('*, city:cities!neighborhoods_city_id_fkey(name)').order('name', { ascending: true }),
   ])
+
+  const countries = countriesResult.data || []
+  const provinces = provincesResult.data || []
+  const cities = citiesResult.data || []
+  const neighborhoods = neighborhoodsResult.data || []
 
   const filterOptions = {
     countries: countries.map((c) => ({ id: c.id, name: c.name })),
@@ -113,8 +89,6 @@ export default async function LocationsPage() {
                 columns={[
                   { key: "name", label: "Nombre" },
                   { key: "code", label: "Código" },
-                  { key: "_count.provinces", label: "Provincias" },
-                  { key: "_count.properties", label: "Propiedades" },
                 ]}
               />
             </CardContent>
@@ -144,8 +118,6 @@ export default async function LocationsPage() {
                 columns={[
                   { key: "name", label: "Nombre" },
                   { key: "country.name", label: "País" },
-                  { key: "_count.cities", label: "Ciudades" },
-                  { key: "_count.properties", label: "Propiedades" },
                 ]}
                 filterOptions={filterOptions}
               />
@@ -176,8 +148,6 @@ export default async function LocationsPage() {
                 columns={[
                   { key: "name", label: "Nombre" },
                   { key: "province.name", label: "Provincia" },
-                  { key: "_count.neighborhoods", label: "Barrios" },
-                  { key: "_count.properties", label: "Propiedades" },
                 ]}
                 filterOptions={filterOptions}
               />
@@ -208,7 +178,6 @@ export default async function LocationsPage() {
                 columns={[
                   { key: "name", label: "Nombre" },
                   { key: "city.name", label: "Ciudad" },
-                  { key: "_count.properties", label: "Propiedades" },
                 ]}
                 filterOptions={filterOptions}
               />

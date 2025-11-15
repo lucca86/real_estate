@@ -1,9 +1,10 @@
 "use server"
 
-import { prisma } from "@/lib/db"
+import { createServerClient } from "@/lib/supabase/server"
 import { getCurrentUser } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import { wordpressAPI } from "@/lib/wordpress"
+
 
 export async function createProperty(formData: FormData) {
   const currentUser = await getCurrentUser()
@@ -55,60 +56,54 @@ export async function createProperty(formData: FormData) {
 
   const pricePerM2 = Number.parseFloat(price) / Number.parseFloat(area)
 
-  const newProperty = await prisma.property.create({
-    data: {
+  const supabase = await createServerClient()
+  
+  const { data: newProperty, error } = await supabase
+    .from("properties")
+    .insert({
       title,
       description,
       adrema: adrema || null,
-      owner: {
-        connect: { id: ownerId },
-      },
-      propertyType: propertyTypeId
-        ? {
-            connect: { id: propertyTypeId },
-          }
-        : undefined,
-      transactionType: transactionType as any,
-      status: status as any,
-      rentalPeriod: rentalPeriod && rentalPeriod !== "" ? (rentalPeriod as any) : null,
+      owner_id: ownerId,
+      property_type_id: propertyTypeId || null,
+      transaction_type: transactionType,
+      status,
+      rental_period: rentalPeriod && rentalPeriod !== "" ? rentalPeriod : null,
       address,
-      country: countryId ? { connect: { id: countryId } } : undefined,
-      province: provinceId ? { connect: { id: provinceId } } : undefined,
-      city: cityId ? { connect: { id: cityId } } : undefined,
-      neighborhood: neighborhoodId ? { connect: { id: neighborhoodId } } : undefined,
-      zipCode: zipCode || null,
+      country_id: countryId || null,
+      province_id: provinceId || null,
+      city_id: cityId || null,
+      neighborhood_id: neighborhoodId || null,
+      zip_code: zipCode || null,
       latitude: latitude ? Number.parseFloat(latitude) : null,
       longitude: longitude ? Number.parseFloat(longitude) : null,
       bedrooms: bedrooms ? Number.parseInt(bedrooms) : null,
       bathrooms: bathrooms ? Number.parseInt(bathrooms) : null,
-      parkingSpaces: parkingSpaces ? Number.parseInt(parkingSpaces) : null,
+      parking_spaces: parkingSpaces ? Number.parseInt(parkingSpaces) : null,
       area: Number.parseFloat(area),
-      lotSize: lotSize ? Number.parseFloat(lotSize) : null,
-      yearBuilt: yearBuilt ? Number.parseInt(yearBuilt) : null,
+      lot_size: lotSize ? Number.parseFloat(lotSize) : null,
+      year_built: yearBuilt ? Number.parseInt(yearBuilt) : null,
       price: Number.parseFloat(price),
-      pricePerM2,
+      price_per_m2: pricePerM2,
       currency,
-      rentalPrice: rentalPrice ? Number.parseFloat(rentalPrice) : null,
+      rental_price: rentalPrice ? Number.parseFloat(rentalPrice) : null,
       features: features ? features.split(",").map((f) => f.trim()) : [],
       amenities: amenities ? amenities.split(",").map((a) => a.trim()) : [],
       images: images ? images.split(",").map((i) => i.trim()) : [],
       videos: videos ? videos.split(",").map((v) => v.trim()) : [],
-      virtualTour: virtualTour || null,
-      propertyLabel: propertyLabel && propertyLabel !== "NONE" ? (propertyLabel as any) : null,
-      syncToWordPress,
+      virtual_tour: virtualTour || null,
+      property_label: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
+      sync_to_wordpress: syncToWordPress,
       published,
-      createdBy: {
-        connect: { id: currentUser.id },
-      },
-    },
-    include: {
-      propertyType: true,
-      country: true,
-      province: true,
-      city: true,
-      neighborhood: true,
-    },
-  })
+      created_by_id: currentUser.id,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error("[v0] Error creating property:", error)
+    throw new Error(`Error creating property: ${error.message}`)
+  }
 
   if (syncToWordPress) {
     try {
@@ -117,36 +112,36 @@ export async function createProperty(formData: FormData) {
         id: newProperty.id,
         title: newProperty.title,
         description: newProperty.description,
-        propertyType: newProperty.propertyType?.name,
-        transactionType: newProperty.transactionType,
+        propertyType: null,
+        transactionType: newProperty.transaction_type,
         status: newProperty.status,
         address: newProperty.address,
-        city: newProperty.city?.name,
-        state: newProperty.province?.name,
-        country: newProperty.country?.name,
-        zipCode: newProperty.zipCode,
+        city: null,
+        state: null,
+        country: null,
+        zipCode: newProperty.zip_code,
         latitude: newProperty.latitude,
         longitude: newProperty.longitude,
         bedrooms: newProperty.bedrooms,
         bathrooms: newProperty.bathrooms,
-        parkingSpaces: newProperty.parkingSpaces,
+        parkingSpaces: newProperty.parking_spaces,
         area: newProperty.area,
-        lotSize: newProperty.lotSize,
-        yearBuilt: newProperty.yearBuilt,
+        lotSize: newProperty.lot_size,
+        yearBuilt: newProperty.year_built,
         price: newProperty.price,
-        pricePerM2: newProperty.pricePerM2,
+        pricePerM2: newProperty.price_per_m2,
         features: newProperty.features,
         amenities: newProperty.amenities,
         images: newProperty.images,
-        virtualTour: newProperty.virtualTour,
-        propertyLabel: newProperty.propertyLabel,
+        virtualTour: newProperty.virtual_tour,
+        propertyLabel: newProperty.property_label,
         published: newProperty.published,
       })
 
-      await prisma.property.update({
-        where: { id: newProperty.id },
-        data: { wordpressId },
-      })
+      await supabase
+        .from("properties")
+        .update({ wordpress_id: wordpressId })
+        .eq("id", newProperty.id)
 
       console.log("[v0] Property synced successfully to WordPress with ID:", wordpressId)
     } catch (error) {
@@ -159,23 +154,25 @@ export async function createProperty(formData: FormData) {
 }
 
 export async function updateProperty(propertyId: string, formData: FormData) {
-  console.log("[v0] updateProperty called for property:", propertyId)
-
   const currentUser = await getCurrentUser()
 
   if (!currentUser) {
     throw new Error("No estás autenticado")
   }
 
-  const property = await prisma.property.findUnique({
-    where: { id: propertyId },
-  })
+  const supabase = await createServerClient()
+  
+  const { data: property, error: fetchError } = await supabase
+    .from("properties")
+    .select("*")
+    .eq("id", propertyId)
+    .single()
 
-  if (!property) {
+  if (fetchError || !property) {
     throw new Error("Propiedad no encontrada")
   }
 
-  if (property.createdById !== currentUser.id && currentUser.role === "VENDEDOR") {
+  if (property.created_by_id !== currentUser.id && currentUser.role === "VENDEDOR") {
     throw new Error("No tienes permisos para editar esta propiedad")
   }
 
@@ -216,140 +213,96 @@ export async function updateProperty(propertyId: string, formData: FormData) {
   const syncToWordPress = formData.get("syncToWordPress") === "on"
   const published = formData.get("published") === "on"
 
-  console.log("[v0] Raw form data for propertyLabel:", {
-    rawValue: formData.get("propertyLabel"),
-    propertyLabel,
-    isNONE: propertyLabel === "NONE",
-    willBeNull: propertyLabel && propertyLabel !== "NONE" ? false : true,
-  })
-
-  console.log("[v0] Form data received:", {
-    title,
-    propertyLabel,
-    syncToWordPress,
-    published,
-    status,
-    transactionType,
-  })
-
   const pricePerM2 = Number.parseFloat(price) / Number.parseFloat(area)
+  const finalPropertyLabel = propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null
 
-  const finalPropertyLabel = propertyLabel && propertyLabel !== "NONE" ? (propertyLabel as any) : null
-  console.log("[v0] Final propertyLabel value to save:", finalPropertyLabel)
-
-  const updatedProperty = await prisma.property.update({
-    where: { id: propertyId },
-    data: {
+  const { data: updatedProperty, error: updateError } = await supabase
+    .from("properties")
+    .update({
       title,
       description,
       adrema: adrema || null,
-      owner: ownerId
-        ? {
-            connect: { id: ownerId },
-          }
-        : undefined,
-      propertyType: propertyTypeId
-        ? {
-            connect: { id: propertyTypeId },
-          }
-        : {
-            disconnect: true,
-          },
-      transactionType: transactionType as any,
-      status: status as any,
-      rentalPeriod: rentalPeriod && rentalPeriod !== "" ? (rentalPeriod as any) : null,
+      owner_id: ownerId,
+      property_type_id: propertyTypeId || null,
+      transaction_type: transactionType,
+      status,
+      rental_period: rentalPeriod && rentalPeriod !== "" ? rentalPeriod : null,
       address,
-      country: countryId ? { connect: { id: countryId } } : { disconnect: true },
-      province: provinceId ? { connect: { id: provinceId } } : { disconnect: true },
-      city: cityId ? { connect: { id: cityId } } : { disconnect: true },
-      neighborhood: neighborhoodId ? { connect: { id: neighborhoodId } } : { disconnect: true },
-      zipCode: zipCode || null,
+      country_id: countryId || null,
+      province_id: provinceId || null,
+      city_id: cityId || null,
+      neighborhood_id: neighborhoodId || null,
+      zip_code: zipCode || null,
       latitude: latitude ? Number.parseFloat(latitude) : null,
       longitude: longitude ? Number.parseFloat(longitude) : null,
       bedrooms: bedrooms ? Number.parseInt(bedrooms) : null,
       bathrooms: bathrooms ? Number.parseInt(bathrooms) : null,
-      parkingSpaces: parkingSpaces ? Number.parseInt(parkingSpaces) : null,
+      parking_spaces: parkingSpaces ? Number.parseInt(parkingSpaces) : null,
       area: Number.parseFloat(area),
-      lotSize: lotSize ? Number.parseFloat(lotSize) : null,
-      yearBuilt: yearBuilt ? Number.parseInt(yearBuilt) : null,
+      lot_size: lotSize ? Number.parseFloat(lotSize) : null,
+      year_built: yearBuilt ? Number.parseInt(yearBuilt) : null,
       price: Number.parseFloat(price),
-      pricePerM2,
+      price_per_m2: pricePerM2,
       currency,
-      rentalPrice: rentalPrice ? Number.parseFloat(rentalPrice) : null,
+      rental_price: rentalPrice ? Number.parseFloat(rentalPrice) : null,
       features: features ? features.split(",").map((f) => f.trim()) : [],
       amenities: amenities ? amenities.split(",").map((a) => a.trim()) : [],
       images: images ? images.split(",").map((i) => i.trim()) : [],
       videos: videos ? videos.split(",").map((v) => v.trim()) : [],
-      virtualTour: virtualTour || null,
-      propertyLabel: finalPropertyLabel,
-      syncToWordPress,
+      virtual_tour: virtualTour || null,
+      property_label: finalPropertyLabel,
+      sync_to_wordpress: syncToWordPress,
       published,
-    },
-    include: {
-      propertyType: true,
-      country: true,
-      province: true,
-      city: true,
-      neighborhood: true,
-    },
-  })
+    })
+    .eq("id", propertyId)
+    .select()
+    .single()
 
-  console.log("[v0] Property updated in database:", {
-    id: updatedProperty.id,
-    title: updatedProperty.title,
-    propertyLabel: updatedProperty.propertyLabel,
-    syncToWordPress: updatedProperty.syncToWordPress,
-    wordpressId: updatedProperty.wordpressId,
-  })
+  if (updateError) {
+    console.error("[v0] Error updating property:", updateError)
+    throw new Error(`Error updating property: ${updateError.message}`)
+  }
 
   if (syncToWordPress) {
     try {
       console.log("[v0] Syncing updated property to WordPress:", updatedProperty.id)
-      console.log("[v0] Property data being sent to WordPress:", {
-        propertyLabel: updatedProperty.propertyLabel,
-        title: updatedProperty.title,
-        status: updatedProperty.status,
-        published: updatedProperty.published,
-        hasPropertyLabel: !!updatedProperty.propertyLabel,
-        propertyLabelType: typeof updatedProperty.propertyLabel,
-      })
-
+      
       const wordpressId = await wordpressAPI.syncProperty({
         id: updatedProperty.id,
-        wordpressId: updatedProperty.wordpressId,
+        wordpressId: updatedProperty.wordpress_id,
         title: updatedProperty.title,
         description: updatedProperty.description,
-        propertyType: updatedProperty.propertyType?.name,
-        transactionType: updatedProperty.transactionType,
+        propertyType: null,
+        transactionType: updatedProperty.transaction_type,
         status: updatedProperty.status,
         address: updatedProperty.address,
-        city: updatedProperty.city?.name,
-        state: updatedProperty.province?.name,
-        country: updatedProperty.country?.name,
-        zipCode: updatedProperty.zipCode,
+        city: null,
+        state: null,
+        country: null,
+        zipCode: updatedProperty.zip_code,
         latitude: updatedProperty.latitude,
         longitude: updatedProperty.longitude,
         bedrooms: updatedProperty.bedrooms,
         bathrooms: updatedProperty.bathrooms,
-        parkingSpaces: updatedProperty.parkingSpaces,
+        parkingSpaces: updatedProperty.parking_spaces,
         area: updatedProperty.area,
-        lotSize: updatedProperty.lotSize,
-        yearBuilt: updatedProperty.yearBuilt,
+        lotSize: updatedProperty.lot_size,
+        yearBuilt: updatedProperty.year_built,
         price: updatedProperty.price,
-        pricePerM2: updatedProperty.pricePerM2,
+        pricePerM2: updatedProperty.price_per_m2,
         features: updatedProperty.features,
         amenities: updatedProperty.amenities,
         images: updatedProperty.images,
-        virtualTour: updatedProperty.virtualTour,
-        propertyLabel: updatedProperty.propertyLabel,
+        virtualTour: updatedProperty.virtual_tour,
+        propertyLabel: updatedProperty.property_label,
         published: updatedProperty.published,
       })
 
-      if (!updatedProperty.wordpressId && wordpressId) {
-        await prisma.property.update({
-          where: { id: updatedProperty.id },
-          data: { wordpressId },
-        })
+      if (!updatedProperty.wordpress_id && wordpressId) {
+        await supabase
+          .from("properties")
+          .update({ wordpress_id: wordpressId })
+          .eq("id", updatedProperty.id)
       }
 
       console.log("[v0] Property synced successfully to WordPress with ID:", wordpressId)
@@ -373,21 +326,31 @@ export async function deleteProperty(propertyId: string) {
     throw new Error("No estás autenticado")
   }
 
-  const property = await prisma.property.findUnique({
-    where: { id: propertyId },
-  })
+  const supabase = await createServerClient()
+  
+  const { data: property, error: fetchError } = await supabase
+    .from("properties")
+    .select("*")
+    .eq("id", propertyId)
+    .single()
 
-  if (!property) {
+  if (fetchError || !property) {
     throw new Error("Propiedad no encontrada")
   }
 
-  if (property.createdById !== currentUser.id && currentUser.role !== "ADMIN") {
+  if (property.created_by_id !== currentUser.id && currentUser.role !== "ADMIN") {
     throw new Error("No tienes permisos para eliminar esta propiedad")
   }
 
-  await prisma.property.delete({
-    where: { id: propertyId },
-  })
+  const { error: deleteError } = await supabase
+    .from("properties")
+    .delete()
+    .eq("id", propertyId)
+
+  if (deleteError) {
+    console.error("[v0] Error deleting property:", deleteError)
+    throw new Error(`Error deleting property: ${deleteError.message}`)
+  }
 
   revalidatePath("/properties")
   revalidatePath("/dashboard")

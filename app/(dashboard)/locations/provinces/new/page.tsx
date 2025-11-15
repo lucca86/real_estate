@@ -1,11 +1,11 @@
 import { getCurrentUser } from "@/lib/auth"
-import { redirect } from "next/navigation"
+import { redirect } from 'next/navigation'
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { ProvinceForm } from "@/components/province-form"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft } from 'lucide-react'
 import Link from "next/link"
-import { prisma } from "@/lib/db"
+import { getCountries } from "@/lib/actions/locations"
 
 export default async function NewProvincePage() {
   const user = await getCurrentUser()
@@ -18,10 +18,7 @@ export default async function NewProvincePage() {
     redirect("/dashboard")
   }
 
-  const countries = await prisma.country.findMany({
-    where: { isActive: true },
-    orderBy: { name: "asc" },
-  })
+  const countries = await getCountries()
 
   return (
     <DashboardLayout user={user}>

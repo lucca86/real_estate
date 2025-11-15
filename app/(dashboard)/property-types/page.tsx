@@ -1,9 +1,9 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Plus, Building2 } from "lucide-react"
+import { Plus, Building2 } from 'lucide-react'
 import { getCurrentUser } from "@/lib/auth"
-import { redirect } from "next/navigation"
-import { db } from "@/lib/db"
+import { redirect } from 'next/navigation'
+import { createServerClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default async function PropertyTypesPage() {
@@ -17,10 +17,17 @@ export default async function PropertyTypesPage() {
     redirect("/dashboard")
   }
 
-  const propertyTypes = await db.propertyType.findMany({
-    where: { isActive: true },
-    orderBy: { name: "asc" },
-  })
+  const supabase = await createServerClient()
+  const { data: propertyTypes, error } = await supabase
+    .from('property_types')
+    .select('*')
+    .eq('is_active', true)
+    .order('name', { ascending: true })
+
+  if (error || !propertyTypes) {
+    console.error('[v0] Error fetching property types:', error)
+    return <div>Error al cargar tipos de propiedad</div>
+  }
 
   return (
     <div className="flex flex-col gap-6">

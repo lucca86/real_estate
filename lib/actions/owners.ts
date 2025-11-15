@@ -35,13 +35,21 @@ export async function getOwners() {
         *,
         city:cities(name),
         province:provinces(name),
-        country:countries(name)
+        country:countries(name),
+        properties:properties(count)
       `)
       .order('created_at', { ascending: false })
 
     if (error) throw error
 
-    return { success: true, data: owners }
+    const transformedOwners = owners?.map(owner => ({
+      ...owner,
+      _count: {
+        properties: owner.properties?.length || 0
+      }
+    })) || []
+
+    return { success: true, data: transformedOwners }
   } catch (error) {
     console.error("[getOwners] Error:", error)
     return { success: false, error: "Error al obtener propietarios" }
@@ -81,13 +89,13 @@ export async function createOwner(formData: FormData) {
       phone: formData.get("phone") as string,
       secondaryPhone: formData.get("secondaryPhone") as string | undefined,
       address: formData.get("address") as string | undefined,
-      city_id: formData.get("cityId") as string | undefined,
-      province_id: formData.get("provinceId") as string | undefined,
-      country_id: formData.get("countryId") as string | undefined,
+      cityId: formData.get("cityId") as string | undefined,
+      provinceId: formData.get("provinceId") as string | undefined,
+      countryId: formData.get("countryId") as string | undefined,
       idNumber: formData.get("idNumber") as string | undefined,
       taxId: formData.get("taxId") as string | undefined,
       notes: formData.get("notes") as string | undefined,
-      is_active: formData.get("isActive") === "on" || formData.get("isActive") === "true",
+      isActive: formData.get("isActive") === "on" || formData.get("isActive") === "true",
     }
 
     const supabase = await createServerClient()
@@ -114,11 +122,11 @@ export async function updateOwner(id: string, formData: FormData) {
       email: formData.get("email") as string,
       phone: formData.get("phone") as string,
       address: formData.get("address") as string | undefined,
-      city_id: formData.get("cityId") as string | undefined,
-      province_id: formData.get("provinceId") as string | undefined,
-      country_id: formData.get("countryId") as string | undefined,
+      cityId: formData.get("cityId") as string | undefined,
+      provinceId: formData.get("provinceId") as string | undefined,
+      countryId: formData.get("countryId") as string | undefined,
       notes: formData.get("notes") as string | undefined,
-      is_active: formData.get("isActive") === "on",
+      isActive: formData.get("isActive") === "on",
     }
 
     const supabase = await createServerClient()

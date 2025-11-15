@@ -1,8 +1,8 @@
-import { prisma } from "@/lib/db"
+import { createServerClient } from "@/lib/supabase/server"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Building2, Edit, MapPin, Plus } from "lucide-react"
+import { Building2, Edit, MapPin, Plus } from 'lucide-react'
 import Link from "next/link"
 import { DeletePropertyButton } from "@/components/delete-property-button"
 import type { SessionUser } from "@/lib/auth"
@@ -12,33 +12,25 @@ interface PropertiesTableProps {
 }
 
 export async function PropertiesTable({ currentUser }: PropertiesTableProps) {
-  const properties = await prisma.property.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      createdBy: {
-        select: {
-          name: true,
-        },
-      },
-      propertyType: {
-        select: {
-          name: true,
-        },
-      },
-      city: {
-        select: {
-          name: true,
-        },
-      },
-      province: {
-        select: {
-          name: true,
-        },
-      },
-    },
-  })
+  const supabase = await createServerClient()
+  
+  const { data: properties, error } = await supabase
+    .from('properties')
+    .select(`
+      *,
+      owner:owners!properties_owner_id_fkey(name),
+      property_type:property_types(name),
+      city:cities(name),
+      province:provinces(name)
+    `)
+    .order('created_at', { ascending: false })
 
-  const statusColors = {
+  if (error || !properties) {
+    console.error('[v0] Error fetching properties:', error)
+    return <Card><CardContent className="p-6">Error al cargar propiedades</CardContent></Card>
+  }
+
+  const statusColors: Record<string, string> = {
     ACTIVO: "bg-green-500/10 text-green-500 hover:bg-green-500/20",
     RESERVADO: "bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20",
     VENDIDO: "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20",
@@ -47,7 +39,7 @@ export async function PropertiesTable({ currentUser }: PropertiesTableProps) {
     EN_REVISION: "bg-orange-500/10 text-orange-500 hover:bg-orange-500/20",
   }
 
-  const statusLabels = {
+  const statusLabels: Record<string, string> = {
     ACTIVO: "Activo",
     RESERVADO: "Reservado",
     VENDIDO: "Vendido",
@@ -80,7 +72,7 @@ export async function PropertiesTable({ currentUser }: PropertiesTableProps) {
               >
                 <Link href={`/properties/${property.id}`}>
                   <div className="aspect-video w-full overflow-hidden bg-muted">
-                    {property.images[0] ? (
+                    {property.images && property.images[0] ? (
                       <img
                         src={property.images[0] || "/placeholder.svg"}
                         alt={property.title}
@@ -99,8 +91,8 @@ export async function PropertiesTable({ currentUser }: PropertiesTableProps) {
                     <Link href={`/properties/${property.id}`} className="flex-1">
                       <h3 className="font-semibold leading-tight text-balance hover:text-primary">{property.title}</h3>
                     </Link>
-                    <Badge variant="secondary" className={statusColors[property.status]}>
-                      {statusLabels[property.status]}
+                    <Badge variant="secondary" className={statusColors[property.status] || ""}>
+                      {statusLabels[property.status] || property.status}
                     </Badge>
                   </div>
 
@@ -110,7 +102,7 @@ export async function PropertiesTable({ currentUser }: PropertiesTableProps) {
                   </div>
 
                   <div className="mb-3 text-sm text-muted-foreground">
-                    <span className="font-medium">{property.propertyType?.name || "Sin tipo"}</span>
+                    <span className="font-medium">{property.property_type?.name || "Sin tipo"}</span>
                     {property.bedrooms && property.bathrooms && (
                       <span className="ml-2">
                         • {property.bedrooms} hab • {property.bathrooms} baños
@@ -124,7 +116,7 @@ export async function PropertiesTable({ currentUser }: PropertiesTableProps) {
                   </div>
 
                   <div className="flex items-center justify-between border-t border-border pt-3">
-                    <span className="text-xs text-muted-foreground">Por {property.createdBy.name}</span>
+                    <span className="text-xs text-muted-foreground">Por {property.owner?.name}</span>
                     <div className="flex gap-1">
                       <Button variant="ghost" size="icon" asChild>
                         <Link href={`/properties/${property.id}/edit`}>
@@ -132,7 +124,7 @@ export async function PropertiesTable({ currentUser }: PropertiesTableProps) {
                           <span className="sr-only">Editar</span>
                         </Link>
                       </Button>
-                      {(currentUser.role === "ADMIN" || property.createdById === currentUser.id) && (
+                      {(currentUser.role === "ADMIN" || property.owner_id === currentUser.id) && (
                         <DeletePropertyButton propertyId={property.id} propertyTitle={property.title} />
                       )}
                     </div>

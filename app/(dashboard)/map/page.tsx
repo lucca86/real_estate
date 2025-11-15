@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/lib/auth"
-import { redirect } from "next/navigation"
-import { prisma } from "@/lib/db"
+import { redirect } from 'next/navigation'
+import { createServerClient } from "@/lib/supabase/server"
 import { PropertiesMap } from "@/components/properties-map"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -11,35 +11,42 @@ export default async function MapPage() {
     redirect("/login")
   }
 
-  const propertiesData = await prisma.property.findMany({
-    where: {
-      published: true,
-      latitude: { not: null },
-      longitude: { not: null },
-    },
-    select: {
-      id: true,
-      title: true,
-      address: true,
-      city: { select: { name: true } },
-      latitude: true,
-      longitude: true,
-      price: true,
-      currency: true,
-      propertyType: { select: { name: true } },
-      status: true,
-      images: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  })
+  const supabase = await createServerClient()
+  const { data: propertiesData, error } = await supabase
+    .from('properties')
+    .select(`
+      id,
+      title,
+      address,
+      city_id,
+      cities!properties_city_id_fkey(name),
+      latitude,
+      longitude,
+      price,
+      currency,
+      property_type_id,
+      property_types!properties_property_type_id_fkey(name),
+      status,
+      images
+    `)
+    .eq('is_active', true)
+    .not('latitude', 'is', null)
+    .not('longitude', 'is', null)
+    .order('created_at', { ascending: false })
 
-  const properties = propertiesData.map((prop) => ({
-    ...prop,
-    city: prop.city?.name || "",
-    propertyType: prop.propertyType?.name || "",
-  }))
+  const properties = propertiesData?.map((prop: any) => ({
+    id: prop.id,
+    title: prop.title,
+    address: prop.address,
+    city: prop.cities?.name || "",
+    latitude: prop.latitude,
+    longitude: prop.longitude,
+    price: prop.price,
+    currency: prop.currency,
+    propertyType: prop.property_types?.name || "",
+    status: prop.status,
+    images: prop.images
+  })) || []
 
   return (
     <div className="space-y-6">

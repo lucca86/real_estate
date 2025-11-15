@@ -9,14 +9,13 @@ const clientSchema = z.object({
   email: z.string().email("Email inválido"),
   phone: z.string().min(1, "El teléfono es requerido"),
   address: z.string().optional(),
-  city_id: z.string().optional(),
-  province_id: z.string().optional(),
-  country_id: z.string().optional(),
-  preferred_property_type_id: z.string().optional(),
-  budget_min: z.number().optional(),
-  budget_max: z.number().optional(),
+  cityId: z.string().optional(),
+  provinceId: z.string().optional(),
+  countryId: z.string().optional(),
+  preferredPropertyTypeId: z.string().optional(),
+  budget: z.number().optional(),
   notes: z.string().optional(),
-  is_active: z.boolean().default(true),
+  isActive: z.boolean().default(true),
 })
 
 export async function getClients() {
@@ -29,12 +28,21 @@ export async function getClients() {
         *,
         city:cities(name),
         province:provinces(name),
-        country:countries(name)
+        country:countries(name),
+        appointments:appointments(count)
       `)
       .order('created_at', { ascending: false })
 
     if (error) throw error
-    return { success: true, data: clients }
+    
+    const transformedClients = clients?.map(client => ({
+      ...client,
+      _count: {
+        appointments: client.appointments?.length || 0
+      }
+    })) || []
+    
+    return { success: true, data: transformedClients }
   } catch (error) {
     console.error("[getClients] Error:", error)
     return { success: false, error: "Error al obtener clientes" }

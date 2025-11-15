@@ -1,11 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { prisma } from "@/lib/db"
-import { Building2, MapPin } from "lucide-react"
+import { createServerClient } from "@/lib/supabase/server"
+import { Building2, MapPin } from 'lucide-react'
 import Link from "next/link"
 
 export async function RecentProperties() {
-  const statusColors = {
+  const statusColors: Record<string, string> = {
     ACTIVO: "bg-green-500/10 text-green-500 hover:bg-green-500/20",
     RESERVADO: "bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20",
     VENDIDO: "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20",
@@ -14,7 +14,7 @@ export async function RecentProperties() {
     EN_REVISION: "bg-orange-500/10 text-orange-500 hover:bg-orange-500/20",
   }
 
-  const statusLabels = {
+  const statusLabels: Record<string, string> = {
     ACTIVO: "Activo",
     RESERVADO: "Reservado",
     VENDIDO: "Vendido",
@@ -26,23 +26,20 @@ export async function RecentProperties() {
   try {
     console.log("[v0] RecentProperties: Starting to fetch properties")
 
-    const propertiesPromise = prisma.property.findMany({
-      take: 5,
-      orderBy: { createdAt: "desc" },
-      include: {
-        createdBy: {
-          select: {
-            name: true,
-          },
-        },
-      },
-    })
+    const supabase = await createServerClient()
 
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Properties query timeout")), 5000),
-    )
+    const { data: properties, error } = await supabase
+      .from('properties')
+      .select(`
+        *,
+        created_by:users!properties_created_by_id_fkey(name)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(5)
 
-    const properties = (await Promise.race([propertiesPromise, timeoutPromise])) as any
+    if (error || !properties) {
+      throw error
+    }
 
     console.log("[v0] RecentProperties: Successfully fetched", properties.length, "properties")
 
@@ -75,8 +72,8 @@ export async function RecentProperties() {
                   <div className="flex-1 space-y-1">
                     <div className="flex items-start justify-between gap-2">
                       <h4 className="font-semibold leading-none text-balance">{property.title}</h4>
-                      <Badge variant="secondary" className={statusColors[property.status]}>
-                        {statusLabels[property.status]}
+                      <Badge variant="secondary" className={statusColors[property.status] || ""}>
+                        {statusLabels[property.status] || property.status}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -87,7 +84,7 @@ export async function RecentProperties() {
                       <span className="font-semibold text-primary">
                         ${property.price.toLocaleString()} {property.currency}
                       </span>
-                      <span className="text-muted-foreground">Por {property.createdBy.name}</span>
+                      <span className="text-muted-foreground">Por {property.created_by?.name}</span>
                     </div>
                   </div>
                 </Link>

@@ -1,64 +1,55 @@
-import { Building2, DollarSign, TrendingUp, Users } from "lucide-react"
+import { Building2, DollarSign, TrendingUp, Users } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { prisma } from "@/lib/db"
+import { createServerClient } from "@/lib/supabase/server"
 
 export async function DashboardStats() {
   console.log("[v0] DashboardStats: Starting to fetch stats")
 
   try {
-    const statsPromise = Promise.all([
-      prisma.property.count(),
-      prisma.property.count({
-        where: { status: "ACTIVO" },
-      }),
-      prisma.property.aggregate({
-        where: {
-          status: { in: ["VENDIDO", "ALQUILADO"] },
-        },
-        _sum: {
-          price: true,
-        },
-      }),
-      prisma.user.count({
-        where: { isActive: true },
-      }),
+    const supabase = await createServerClient()
+
+    const [
+      { count: totalProperties },
+      { count: availableProperties },
+      { data: revenueData },
+      { count: totalUsers }
+    ] = await Promise.all([
+      supabase.from('properties').select('*', { count: 'exact', head: true }),
+      supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'ACTIVO'),
+      supabase.from('properties').select('price').in('status', ['VENDIDO', 'ALQUILADO']),
+      supabase.from('users').select('*', { count: 'exact', head: true }).eq('is_active', true)
     ])
 
-    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Stats query timeout")), 5000))
-
-    const [totalProperties, availableProperties, totalRevenue, totalUsers] = (await Promise.race([
-      statsPromise,
-      timeoutPromise,
-    ])) as any
-
-    console.log("[v0] DashboardStats: Successfully fetched stats")
+    const totalRevenue = revenueData?.reduce((sum, prop) => sum + (prop.price || 0), 0) || 0
 
     const stats = [
       {
         title: "Total Propiedades",
-        value: totalProperties,
+        value: totalProperties || 0,
         icon: Building2,
-        description: `${availableProperties} disponibles`,
+        description: `${availableProperties || 0} disponibles`,
       },
       {
         title: "Ingresos Totales",
-        value: `$${(totalRevenue._sum.price || 0).toLocaleString()}`,
+        value: `$${totalRevenue.toLocaleString()}`,
         icon: DollarSign,
         description: "De ventas y alquileres",
       },
       {
         title: "Propiedades Activas",
-        value: availableProperties,
+        value: availableProperties || 0,
         icon: TrendingUp,
         description: "Listas para venta/alquiler",
       },
       {
         title: "Usuarios Activos",
-        value: totalUsers,
+        value: totalUsers || 0,
         icon: Users,
         description: "En el sistema",
       },
     ]
+
+    console.log("[v0] DashboardStats: Successfully fetched stats")
 
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

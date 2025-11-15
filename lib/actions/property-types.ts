@@ -4,10 +4,11 @@ import { revalidatePath } from "next/cache"
 import { createServerClient } from "@/lib/supabase/server"
 import { z } from "zod"
 
+
 const propertyTypeSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
   description: z.string().optional(),
-  isActive: z.boolean().default(true),
+  is_active: z.boolean().default(true),
 })
 
 export async function getPropertyTypes() {
@@ -15,21 +16,13 @@ export async function getPropertyTypes() {
     const supabase = await createServerClient()
     
     const { data: propertyTypes, error } = await supabase
-      .from('PropertyType')
-      .select(`
-        *,
-        properties:Property(count)
-      `)
+      .from('property_types')
+      .select('*')
       .order('name', { ascending: true })
 
     if (error) throw error
 
-    const formatted = propertyTypes?.map(pt => ({
-      ...pt,
-      _count: { properties: pt.properties?.length || 0 }
-    }))
-
-    return formatted || []
+    return propertyTypes || []
   } catch (error) {
     console.error("[getPropertyTypes] Error:", error)
     throw new Error("Error al obtener los tipos de propiedad")
@@ -41,9 +34,9 @@ export async function getActivePropertyTypes() {
     const supabase = await createServerClient()
     
     const { data, error } = await supabase
-      .from('PropertyType')
+      .from('property_types')
       .select('*')
-      .eq('isActive', true)
+      .eq('is_active', true)
       .order('name', { ascending: true })
 
     if (error) throw error
@@ -59,20 +52,14 @@ export async function getPropertyTypeById(id: string) {
     const supabase = await createServerClient()
     
     const { data, error } = await supabase
-      .from('PropertyType')
-      .select(`
-        *,
-        properties:Property(count)
-      `)
+      .from('property_types')
+      .select('*')
       .eq('id', id)
       .single()
 
     if (error) throw error
 
-    return {
-      ...data,
-      _count: { properties: data?.properties?.length || 0 }
-    }
+    return data
   } catch (error) {
     console.error("[getPropertyTypeById] Error:", error)
     throw new Error("Error al obtener el tipo de propiedad")
@@ -84,14 +71,14 @@ export async function createPropertyType(formData: FormData) {
     const data = {
       name: formData.get("name") as string,
       description: formData.get("description") as string,
-      isActive: formData.get("isActive") === "on",
+      is_active: formData.get("isActive") === "on",
     }
 
     const validated = propertyTypeSchema.parse(data)
     const supabase = await createServerClient()
 
     const { data: propertyType, error } = await supabase
-      .from('PropertyType')
+      .from('property_types')
       .insert(validated)
       .select()
       .single()
@@ -114,14 +101,14 @@ export async function updatePropertyType(id: string, formData: FormData) {
     const data = {
       name: formData.get("name") as string,
       description: formData.get("description") as string,
-      isActive: formData.get("isActive") === "on",
+      is_active: formData.get("isActive") === "on",
     }
 
     const validated = propertyTypeSchema.parse(data)
     const supabase = await createServerClient()
 
     const { data: propertyType, error } = await supabase
-      .from('PropertyType')
+      .from('property_types')
       .update(validated)
       .eq('id', id)
       .select()
@@ -146,8 +133,8 @@ export async function deletePropertyType(id: string) {
     const supabase = await createServerClient()
     
     const { data: propertyType } = await supabase
-      .from('PropertyType')
-      .select('*, properties:Property(count)')
+      .from('property_types')
+      .select('*')
       .eq('id', id)
       .single()
 
@@ -155,14 +142,8 @@ export async function deletePropertyType(id: string) {
       throw new Error("Tipo de propiedad no encontrado")
     }
 
-    if ((propertyType.properties?.length || 0) > 0) {
-      throw new Error(
-        `No se puede eliminar este tipo de propiedad porque tiene ${propertyType.properties?.length} propiedad(es) asociada(s)`
-      )
-    }
-
     const { error } = await supabase
-      .from('PropertyType')
+      .from('property_types')
       .delete()
       .eq('id', id)
 

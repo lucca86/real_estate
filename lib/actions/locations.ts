@@ -3,7 +3,6 @@
 import { createServerClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
-
 // Country actions
 export async function createCountry(formData: FormData) {
   const name = formData.get("name") as string
@@ -17,11 +16,11 @@ export async function createCountry(formData: FormData) {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('Country')
+      .from('countries')
       .insert({
         name,
         code: code.toUpperCase(),
-        isActive,
+        is_active: isActive,
       })
       .select()
       .single()
@@ -48,11 +47,11 @@ export async function updateCountry(id: string, formData: FormData) {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('Country')
+      .from('countries')
       .update({
         name,
         code: code.toUpperCase(),
-        isActive,
+        is_active: isActive,
       })
       .eq('id', id)
       .select()
@@ -80,9 +79,9 @@ export async function createProvince(formData: FormData) {
 
   try {
     const supabase = await createServerClient()
-    const { data, error } = await supabase
-      .from('Province')
-      .insert({ name, countryId, isActive })
+    const { data, error} = await supabase
+      .from('provinces')
+      .insert({ name, country_id: countryId, is_active: isActive })
       .select()
       .single()
 
@@ -108,8 +107,8 @@ export async function updateProvince(id: string, formData: FormData) {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('Province')
-      .update({ name, countryId, isActive })
+      .from('provinces')
+      .update({ name, country_id: countryId, is_active: isActive })
       .eq('id', id)
       .select()
       .single()
@@ -137,8 +136,8 @@ export async function createCity(formData: FormData) {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('City')
-      .insert({ name, provinceId, isActive })
+      .from('cities')
+      .insert({ name, province_id: provinceId, is_active: isActive })
       .select()
       .single()
 
@@ -164,8 +163,8 @@ export async function updateCity(id: string, formData: FormData) {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('City')
-      .update({ name, provinceId, isActive })
+      .from('cities')
+      .update({ name, province_id: provinceId, is_active: isActive })
       .eq('id', id)
       .select()
       .single()
@@ -193,8 +192,8 @@ export async function createNeighborhood(formData: FormData) {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('Neighborhood')
-      .insert({ name, cityId, isActive })
+      .from('neighborhoods')
+      .insert({ name, city_id: cityId, is_active: isActive })
       .select()
       .single()
 
@@ -220,8 +219,8 @@ export async function updateNeighborhood(id: string, formData: FormData) {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('Neighborhood')
-      .update({ name, cityId, isActive })
+      .from('neighborhoods')
+      .update({ name, city_id: cityId, is_active: isActive })
       .eq('id', id)
       .select()
       .single()
@@ -240,10 +239,15 @@ export async function updateNeighborhood(id: string, formData: FormData) {
 export async function deleteLocation(type: "country" | "province" | "city" | "neighborhood", id: string) {
   try {
     const supabase = await createServerClient()
-    const table = type.charAt(0).toUpperCase() + type.slice(1)
+    const tableMap = {
+      country: 'countries',
+      province: 'provinces',
+      city: 'cities',
+      neighborhood: 'neighborhoods'
+    }
     
     const { error } = await supabase
-      .from(table)
+      .from(tableMap[type])
       .delete()
       .eq('id', id)
 
@@ -261,9 +265,9 @@ export async function getCountries() {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('Country')
+      .from('countries')
       .select('id, name, code')
-      .eq('isActive', true)
+      .eq('is_active', true)
       .order('name', { ascending: true })
 
     if (error) throw error
@@ -278,10 +282,10 @@ export async function getProvinces(countryId: string) {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('Province')
+      .from('provinces')
       .select('id, name')
-      .eq('countryId', countryId)
-      .eq('isActive', true)
+      .eq('country_id', countryId)
+      .eq('is_active', true)
       .order('name', { ascending: true })
 
     if (error) throw error
@@ -296,10 +300,10 @@ export async function getCities(provinceId: string) {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('City')
+      .from('cities')
       .select('id, name')
-      .eq('provinceId', provinceId)
-      .eq('isActive', true)
+      .eq('province_id', provinceId)
+      .eq('is_active', true)
       .order('name', { ascending: true })
 
     if (error) throw error
@@ -314,10 +318,10 @@ export async function getNeighborhoods(cityId: string) {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('Neighborhood')
+      .from('neighborhoods')
       .select('id, name')
-      .eq('cityId', cityId)
-      .eq('isActive', true)
+      .eq('city_id', cityId)
+      .eq('is_active', true)
       .order('name', { ascending: true })
 
     if (error) throw error
@@ -325,5 +329,87 @@ export async function getNeighborhoods(cityId: string) {
   } catch (error) {
     console.error("[getNeighborhoods] Error:", error)
     return []
+  }
+}
+
+export async function getAllCountries() {
+  try {
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+      .from('countries')
+      .select('id, name, code, is_active, created_at')
+      .order('name', { ascending: true })
+
+    if (error) throw error
+    return { success: true, data: data || [] }
+  } catch (error: any) {
+    console.error("[getAllCountries] Error:", error)
+    return { success: false, error: error.message }
+  }
+}
+
+export async function getAllProvinces() {
+  try {
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+      .from('provinces')
+      .select(`
+        id,
+        name,
+        is_active,
+        created_at,
+        country:countries(id, name)
+      `)
+      .order('name', { ascending: true })
+
+    if (error) throw error
+    return { success: true, data: data || [] }
+  } catch (error: any) {
+    console.error("[getAllProvinces] Error:", error)
+    return { success: false, error: error.message }
+  }
+}
+
+export async function getAllCities() {
+  try {
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+      .from('cities')
+      .select(`
+        id,
+        name,
+        is_active,
+        created_at,
+        province:provinces(id, name)
+      `)
+      .order('name', { ascending: true })
+
+    if (error) throw error
+    return { success: true, data: data || [] }
+  } catch (error: any) {
+    console.error("[getAllCities] Error:", error)
+    return { success: false, error: error.message }
+  }
+}
+
+export async function getAllNeighborhoods() {
+  try {
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+      .from('neighborhoods')
+      .select(`
+        id,
+        name,
+        is_active,
+        created_at,
+        city:cities(id, name)
+      `)
+      .order('name', { ascending: true })
+
+    if (error) throw error
+    return { success: true, data: data || [] }
+  } catch (error: any) {
+    console.error("[getAllNeighborhoods] Error:", error)
+    return { success: false, error: error.message }
   }
 }

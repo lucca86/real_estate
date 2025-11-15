@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,10 +11,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2 } from "lucide-react"
+import { Loader2 } from 'lucide-react'
 import { createUser, updateUser } from "@/lib/actions/users"
 import type { SessionUser } from "@/lib/auth"
-import type { User } from "@prisma/client"
+
+type User = {
+  id: string
+  name: string
+  email: string
+  role: "ADMIN" | "SUPERVISOR" | "VENDEDOR"
+  is_active: boolean
+}
 
 interface UserFormProps {
   currentUser: SessionUser
@@ -80,10 +87,6 @@ export function UserForm({ currentUser, editUser }: UserFormProps) {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="phone">Teléfono</Label>
-              <Input id="phone" name="phone" type="tel" defaultValue={editUser?.phone || ""} disabled={isLoading} />
-            </div>
 
             <div className="space-y-2">
               <Label htmlFor="role">Rol</Label>
@@ -123,7 +126,7 @@ export function UserForm({ currentUser, editUser }: UserFormProps) {
               <Label htmlFor="isActive">Usuario Activo</Label>
               <p className="text-sm text-muted-foreground">El usuario puede acceder al sistema</p>
             </div>
-            <Switch id="isActive" name="isActive" defaultChecked={editUser?.isActive ?? true} disabled={isLoading} />
+            <Switch id="isActive" name="isActive" defaultChecked={editUser?.is_active ?? true} disabled={isLoading} />
           </div>
 
           <div className="flex justify-end gap-4">

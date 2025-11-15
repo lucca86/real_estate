@@ -44,57 +44,12 @@ const getDatabaseUrl = () => {
   return url
 }
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["warn"],
-    datasources: {
-      db: {
-        url: getDatabaseUrl(),
-      },
-    },
-    ...(process.env.NODE_ENV === "production" && {
-      errorFormat: "minimal",
-    }),
-  })
-
-export const db = prisma
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma
-
-export async function safePrismaQuery<T>(
-  operation: () => Promise<T>,
-  fallbackSql?: () => Promise<T>,
-): Promise<T> {
-  try {
-    return await operation()
-  } catch (error) {
-    // Only use fallback in production
-    if (process.env.NODE_ENV === "production" && fallbackSql) {
-      console.log("[v0] Prisma query failed in production, using SQL fallback")
-      try {
-        return await fallbackSql()
-      } catch (fallbackError) {
-        console.error("[v0] SQL fallback also failed:", fallbackError)
-        throw error // Throw original error
-      }
-    }
-    throw error
-  }
-}
+// This file is kept for backwards compatibility but exports null
+export const prisma = null as any
+export const db = null as any
 
 export function getSqlClient() {
-  const url =
-    process.env.DATABASE_URL ||
-    process.env.real_estate_DATABASE_URL ||
-    process.env.POSTGRES_URL ||
-    process.env.real_estate_POSTGRES_URL
-
-  if (!url) {
-    throw new Error("Database URL not configured")
-  }
-
-  return neon(url)
+  throw new Error("Please use Supabase client from @/lib/supabase/server instead")
 }
 
 let isShuttingDown = false
@@ -105,7 +60,7 @@ const gracefulShutdown = async (signal: string) => {
 
   console.log(`[v0] ${signal} received, closing database connection...`)
   try {
-    await prisma.$disconnect()
+    // await prisma.$disconnect() // Commented out to disable Prisma
     console.log("[v0] Database disconnected successfully")
   } catch (error) {
     console.error("[v0] Error disconnecting database:", error)

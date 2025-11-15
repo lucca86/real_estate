@@ -1,6 +1,6 @@
 "use server"
 
-import { prisma } from "@/lib/db"
+import { createServerClient } from "@/lib/supabase/server"
 import { hashPassword, getCurrentUser, hasPermission } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 
@@ -13,7 +13,6 @@ export async function createUser(formData: FormData) {
 
   const name = formData.get("name") as string
   const email = formData.get("email") as string
-  const phone = formData.get("phone") as string
   const role = formData.get("role") as "ADMIN" | "SUPERVISOR" | "VENDEDOR"
   const password = formData.get("password") as string
   const confirmPassword = formData.get("confirmPassword") as string
@@ -31,14 +30,17 @@ export async function createUser(formData: FormData) {
     throw new Error("La contraseña debe tener al menos 6 caracteres")
   }
 
-  // Only admins can create admin users
   if (role === "ADMIN" && currentUser.role !== "ADMIN") {
     throw new Error("Solo los administradores pueden crear usuarios administradores")
   }
 
-  const existingUser = await prisma.user.findUnique({
-    where: { email },
-  })
+  const supabase = await createServerClient()
+
+  const { data: existingUser } = await supabase
+    .from("users")
+    .select("id")
+    .eq("email", email)
+    .single()
 
   if (existingUser) {
     throw new Error("Ya existe un usuario con este email")
@@ -46,16 +48,15 @@ export async function createUser(formData: FormData) {
 
   const hashedPassword = await hashPassword(password)
 
-  await prisma.user.create({
-    data: {
-      name,
-      email,
-      phone: phone || null,
-      role,
-      password: hashedPassword,
-      isActive,
-    },
+  const { error } = await supabase.from("users").insert({
+    name,
+    email,
+    role,
+    password: hashedPassword,
+    is_active: isActive,
   })
+
+  if (error) throw error
 
   revalidatePath("/users")
 }
@@ -69,7 +70,6 @@ export async function updateUser(userId: string, formData: FormData) {
 
   const name = formData.get("name") as string
   const email = formData.get("email") as string
-  const phone = formData.get("phone") as string
   const role = formData.get("role") as "ADMIN" | "SUPERVISOR" | "VENDEDOR"
   const isActive = formData.get("isActive") === "on"
 
@@ -77,32 +77,34 @@ export async function updateUser(userId: string, formData: FormData) {
     throw new Error("Nombre y email son requeridos")
   }
 
-  // Only admins can change roles to admin
   if (role === "ADMIN" && currentUser.role !== "ADMIN") {
     throw new Error("Solo los administradores pueden asignar el rol de administrador")
   }
 
-  const existingUser = await prisma.user.findFirst({
-    where: {
-      email,
-      NOT: { id: userId },
-    },
-  })
+  const supabase = await createServerClient()
+
+  const { data: existingUser } = await supabase
+    .from("users")
+    .select("id")
+    .eq("email", email)
+    .neq("id", userId)
+    .single()
 
   if (existingUser) {
     throw new Error("Ya existe otro usuario con este email")
   }
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
+  const { error } = await supabase
+    .from("users")
+    .update({
       name,
       email,
-      phone: phone || null,
       role,
-      isActive,
-    },
-  })
+      is_active: isActive,
+    })
+    .eq("id", userId)
+
+  if (error) throw error
 
   revalidatePath("/users")
   revalidatePath(`/users/${userId}/edit`)
@@ -119,9 +121,11 @@ export async function deleteUser(userId: string) {
     throw new Error("No puedes eliminar tu propio usuario")
   }
 
-  await prisma.user.delete({
-    where: { id: userId },
-  })
+  const supabase = await createServerClient()
+
+  const { error } = await supabase.from("users").delete().eq("id", userId)
+
+  if (error) throw error
 
   revalidatePath("/users")
 }
