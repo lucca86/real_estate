@@ -75,7 +75,7 @@ export default async function ProvincesPage() {
                 {provinces.map((province) => (
                   <TableRow key={province.id}>
                     <TableCell className="font-medium">{province.name}</TableCell>
-                    <TableCell>{Array.isArray(province.country) ? province.country[0]?.name : province.country?.name || "-"}</TableCell>
+                    <TableCell>{province.country?.name || "-"}</TableCell>
                     <TableCell>
                       <Badge variant={province.is_active ? "default" : "secondary"}>
                         {province.is_active ? "Activa" : "Inactiva"}

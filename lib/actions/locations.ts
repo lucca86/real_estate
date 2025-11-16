@@ -363,7 +363,15 @@ export async function getAllProvinces() {
       .order('name', { ascending: true })
 
     if (error) throw error
-    return { success: true, data: data || [] }
+    
+    const transformedData = (data || []).map(province => ({
+      ...province,
+      country: Array.isArray(province.country) && province.country.length > 0 
+        ? province.country[0] 
+        : null
+    }))
+    
+    return { success: true, data: transformedData }
   } catch (error: any) {
     console.error("[getAllProvinces] Error:", error)
     return { success: false, error: error.message }
@@ -385,7 +393,15 @@ export async function getAllCities() {
       .order('name', { ascending: true })
 
     if (error) throw error
-    return { success: true, data: data || [] }
+    
+    const transformedData = (data || []).map(city => ({
+      ...city,
+      province: Array.isArray(city.province) && city.province.length > 0 
+        ? city.province[0] 
+        : null
+    }))
+    
+    return { success: true, data: transformedData }
   } catch (error: any) {
     console.error("[getAllCities] Error:", error)
     return { success: false, error: error.message }
@@ -407,7 +423,15 @@ export async function getAllNeighborhoods() {
       .order('name', { ascending: true })
 
     if (error) throw error
-    return { success: true, data: data || [] }
+    
+    const transformedData = (data || []).map(neighborhood => ({
+      ...neighborhood,
+      city: Array.isArray(neighborhood.city) && neighborhood.city.length > 0 
+        ? neighborhood.city[0] 
+        : null
+    }))
+    
+    return { success: true, data: transformedData }
   } catch (error: any) {
     console.error("[getAllNeighborhoods] Error:", error)
     return { success: false, error: error.message }

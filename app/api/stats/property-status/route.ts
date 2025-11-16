@@ -1,19 +1,24 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/db"
+import { createServerClient } from "@/lib/supabase/server"
 
 export async function GET() {
   try {
-    const statusCounts = (await Promise.race([
-      prisma.property.groupBy({
-        by: ["status"],
-        _count: {
-          status: true,
-        },
-      }),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Query timeout")), 10000)),
-    ])) as any[]
+    const supabase = await createServerClient()
+    
+    const { data: properties, error } = await supabase
+      .from("properties")
+      .select("status")
+    
+    if (error) throw error
 
-    const statusColors = {
+    // Count by status manually
+    const statusCounts = properties.reduce((acc: any, prop: any) => {
+      const status = prop.status
+      acc[status] = (acc[status] || 0) + 1
+      return acc
+    }, {})
+
+    const statusColors: Record<string, string> = {
       ACTIVO: "hsl(142, 76%, 36%)",
       RESERVADO: "hsl(48, 96%, 53%)",
       VENDIDO: "hsl(221, 83%, 53%)",
@@ -22,7 +27,7 @@ export async function GET() {
       EN_REVISION: "hsl(25, 95%, 53%)",
     }
 
-    const statusLabels = {
+    const statusLabels: Record<string, string> = {
       ACTIVO: "Activo",
       RESERVADO: "Reservado",
       VENDIDO: "Vendido",
@@ -31,10 +36,10 @@ export async function GET() {
       EN_REVISION: "En Revisión",
     }
 
-    const data = statusCounts.map((item) => ({
-      name: statusLabels[item.status as keyof typeof statusLabels],
-      value: item._count.status,
-      color: statusColors[item.status as keyof typeof statusColors],
+    const data = Object.entries(statusCounts).map(([status, count]) => ({
+      name: statusLabels[status] || status,
+      value: count,
+      color: statusColors[status] || "hsl(0, 0%, 50%)",
     }))
 
     return NextResponse.json(data)

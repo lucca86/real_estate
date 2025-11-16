@@ -17,7 +17,8 @@ import type { SessionUser } from "@/lib/auth"
 
 type User = {
   id: string
-  name: string
+  first_name: string
+  last_name: string
   email: string
   role: "ADMIN" | "SUPERVISOR" | "VENDEDOR"
   is_active: boolean
@@ -71,8 +72,13 @@ export function UserForm({ currentUser, editUser }: UserFormProps) {
 
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="name">Nombre Completo</Label>
-              <Input id="name" name="name" defaultValue={editUser?.name} required disabled={isLoading} />
+              <Label htmlFor="firstName">Nombre</Label>
+              <Input id="firstName" name="firstName" defaultValue={editUser?.first_name} required disabled={isLoading} />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Apellido</Label>
+              <Input id="lastName" name="lastName" defaultValue={editUser?.last_name} required disabled={isLoading} />
             </div>
 
             <div className="space-y-2">
@@ -87,6 +93,19 @@ export function UserForm({ currentUser, editUser }: UserFormProps) {
               />
             </div>
 
+            {!editUser && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Contraseña</Label>
+                  <Input id="password" name="password" type="password" required disabled={isLoading} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
+                  <Input id="confirmPassword" name="confirmPassword" type="password" required disabled={isLoading} />
+                </div>
+              </>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="role">Rol</Label>
@@ -105,20 +124,6 @@ export function UserForm({ currentUser, editUser }: UserFormProps) {
                 </SelectContent>
               </Select>
             </div>
-
-            {!editUser && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Contraseña</Label>
-                  <Input id="password" name="password" type="password" required disabled={isLoading} />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
-                  <Input id="confirmPassword" name="confirmPassword" type="password" required disabled={isLoading} />
-                </div>
-              </>
-            )}
           </div>
 
           <div className="flex items-center justify-between rounded-lg border border-border p-4">

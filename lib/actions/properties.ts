@@ -5,7 +5,6 @@ import { getCurrentUser } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import { wordpressAPI } from "@/lib/wordpress"
 
-
 export async function createProperty(formData: FormData) {
   const currentUser = await getCurrentUser()
 
@@ -15,7 +14,6 @@ export async function createProperty(formData: FormData) {
 
   const title = formData.get("title") as string
   const description = formData.get("description") as string
-  const adrema = formData.get("adrema") as string
   const ownerId = formData.get("ownerId") as string
   const propertyTypeId = formData.get("propertyTypeId") as string
   const transactionType = formData.get("transactionType") as string
@@ -63,7 +61,6 @@ export async function createProperty(formData: FormData) {
     .insert({
       title,
       description,
-      adrema: adrema || null,
       owner_id: ownerId,
       property_type_id: propertyTypeId || null,
       transaction_type: transactionType,
@@ -178,7 +175,6 @@ export async function updateProperty(propertyId: string, formData: FormData) {
 
   const title = formData.get("title") as string
   const description = formData.get("description") as string
-  const adrema = formData.get("adrema") as string
   const ownerId = formData.get("ownerId") as string
   const propertyTypeId = formData.get("propertyTypeId") as string
   const transactionType = formData.get("transactionType") as string
@@ -221,7 +217,6 @@ export async function updateProperty(propertyId: string, formData: FormData) {
     .update({
       title,
       description,
-      adrema: adrema || null,
       owner_id: ownerId,
       property_type_id: propertyTypeId || null,
       transaction_type: transactionType,

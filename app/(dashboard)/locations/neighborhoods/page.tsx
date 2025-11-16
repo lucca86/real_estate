@@ -75,7 +75,7 @@ export default async function NeighborhoodsPage() {
                 {neighborhoods.map((neighborhood) => (
                   <TableRow key={neighborhood.id}>
                     <TableCell className="font-medium">{neighborhood.name}</TableCell>
-                    <TableCell>{Array.isArray(neighborhood.city) ? neighborhood.city[0]?.name : neighborhood.city?.name || "-"}</TableCell>
+                    <TableCell>{neighborhood.city?.name || "-"}</TableCell>
                     <TableCell>
                       <Badge variant={neighborhood.is_active ? "default" : "secondary"}>
                         {neighborhood.is_active ? "Activo" : "Inactivo"}

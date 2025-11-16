@@ -3,6 +3,7 @@
 import { createServerClient } from "@/lib/supabase/server"
 import { hashPassword, getCurrentUser, hasPermission } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
+import { randomUUID } from "crypto"
 
 export async function createUser(formData: FormData) {
   const currentUser = await getCurrentUser()
@@ -11,14 +12,15 @@ export async function createUser(formData: FormData) {
     throw new Error("No tienes permisos para crear usuarios")
   }
 
-  const name = formData.get("name") as string
+  const firstName = formData.get("firstName") as string
+  const lastName = formData.get("lastName") as string
   const email = formData.get("email") as string
   const role = formData.get("role") as "ADMIN" | "SUPERVISOR" | "VENDEDOR"
   const password = formData.get("password") as string
   const confirmPassword = formData.get("confirmPassword") as string
   const isActive = formData.get("isActive") === "on"
 
-  if (!name || !email || !password) {
+  if (!firstName || !lastName || !email || !password) {
     throw new Error("Todos los campos son requeridos")
   }
 
@@ -49,7 +51,9 @@ export async function createUser(formData: FormData) {
   const hashedPassword = await hashPassword(password)
 
   const { error } = await supabase.from("users").insert({
-    name,
+    id: randomUUID(),
+    first_name: firstName,
+    last_name: lastName,
     email,
     role,
     password: hashedPassword,
@@ -68,13 +72,14 @@ export async function updateUser(userId: string, formData: FormData) {
     throw new Error("No tienes permisos para actualizar usuarios")
   }
 
-  const name = formData.get("name") as string
+  const firstName = formData.get("firstName") as string
+  const lastName = formData.get("lastName") as string
   const email = formData.get("email") as string
   const role = formData.get("role") as "ADMIN" | "SUPERVISOR" | "VENDEDOR"
   const isActive = formData.get("isActive") === "on"
 
-  if (!name || !email) {
-    throw new Error("Nombre y email son requeridos")
+  if (!firstName || !lastName || !email) {
+    throw new Error("Nombre, apellido y email son requeridos")
   }
 
   if (role === "ADMIN" && currentUser.role !== "ADMIN") {
@@ -97,7 +102,8 @@ export async function updateUser(userId: string, formData: FormData) {
   const { error } = await supabase
     .from("users")
     .update({
-      name,
+      first_name: firstName,
+      last_name: lastName,
       email,
       role,
       is_active: isActive,

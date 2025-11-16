@@ -1,33 +1,28 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/db"
+import { createServerClient } from "@/lib/supabase/server"
 
 export async function GET() {
   try {
     const sixMonthsAgo = new Date()
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
 
-    const properties = (await Promise.race([
-      prisma.property.findMany({
-        where: {
-          status: { in: ["VENDIDO", "ALQUILADO"] },
-          updatedAt: {
-            gte: sixMonthsAgo,
-          },
-        },
-        select: {
-          price: true,
-          updatedAt: true,
-        },
-      }),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("Query timeout")), 10000)),
-    ])) as any[]
+    const supabase = await createServerClient()
+    
+    const { data: properties, error } = await supabase
+      .from("properties")
+      .select("price, updated_at")
+      .in("status", ["VENDIDO", "ALQUILADO"])
+      .gte("updated_at", sixMonthsAgo.toISOString())
+
+    if (error) throw error
 
     const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
 
-    const revenueByMonth = properties.reduce(
+    const revenueByMonth = (properties || []).reduce(
       (acc, property) => {
-        const month = property.updatedAt.getMonth()
-        const year = property.updatedAt.getFullYear()
+        const updatedAt = new Date(property.updated_at)
+        const month = updatedAt.getMonth()
+        const year = updatedAt.getFullYear()
         const key = `${monthNames[month]} ${year}`
 
         if (!acc[key]) {
