@@ -130,8 +130,8 @@ async function checkScheduleConflict(
     `)
     .eq('agent_id', agentId)
     .in('status', ['PENDIENTE', 'CONFIRMADA'])
-    .gte('scheduled_at', dayStart.toISOString())
-    .lte('scheduled_at', dayEnd.toISOString())
+    .gte('scheduled_date', dayStart.toISOString())
+    .lte('scheduled_date', dayEnd.toISOString())
 
   if (excludeAppointmentId) {
     query = query.neq('id', excludeAppointmentId)
@@ -142,7 +142,7 @@ async function checkScheduleConflict(
   console.log("[v0] Found existing appointments:", existingAppointments?.length || 0)
 
   for (const existing of existingAppointments || []) {
-    const existingStart = new Date(existing.scheduled_at)
+    const existingStart = new Date(existing.scheduled_date)
     const existingEnd = new Date(existingStart.getTime() + existing.duration * 60000)
     const hasOverlap = scheduledAt < existingEnd && endTime > existingStart
 
@@ -240,7 +240,7 @@ export async function createAppointment(data: AppointmentInput) {
         property_id: validated.propertyId,
         client_id: validated.clientId,
         agent_id: validated.agentId,
-        scheduled_at: scheduledAt.toISOString(),
+        scheduled_date: scheduledAt.toISOString(),
         duration: validated.duration,
         status: validated.status,
         notes: validated.notes,
@@ -303,22 +303,42 @@ export async function getAppointments(filters?: {
       .from('appointments')
       .select(`
         *,
-        property:properties(id, title, address, city_id, images),
+        property:properties(
+          id, 
+          title, 
+          address, 
+          city_id, 
+          images,
+          city:cities(id, name)
+        ),
         client:clients(id, name, email, phone),
-        agent:users(id, name, email, phone)
+        agent:users(id, name, email)
       `)
-      .order('scheduled_at', { ascending: true })
+      .order('scheduled_date', { ascending: true })
 
     if (filters?.agentId) query = query.eq('agent_id', filters.agentId)
     if (filters?.clientId) query = query.eq('client_id', filters.clientId)
     if (filters?.propertyId) query = query.eq('property_id', filters.propertyId)
     if (filters?.status) query = query.eq('status', filters.status)
-    if (filters?.startDate) query = query.gte('scheduled_at', filters.startDate)
-    if (filters?.endDate) query = query.lte('scheduled_at', filters.endDate)
+    if (filters?.startDate) query = query.gte('scheduled_date', filters.startDate)
+    if (filters?.endDate) query = query.lte('scheduled_date', filters.endDate)
 
-    const { data: appointments } = await query
+    const { data: appointments, error } = await query
 
-    return { success: true, data: appointments }
+    if (error) {
+      console.error("[v0] Error fetching appointments:", error)
+      return { success: false, error: "Error al obtener las citas" }
+    }
+
+    const transformedAppointments = appointments?.map((apt) => ({
+      ...apt,
+      property: {
+        ...apt.property,
+        city: apt.property?.city?.[0] || null,
+      },
+    }))
+
+    return { success: true, data: transformedAppointments }
   } catch (error) {
     console.error("[v0] Error fetching appointments:", error)
     return { success: false, error: "Error al obtener las citas" }
@@ -373,7 +393,7 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
     }
 
     if (data.scheduledAt || data.duration) {
-      const scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : existing.scheduled_at
+      const scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : existing.scheduled_date
       const duration = data.duration ?? existing.duration
       const agentId = data.agentId ?? existing.agent_id
 
@@ -401,7 +421,7 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
     if (data.propertyId) updateData.property_id = data.propertyId
     if (data.clientId) updateData.client_id = data.clientId
     if (data.agentId) updateData.agent_id = data.agentId
-    if (data.scheduledAt) updateData.scheduled_at = new Date(data.scheduledAt).toISOString()
+    if (data.scheduledAt) updateData.scheduled_date = new Date(data.scheduledAt).toISOString()
     if (data.duration) updateData.duration = data.duration
     if (data.status) updateData.status = data.status
     if (data.notes !== undefined) updateData.notes = data.notes
@@ -434,7 +454,7 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
         clientEmail: updatedAppointment.client.email,
         agentName: updatedAppointment.agent.name,
         agentEmail: updatedAppointment.agent.email,
-        scheduledAt: updatedAppointment.scheduled_at,
+        scheduledAt: updatedAppointment.scheduled_date,
         duration: updatedAppointment.duration,
         notes: updatedAppointment.notes || undefined,
       })
