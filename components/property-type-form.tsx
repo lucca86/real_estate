@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,9 +11,15 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2 } from "lucide-react"
+import { Loader2 } from 'lucide-react'
 import { createPropertyType, updatePropertyType } from "@/lib/actions/property-types"
-import type { PropertyType } from "@prisma/client"
+
+interface PropertyType {
+  id?: string
+  name?: string
+  description?: string | null
+  isActive?: boolean
+}
 
 interface PropertyTypeFormProps {
   propertyType?: PropertyType
@@ -24,7 +30,7 @@ export function PropertyTypeForm({ propertyType }: PropertyTypeFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError(null)
     setIsLoading(true)
@@ -33,6 +39,9 @@ export function PropertyTypeForm({ propertyType }: PropertyTypeFormProps) {
 
     try {
       if (propertyType) {
+        if (!propertyType.id) {
+          throw new Error("ID de tipo de propiedad no válido")
+        }
         await updatePropertyType(propertyType.id, formData)
       } else {
         await createPropertyType(formData)

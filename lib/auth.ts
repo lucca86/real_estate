@@ -3,7 +3,6 @@ import { cookies } from "next/headers"
 import { jwtVerify } from "jose"
 import { hash, compare } from "bcryptjs"
 import { authenticator } from "otplib"
-import type { UserRole } from "@prisma/client"
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
@@ -13,7 +12,7 @@ export interface SessionUser {
   id: string
   email: string
   name: string
-  role: UserRole
+  role: "ADMIN" | "SUPERVISOR" | "VENDEDOR"
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -37,10 +36,10 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
 
     const supabase = await createClient()
     const { data: userData, error: userError } = await supabase
-      .from("users")
-      .select("id, email, name, role, is_active")
+      .from("User")
+      .select("id, email, name, role, isActive")
       .eq("id", payload.userId as string)
-      .eq("is_active", true)
+      .eq("isActive", true)
       .single()
 
     if (userError || !userData) {
@@ -51,7 +50,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       id: userData.id,
       email: userData.email,
       name: userData.name,
-      role: userData.role as UserRole,
+      role: userData.role as "ADMIN" | "SUPERVISOR" | "VENDEDOR",
     }
   } catch (error) {
     console.error("[getCurrentUser] Error:", error)
@@ -60,7 +59,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
 }
 
 // Permission helpers
-export function hasPermission(user: SessionUser, requiredRole: UserRole): boolean {
+export function hasPermission(user: SessionUser, requiredRole: "ADMIN" | "SUPERVISOR" | "VENDEDOR"): boolean {
   const roleHierarchy = {
     ADMIN: 3,
     SUPERVISOR: 2,

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -13,9 +13,17 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2 } from "lucide-react"
-import { AppointmentStatus } from "@prisma/client"
+import { Loader2 } from 'lucide-react'
 import { datetimeLocalToISO, dateToDatetimeLocal } from "@/lib/timezone-utils"
+
+const AppointmentStatus = {
+  PENDIENTE: "PENDIENTE",
+  CONFIRMADA: "CONFIRMADA",
+  COMPLETADA: "COMPLETADA",
+  CANCELADA: "CANCELADA",
+} as const
+
+type AppointmentStatus = typeof AppointmentStatus[keyof typeof AppointmentStatus]
 
 const appointmentSchema = z.object({
   propertyId: z.string().min(1, "Selecciona una propiedad"),

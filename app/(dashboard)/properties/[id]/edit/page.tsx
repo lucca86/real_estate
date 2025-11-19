@@ -7,7 +7,8 @@ import { ChevronLeft } from 'lucide-react'
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { getPropertyById } from "@/lib/actions/properties"
-import type { TransactionType } from "@prisma/client"
+
+type TransactionType = "VENTA" | "ALQUILER" | "VENTA_ALQUILER" | "ALQUILER_OPCION_COMPRA"
 
 export default async function EditPropertyPage({
   params,

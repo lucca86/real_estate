@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, MapPin, Sparkles, Plus } from "lucide-react"
+import { Loader2, MapPin, Sparkles, Plus } from 'lucide-react'
 import { createProperty, updateProperty } from "@/lib/actions/properties"
 import { geocodeAddress } from "@/lib/geocoding"
 import { generatePropertyTitle } from "@/lib/actions/ai-property-title"
@@ -19,10 +19,59 @@ import { useToast } from "@/hooks/use-toast"
 import { PropertiesMap } from "@/components/property-map"
 import { CreateOwnerDialog } from "@/components/create-owner-dialog"
 import { getCountries, getProvinces, getCities, getNeighborhoods } from "@/lib/actions/locations"
-import type { Property } from "@prisma/client"
+
+interface Property {
+  id?: string
+  title?: string
+  description?: string | null
+  ownerId?: string
+  owner?: { id: string; name: string }
+  propertyTypeId?: string
+  status?: string
+  address?: string
+  city?: string
+  country?: string
+  state?: string
+  countryId?: string | null
+  provinceId?: string | null
+  cityId?: string | null
+  neighborhoodId?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  bedrooms?: number | null
+  bathrooms?: number | null
+  parkingSpaces?: number | null
+  area?: number
+  yearBuilt?: number | null
+  price?: number
+  currency?: string | null
+  amenities?: string[]
+  images?: string[]
+  isFeatured?: boolean
+  featured?: boolean
+  views?: number
+  wordpressId?: number | null
+  syncedAt?: string | null
+  createdById?: string | null
+  syncToWordPress?: boolean
+  adrema?: string | null
+  transactionType?: string
+  rentalPeriod?: string | null
+  zipCode?: string | null
+  lotSize?: number | null
+  pricePerM2?: number | null
+  rentalPrice?: number | null
+  virtualTour?: string | null
+  propertyLabel?: string | null
+  published?: boolean
+  features?: string[]
+  videos?: string[]
+  createdAt?: Date
+  updatedAt?: Date
+}
 
 interface PropertyFormProps {
-  editProperty?: Property & { owner?: { id: string; name: string } }
+  editProperty?: Property
 }
 
 export function PropertyForm({ editProperty }: PropertyFormProps) {
@@ -111,7 +160,7 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
     fetchData()
   }, [editProperty])
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError(null)
     setIsLoading(true)
@@ -120,6 +169,9 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
 
     try {
       if (editProperty) {
+        if (!editProperty.id) {
+          throw new Error("ID de propiedad no válido")
+        }
         await updateProperty(editProperty.id, formData)
         toast({
           title: "Propiedad actualizada",
@@ -379,7 +431,7 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
               id="description"
               name="description"
               rows={4}
-              defaultValue={editProperty?.description}
+              defaultValue={editProperty?.description ?? undefined}
               required
               disabled={isLoading}
             />
@@ -859,7 +911,7 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
               id="features"
               name="features"
               placeholder="Piscina, Jardín, Terraza, etc."
-              defaultValue={editProperty?.features.join(", ")}
+              defaultValue={editProperty?.features?.join(", ") ?? ""}
               disabled={isLoading}
             />
           </div>
@@ -870,7 +922,7 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
               id="amenities"
               name="amenities"
               placeholder="Gimnasio, Seguridad 24/7, Área de juegos, etc."
-              defaultValue={editProperty?.amenities.join(", ")}
+              defaultValue={editProperty?.amenities?.join(", ") ?? ""}
               disabled={isLoading}
             />
           </div>
@@ -890,7 +942,7 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
               name="images"
               rows={3}
               placeholder="https://ejemplo.com/imagen1.jpg, https://ejemplo.com/imagen2.jpg"
-              defaultValue={editProperty?.images.join(", ")}
+              defaultValue={editProperty?.images?.join(", ") ?? ""}
               disabled={isLoading}
             />
           </div>
@@ -901,7 +953,7 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
               id="videos"
               name="videos"
               placeholder="https://youtube.com/watch?v=..."
-              defaultValue={editProperty?.videos.join(", ")}
+              defaultValue={editProperty?.videos?.join(", ") ?? ""}
               disabled={isLoading}
             />
           </div>
