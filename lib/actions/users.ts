@@ -54,6 +54,7 @@ export async function createUser(formData: FormData) {
     id: randomUUID(),
     first_name: firstName,
     last_name: lastName,
+    name: `${firstName} ${lastName}`,
     email,
     role,
     password: hashedPassword,
@@ -104,6 +105,7 @@ export async function updateUser(userId: string, formData: FormData) {
     .update({
       first_name: firstName,
       last_name: lastName,
+      name: `${firstName} ${lastName}`,
       email,
       role,
       is_active: isActive,

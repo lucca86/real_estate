@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import crypto from "crypto"
 
 // Country actions
 export async function createCountry(formData: FormData) {
@@ -18,6 +19,7 @@ export async function createCountry(formData: FormData) {
     const { data, error } = await supabase
       .from('countries')
       .insert({
+        id: crypto.randomUUID(),
         name,
         code: code.toUpperCase(),
         is_active: isActive,
@@ -81,7 +83,12 @@ export async function createProvince(formData: FormData) {
     const supabase = await createServerClient()
     const { data, error} = await supabase
       .from('provinces')
-      .insert({ name, country_id: countryId, is_active: isActive })
+      .insert({ 
+        id: crypto.randomUUID(),
+        name, 
+        country_id: countryId, 
+        is_active: isActive 
+      })
       .select()
       .single()
 
@@ -137,7 +144,12 @@ export async function createCity(formData: FormData) {
     const supabase = await createServerClient()
     const { data, error } = await supabase
       .from('cities')
-      .insert({ name, province_id: provinceId, is_active: isActive })
+      .insert({ 
+        id: crypto.randomUUID(),
+        name, 
+        province_id: provinceId, 
+        is_active: isActive 
+      })
       .select()
       .single()
 
@@ -193,7 +205,12 @@ export async function createNeighborhood(formData: FormData) {
     const supabase = await createServerClient()
     const { data, error } = await supabase
       .from('neighborhoods')
-      .insert({ name, city_id: cityId, is_active: isActive })
+      .insert({ 
+        id: crypto.randomUUID(),
+        name, 
+        city_id: cityId, 
+        is_active: isActive 
+      })
       .select()
       .single()
 
@@ -435,5 +452,74 @@ export async function getAllNeighborhoods() {
   } catch (error: any) {
     console.error("[getAllNeighborhoods] Error:", error)
     return { success: false, error: error.message }
+  }
+}
+
+// getById functions for edit pages
+export async function getCountryById(id: string) {
+  try {
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+      .from('countries')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) throw error
+    return data
+  } catch (error: any) {
+    console.error("[getCountryById] Error:", error)
+    return null
+  }
+}
+
+export async function getCityById(id: string) {
+  try {
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+      .from('cities')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) throw error
+    return data
+  } catch (error: any) {
+    console.error("[getCityById] Error:", error)
+    return null
+  }
+}
+
+export async function getProvinceById(id: string) {
+  try {
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+      .from('provinces')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) throw error
+    return data
+  } catch (error: any) {
+    console.error("[getProvinceById] Error:", error)
+    return null
+  }
+}
+
+export async function getNeighborhoodById(id: string) {
+  try {
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+      .from('neighborhoods')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) throw error
+    return data
+  } catch (error: any) {
+    console.error("[getNeighborhoodById] Error:", error)
+    return null
   }
 }

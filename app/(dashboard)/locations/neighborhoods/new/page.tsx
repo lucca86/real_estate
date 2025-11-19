@@ -1,11 +1,11 @@
 import { getCurrentUser } from "@/lib/auth"
-import { redirect } from "next/navigation"
+import { redirect } from 'next/navigation'
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { NeighborhoodForm } from "@/components/neighborhood-form"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft } from 'lucide-react'
 import Link from "next/link"
-import { prisma } from "@/lib/db"
+import { getAllCities } from "@/lib/actions/locations"
 
 export default async function NewNeighborhoodPage() {
   const user = await getCurrentUser()
@@ -18,13 +18,16 @@ export default async function NewNeighborhoodPage() {
     redirect("/dashboard")
   }
 
-  const cities = await prisma.city.findMany({
-    where: { isActive: true },
-    orderBy: { name: "asc" },
-    include: {
-      province: { select: { name: true } },
-    },
-  })
+  const citiesResult = await getAllCities()
+  const cities = citiesResult.success && citiesResult.data
+    ? citiesResult.data.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        province: {
+          name: c.province?.name || ''
+        }
+      }))
+    : []
 
   return (
     <DashboardLayout user={user}>

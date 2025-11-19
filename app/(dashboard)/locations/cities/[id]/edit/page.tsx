@@ -1,11 +1,11 @@
 import { getCurrentUser } from "@/lib/auth"
-import { redirect, notFound } from "next/navigation"
+import { redirect, notFound } from 'next/navigation'
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { CityForm } from "@/components/city-form"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft } from 'lucide-react'
 import Link from "next/link"
-import { prisma } from "@/lib/db"
+import { getCityById, getAllProvinces } from "@/lib/actions/locations"
 
 export default async function EditCityPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -19,22 +19,24 @@ export default async function EditCityPage({ params }: { params: Promise<{ id: s
     redirect("/dashboard")
   }
 
-  const [city, provinces] = await Promise.all([
-    prisma.city.findUnique({
-      where: { id },
-    }),
-    prisma.province.findMany({
-      where: { isActive: true },
-      orderBy: { name: "asc" },
-      include: {
-        country: { select: { name: true } },
-      },
-    }),
+  const [city, provincesResult] = await Promise.all([
+    getCityById(id),
+    getAllProvinces(),
   ])
 
   if (!city) {
     notFound()
   }
+
+  const provinces = provincesResult.success && provincesResult.data
+    ? provincesResult.data.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        country: {
+          name: p.country?.name || ''
+        }
+      }))
+    : []
 
   return (
     <DashboardLayout user={user}>
@@ -51,7 +53,15 @@ export default async function EditCityPage({ params }: { params: Promise<{ id: s
           <p className="text-muted-foreground">Modifica la información de la ciudad</p>
         </div>
 
-        <CityForm city={city} provinces={provinces} />
+        <CityForm 
+          city={{
+            id: city.id,
+            name: city.name,
+            provinceId: city.province_id,
+            isActive: city.is_active
+          }}
+          provinces={provinces} 
+        />
       </div>
     </DashboardLayout>
   )

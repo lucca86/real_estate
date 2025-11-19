@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/lib/auth"
-import { redirect } from "next/navigation"
+import { redirect } from 'next/navigation'
 import { ClientForm } from "@/components/client-form"
 
 export default async function NewClientPage() {

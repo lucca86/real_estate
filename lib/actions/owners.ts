@@ -3,20 +3,21 @@
 import { revalidatePath } from "next/cache"
 import { createServerClient } from "@/lib/supabase/server"
 import { z } from "zod"
+import crypto from "crypto"
 
 const ownerSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
   email: z.string().email("Email inválido"),
   phone: z.string().min(1, "El teléfono es requerido"),
-  secondaryPhone: z.string().optional(),
+  secondary_phone: z.string().optional(),
   address: z.string().optional(),
-  cityId: z.string().optional(),
-  provinceId: z.string().optional(),
-  countryId: z.string().optional(),
-  idNumber: z.string().optional(),
-  taxId: z.string().optional(),
+  city_id: z.string().optional(),
+  province_id: z.string().optional(),
+  country_id: z.string().optional(),
+  id_number: z.string().optional(),
+  tax_id: z.string().optional(),
   notes: z.string().optional(),
-  isActive: z.boolean().default(true),
+  is_active: z.boolean().default(true),
 })
 
 const quickOwnerSchema = z.object({
@@ -81,27 +82,41 @@ export async function getOwnerById(id: string) {
   }
 }
 
-export async function createOwner(formData: FormData) {
+export async function createOwner(data: {
+  name: string
+  email: string
+  phone: string
+  secondaryPhone?: string
+  address?: string
+  cityId?: string
+  provinceId?: string
+  countryId?: string
+  idNumber?: string
+  taxId?: string
+  notes?: string
+  isActive: boolean
+}) {
   try {
-    const data = {
-      name: formData.get("name") as string,
-      email: formData.get("email") as string,
-      phone: formData.get("phone") as string,
-      secondaryPhone: formData.get("secondaryPhone") as string | undefined,
-      address: formData.get("address") as string | undefined,
-      cityId: formData.get("cityId") as string | undefined,
-      provinceId: formData.get("provinceId") as string | undefined,
-      countryId: formData.get("countryId") as string | undefined,
-      idNumber: formData.get("idNumber") as string | undefined,
-      taxId: formData.get("taxId") as string | undefined,
-      notes: formData.get("notes") as string | undefined,
-      isActive: formData.get("isActive") === "on" || formData.get("isActive") === "true",
+    const ownerData = {
+      id: crypto.randomUUID(),
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      secondary_phone: data.secondaryPhone || null,
+      address: data.address || null,
+      city_id: data.cityId || null,
+      province_id: data.provinceId || null,
+      country_id: data.countryId || null,
+      id_number: data.idNumber || null,
+      tax_id: data.taxId || null,
+      notes: data.notes || null,
+      is_active: data.isActive,
     }
 
     const supabase = await createServerClient()
-    const { data: owner, error} = await supabase
+    const { data: owner, error } = await supabase
       .from('owners')
-      .insert(data)
+      .insert(ownerData)
       .select()
       .single()
 
@@ -115,24 +130,40 @@ export async function createOwner(formData: FormData) {
   }
 }
 
-export async function updateOwner(id: string, formData: FormData) {
+export async function updateOwner(id: string, data: {
+  name: string
+  email: string
+  phone: string
+  secondaryPhone?: string
+  address?: string
+  cityId?: string
+  provinceId?: string
+  countryId?: string
+  idNumber?: string
+  taxId?: string
+  notes?: string
+  isActive: boolean
+}) {
   try {
-    const data = {
-      name: formData.get("name") as string,
-      email: formData.get("email") as string,
-      phone: formData.get("phone") as string,
-      address: formData.get("address") as string | undefined,
-      cityId: formData.get("cityId") as string | undefined,
-      provinceId: formData.get("provinceId") as string | undefined,
-      countryId: formData.get("countryId") as string | undefined,
-      notes: formData.get("notes") as string | undefined,
-      isActive: formData.get("isActive") === "on",
+    const ownerData = {
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      secondary_phone: data.secondaryPhone || null,
+      address: data.address || null,
+      city_id: data.cityId || null,
+      province_id: data.provinceId || null,
+      country_id: data.countryId || null,
+      id_number: data.idNumber || null,
+      tax_id: data.taxId || null,
+      notes: data.notes || null,
+      is_active: data.isActive,
     }
 
     const supabase = await createServerClient()
     const { data: owner, error } = await supabase
       .from('owners')
-      .update(data)
+      .update(ownerData)
       .eq('id', id)
       .select()
       .single()

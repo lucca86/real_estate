@@ -1,11 +1,11 @@
 import { getCurrentUser } from "@/lib/auth"
-import { redirect } from "next/navigation"
+import { redirect } from 'next/navigation'
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { CityForm } from "@/components/city-form"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft } from 'lucide-react'
 import Link from "next/link"
-import { prisma } from "@/lib/db"
+import { getAllProvinces } from "@/lib/actions/locations"
 
 export default async function NewCityPage() {
   const user = await getCurrentUser()
@@ -18,13 +18,16 @@ export default async function NewCityPage() {
     redirect("/dashboard")
   }
 
-  const provinces = await prisma.province.findMany({
-    where: { isActive: true },
-    orderBy: { name: "asc" },
-    include: {
-      country: { select: { name: true } },
-    },
-  })
+  const provincesResult = await getAllProvinces()
+  const provinces = provincesResult.success && provincesResult.data
+    ? provincesResult.data.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        country: {
+          name: p.country?.name || ''
+        }
+      }))
+    : []
 
   return (
     <DashboardLayout user={user}>

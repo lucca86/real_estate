@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter } from 'next/navigation'
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { createOwner, updateOwner, deleteOwner } from "@/lib/actions/owners"
-import { Loader2, Trash2 } from "lucide-react"
+import { Loader2, Trash2 } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
 import {
   AlertDialog,
@@ -25,6 +25,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Switch } from "@/components/ui/switch"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { createServerClient } from "@/lib/supabase/server"
 
 const ownerSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
@@ -32,9 +40,9 @@ const ownerSchema = z.object({
   phone: z.string().min(1, "El teléfono es requerido"),
   secondaryPhone: z.string().optional(),
   address: z.string().optional(),
-  city: z.string().optional(),
-  state: z.string().optional(),
-  country: z.string().min(1, "El país es requerido"),
+  cityId: z.string().optional(),
+  provinceId: z.string().optional(),
+  countryId: z.string().min(1, "El país es requerido"),
   idNumber: z.string().optional(),
   taxId: z.string().optional(),
   notes: z.string().optional(),
@@ -49,23 +57,28 @@ interface OwnerFormProps {
     name: string
     email: string
     phone: string
-    secondaryPhone: string | null
+    secondary_phone: string | null
     address: string | null
-    city: string | null
-    state: string | null
-    country: string
-    idNumber: string | null
-    taxId: string | null
+    city_id: string | null
+    province_id: string | null
+    country_id: string | null
+    id_number: string | null
+    tax_id: string | null
     notes: string | null
-    isActive: boolean
+    is_active: boolean
   }
+  countries?: Array<{ id: string; name: string }>
+  provinces?: Array<{ id: string; name: string; country_id: string }>
+  cities?: Array<{ id: string; name: string; province_id: string }>
 }
 
-export function OwnerForm({ owner }: OwnerFormProps) {
+export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }: OwnerFormProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [filteredProvinces, setFilteredProvinces] = useState(provinces)
+  const [filteredCities, setFilteredCities] = useState(cities)
 
   const {
     register,
@@ -79,19 +92,44 @@ export function OwnerForm({ owner }: OwnerFormProps) {
       name: owner?.name || "",
       email: owner?.email || "",
       phone: owner?.phone || "",
-      secondaryPhone: owner?.secondaryPhone || "",
+      secondaryPhone: owner?.secondary_phone || "",
       address: owner?.address || "",
-      city: owner?.city || "",
-      state: owner?.state || "",
-      country: owner?.country || "",
-      idNumber: owner?.idNumber || "",
-      taxId: owner?.taxId || "",
+      cityId: owner?.city_id || "",
+      provinceId: owner?.province_id || "",
+      countryId: owner?.country_id || "",
+      idNumber: owner?.id_number || "",
+      taxId: owner?.tax_id || "",
       notes: owner?.notes || "",
-      isActive: owner?.isActive ?? true,
+      isActive: owner?.is_active ?? true,
     },
   })
 
   const isActive = watch("isActive")
+  const countryId = watch("countryId")
+  const provinceId = watch("provinceId")
+
+  useEffect(() => {
+    if (countryId) {
+      const filtered = provinces.filter(p => p.country_id === countryId)
+      setFilteredProvinces(filtered)
+      const currentProvince = provinces.find(p => p.id === provinceId)
+      if (currentProvince && currentProvince.country_id !== countryId) {
+        setValue("provinceId", "")
+        setValue("cityId", "")
+      }
+    } else {
+      setFilteredProvinces(provinces)
+    }
+  }, [countryId, provinces, provinceId, setValue])
+
+  useEffect(() => {
+    if (provinceId) {
+      const filtered = cities.filter(c => c.province_id === provinceId)
+      setFilteredCities(filtered)
+    } else {
+      setFilteredCities(cities)
+    }
+  }, [provinceId, cities])
 
   const onSubmit = async (data: OwnerFormData) => {
     setIsSubmitting(true)
@@ -198,8 +236,8 @@ export function OwnerForm({ owner }: OwnerFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="taxId">RNC/Número Fiscal</Label>
-              <Input id="taxId" {...register("taxId")} placeholder="123-45678-9" />
+              <Label htmlFor="taxId">CUIL/CUIT</Label>
+              <Input id="taxId" {...register("taxId")} placeholder="20-12345678-9" />
             </div>
           </div>
 
@@ -210,21 +248,54 @@ export function OwnerForm({ owner }: OwnerFormProps) {
 
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <Label htmlFor="city">Ciudad</Label>
-              <Input id="city" {...register("city")} placeholder="Corrientes" />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="state">Provincia/Estado</Label>
-              <Input id="state" {...register("state")} placeholder="Corrientes" />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="country">
+              <Label htmlFor="countryId">
                 País <span className="text-destructive">*</span>
               </Label>
-              <Input id="country" {...register("country")} placeholder="Argentina" />
-              {errors.country && <p className="text-sm text-destructive">{errors.country.message}</p>}
+              <Select value={countryId} onValueChange={(value) => setValue("countryId", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar país" />
+                </SelectTrigger>
+                <SelectContent>
+                  {countries.map((country) => (
+                    <SelectItem key={country.id} value={country.id}>
+                      {country.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.countryId && <p className="text-sm text-destructive">{errors.countryId.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="provinceId">Provincia/Estado</Label>
+              <Select value={provinceId} onValueChange={(value) => setValue("provinceId", value)} disabled={!countryId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={countryId ? "Seleccionar provincia" : "Seleccione un país primero"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredProvinces.map((province) => (
+                    <SelectItem key={province.id} value={province.id}>
+                      {province.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="cityId">Ciudad</Label>
+              <Select value={watch("cityId")} onValueChange={(value) => setValue("cityId", value)} disabled={!provinceId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={provinceId ? "Seleccionar ciudad" : "Seleccione una provincia primero"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredCities.map((city) => (
+                    <SelectItem key={city.id} value={city.id}>
+                      {city.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

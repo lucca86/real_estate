@@ -1,11 +1,11 @@
 import { getCurrentUser } from "@/lib/auth"
-import { redirect, notFound } from "next/navigation"
+import { redirect, notFound } from 'next/navigation'
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { ProvinceForm } from "@/components/province-form"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft } from 'lucide-react'
 import Link from "next/link"
-import { prisma } from "@/lib/db"
+import { getProvinceById, getAllCountries } from "@/lib/actions/locations"
 
 export default async function EditProvincePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -19,19 +19,19 @@ export default async function EditProvincePage({ params }: { params: Promise<{ i
     redirect("/dashboard")
   }
 
-  const [province, countries] = await Promise.all([
-    prisma.province.findUnique({
-      where: { id },
-    }),
-    prisma.country.findMany({
-      where: { isActive: true },
-      orderBy: { name: "asc" },
-    }),
+  const [province, countriesResult] = await Promise.all([
+    getProvinceById(id),
+    getAllCountries(),
   ])
 
   if (!province) {
     notFound()
   }
+
+  const countries = countriesResult.success ? (countriesResult.data?.map((c: any) => ({
+    id: c.id,
+    name: c.name
+  })) || []) : []
 
   return (
     <DashboardLayout user={user}>
@@ -48,7 +48,15 @@ export default async function EditProvincePage({ params }: { params: Promise<{ i
           <p className="text-muted-foreground">Modifica la información de la provincia</p>
         </div>
 
-        <ProvinceForm province={province} countries={countries} />
+        <ProvinceForm 
+          province={{
+            id: province.id,
+            name: province.name,
+            countryId: province.country_id,
+            isActive: province.is_active
+          }}
+          countries={countries} 
+        />
       </div>
     </DashboardLayout>
   )

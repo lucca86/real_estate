@@ -3,18 +3,25 @@
 import { revalidatePath } from "next/cache"
 import { createServerClient } from "@/lib/supabase/server"
 import { z } from "zod"
+import crypto from "crypto"
 
 const clientSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
   email: z.string().email("Email inválido"),
   phone: z.string().min(1, "El teléfono es requerido"),
+  secondaryPhone: z.string().optional(),
+  idNumber: z.string().optional(),
   address: z.string().optional(),
   cityId: z.string().optional(),
   provinceId: z.string().optional(),
   countryId: z.string().optional(),
+  occupation: z.string().optional(),
+  budgetMin: z.number().optional(),
+  budgetMax: z.number().optional(),
   preferredPropertyTypeId: z.string().optional(),
-  budget: z.number().optional(),
+  preferredTransactionType: z.string().optional(),
   notes: z.string().optional(),
+  source: z.string().optional(),
   isActive: z.boolean().default(true),
 })
 
@@ -79,9 +86,30 @@ export async function createClient(data: z.infer<typeof clientSchema>) {
     const validated = clientSchema.parse(data)
     const supabase = await createServerClient()
 
+    const clientData = {
+      id: crypto.randomUUID(),
+      name: validated.name,
+      email: validated.email,
+      phone: validated.phone,
+      secondary_phone: validated.secondaryPhone || null,
+      id_number: validated.idNumber || null,
+      address: validated.address || null,
+      city_id: validated.cityId || null,
+      province_id: validated.provinceId || null,
+      country_id: validated.countryId || null,
+      occupation: validated.occupation || null,
+      budget_min: validated.budgetMin || null,
+      budget_max: validated.budgetMax || null,
+      preferred_property_type_id: validated.preferredPropertyTypeId || null,
+      preferred_transaction_type: validated.preferredTransactionType || null,
+      notes: validated.notes || null,
+      source: validated.source || null,
+      is_active: validated.isActive,
+    }
+
     const { data: client, error } = await supabase
       .from('clients')
-      .insert(validated)
+      .insert(clientData)
       .select()
       .single()
 
@@ -103,9 +131,30 @@ export async function updateClient(id: string, data: z.infer<typeof clientSchema
     const validated = clientSchema.parse(data)
     const supabase = await createServerClient()
 
+    const clientData = {
+      name: validated.name,
+      email: validated.email,
+      phone: validated.phone,
+      secondary_phone: validated.secondaryPhone || null,
+      id_number: validated.idNumber || null,
+      address: validated.address || null,
+      city_id: validated.cityId || null,
+      province_id: validated.provinceId || null,
+      country_id: validated.countryId || null,
+      occupation: validated.occupation || null,
+      budget_min: validated.budgetMin || null,
+      budget_max: validated.budgetMax || null,
+      preferred_property_type_id: validated.preferredPropertyTypeId || null,
+      preferred_transaction_type: validated.preferredTransactionType || null,
+      notes: validated.notes || null,
+      source: validated.source || null,
+      is_active: validated.isActive,
+      updated_at: new Date().toISOString(),
+    }
+
     const { data: client, error } = await supabase
       .from('clients')
-      .update(validated)
+      .update(clientData)
       .eq('id', id)
       .select()
       .single()

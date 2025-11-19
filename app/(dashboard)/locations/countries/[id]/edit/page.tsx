@@ -1,11 +1,11 @@
 import { getCurrentUser } from "@/lib/auth"
-import { redirect, notFound } from "next/navigation"
+import { redirect, notFound } from 'next/navigation'
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { CountryForm } from "@/components/country-form"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft } from "lucide-react"
+import { ChevronLeft } from 'lucide-react'
 import Link from "next/link"
-import { prisma } from "@/lib/db"
+import { getCountryById } from "@/lib/actions/locations"
 
 export default async function EditCountryPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -19,9 +19,7 @@ export default async function EditCountryPage({ params }: { params: Promise<{ id
     redirect("/dashboard")
   }
 
-  const country = await prisma.country.findUnique({
-    where: { id },
-  })
+  const country = await getCountryById(id)
 
   if (!country) {
     notFound()

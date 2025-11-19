@@ -1,15 +1,28 @@
 import { getCurrentUser } from "@/lib/auth"
-import { redirect, notFound } from "next/navigation"
-import { prisma } from "@/lib/db"
+import { redirect, notFound } from 'next/navigation'
+import { getPropertyById } from "@/lib/actions/properties"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { WordPressSyncButton } from "@/components/wordpress-sync-button"
 import { ImageGallery } from "@/components/image-gallery"
 import { PropertiesMap } from "@/components/properties-map"
-import { MapPin, Bed, Bath, Car, User, ChevronLeft, Edit } from "lucide-react"
+import { MapPin, Bed, Bath, Car, User, ChevronLeft, Edit } from 'lucide-react'
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { PropertyStatus } from "@prisma/client"
+
+const statusColors = {
+  DISPONIBLE: "bg-green-500/10 text-green-500 hover:bg-green-500/20",
+  RESERVADO: "bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20",
+  VENDIDO: "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20",
+  ALQUILADO: "bg-purple-500/10 text-purple-500 hover:bg-purple-500/20",
+}
+
+const statusLabels = {
+  DISPONIBLE: "Disponible",
+  RESERVADO: "Reservado",
+  VENDIDO: "Vendido",
+  ALQUILADO: "Alquilado",
+}
 
 export default async function PropertyDetailPage({ params }: { params: { id: string } }) {
   const user = await getCurrentUser()
@@ -18,23 +31,13 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
     redirect("/login")
   }
 
-  const property = await prisma.property.findUnique({
-    where: { id: params.id },
-    include: {
-      city: true,
-      province: true,
-      country: true,
-      neighborhood: true,
-      owner: true,
-      propertyType: true,
-    },
-  })
+  const property = await getPropertyById(params.id)
 
   if (!property) {
     notFound()
   }
 
-  const propertyImages = typeof property.images === "string" ? JSON.parse(property.images) : property.images || []
+  const propertyImages = property.images || []
 
   return (
     <div className="flex flex-col gap-4">
@@ -46,8 +49,8 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
         <div className="flex items-center gap-4">
           <WordPressSyncButton
             propertyId={property.id}
-            wordpressId={property.wordpressId}
-            syncedAt={property.syncedAt}
+            wordpressId={property.wordpress_id}
+            syncedAt={property.synced_at}
           />
           <Button asChild variant="outline">
             <Link href={`/properties/${params.id}/edit`}>
@@ -82,14 +85,14 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
             </div>
             <div className="flex items-center gap-2">
               <Car className="h-5 w-5 text-muted-foreground" />
-              <span>{property.parkingSpaces || 0} parqueos</span>
+              <span>{property.parking_spaces || 0} parqueos</span>
             </div>
           </div>
 
           <Separator />
 
           <div className="grid gap-4 md:grid-cols-2">
-            {property.status === PropertyStatus.ACTIVO && (
+            {property.status === "DISPONIBLE" && (
               <div className="flex items-center gap-2">
                 <span>Disponible ahora</span>
               </div>
@@ -119,7 +122,7 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                   price: property.price,
                   currency: property.currency,
                   images: propertyImages,
-                  propertyType: property.propertyType?.name || "Sin tipo",
+                  propertyType: property.property_type?.name || "Sin tipo",
                   city: property.city?.name || property.address,
                 },
               ]}

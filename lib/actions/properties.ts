@@ -4,6 +4,7 @@ import { createServerClient } from "@/lib/supabase/server"
 import { getCurrentUser } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import { wordpressAPI } from "@/lib/wordpress"
+import crypto from "crypto"
 
 export async function createProperty(formData: FormData) {
   const currentUser = await getCurrentUser()
@@ -16,62 +17,51 @@ export async function createProperty(formData: FormData) {
   const description = formData.get("description") as string
   const ownerId = formData.get("ownerId") as string
   const propertyTypeId = formData.get("propertyTypeId") as string
-  const transactionType = formData.get("transactionType") as string
   const status = formData.get("status") as string
-  const rentalPeriod = formData.get("rentalPeriod") as string
-
   const address = formData.get("address") as string
   const countryId = formData.get("countryId") as string
   const provinceId = formData.get("provinceId") as string
   const cityId = formData.get("cityId") as string
   const neighborhoodId = formData.get("neighborhoodId") as string
-  const zipCode = formData.get("zipCode") as string
-
   const latitude = formData.get("latitude") as string
   const longitude = formData.get("longitude") as string
   const bedrooms = formData.get("bedrooms") as string
   const bathrooms = formData.get("bathrooms") as string
   const parkingSpaces = formData.get("parkingSpaces") as string
   const area = formData.get("area") as string
-  const lotSize = formData.get("lotSize") as string
   const yearBuilt = formData.get("yearBuilt") as string
   const price = formData.get("price") as string
   const currency = formData.get("currency") as string
-  const rentalPrice = formData.get("rentalPrice") as string
-  const features = formData.get("features") as string
   const amenities = formData.get("amenities") as string
   const images = formData.get("images") as string
-  const videos = formData.get("videos") as string
-  const virtualTour = formData.get("virtualTour") as string
-
+  const isFeatured = formData.get("isFeatured") === "on"
+  const lotSize = formData.get("lotSize") as string
   const propertyLabel = formData.get("propertyLabel") as string
+  const adrema = formData.get("adrema") as string
+  const features = formData.get("features") as string
+  const videos = formData.get("videos") as string
   const syncToWordPress = formData.get("syncToWordPress") === "on"
-  const published = formData.get("published") === "on"
 
   if (!title || !description || !address || !countryId || !provinceId || !cityId || !area || !price || !ownerId) {
     throw new Error("Todos los campos requeridos deben ser completados")
   }
-
-  const pricePerM2 = Number.parseFloat(price) / Number.parseFloat(area)
 
   const supabase = await createServerClient()
   
   const { data: newProperty, error } = await supabase
     .from("properties")
     .insert({
+      id: crypto.randomUUID(),
       title,
       description,
       owner_id: ownerId,
       property_type_id: propertyTypeId || null,
-      transaction_type: transactionType,
       status,
-      rental_period: rentalPeriod && rentalPeriod !== "" ? rentalPeriod : null,
       address,
       country_id: countryId || null,
       province_id: provinceId || null,
       city_id: cityId || null,
       neighborhood_id: neighborhoodId || null,
-      zip_code: zipCode || null,
       latitude: latitude ? Number.parseFloat(latitude) : null,
       longitude: longitude ? Number.parseFloat(longitude) : null,
       bedrooms: bedrooms ? Number.parseInt(bedrooms) : null,
@@ -81,18 +71,16 @@ export async function createProperty(formData: FormData) {
       lot_size: lotSize ? Number.parseFloat(lotSize) : null,
       year_built: yearBuilt ? Number.parseInt(yearBuilt) : null,
       price: Number.parseFloat(price),
-      price_per_m2: pricePerM2,
       currency,
-      rental_price: rentalPrice ? Number.parseFloat(rentalPrice) : null,
-      features: features ? features.split(",").map((f) => f.trim()) : [],
       amenities: amenities ? amenities.split(",").map((a) => a.trim()) : [],
       images: images ? images.split(",").map((i) => i.trim()) : [],
-      videos: videos ? videos.split(",").map((v) => v.trim()) : [],
-      virtual_tour: virtualTour || null,
+      is_featured: isFeatured,
       property_label: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
+      adrema: adrema || null,
+      features: features ? features.split(",").map((f) => f.trim()) : [],
+      videos: videos ? videos.split(",").map((v) => v.trim()) : [],
       sync_to_wordpress: syncToWordPress,
-      published,
-      created_by_id: currentUser.id,
+      is_active: true,
     })
     .select()
     .single()
@@ -105,18 +93,31 @@ export async function createProperty(formData: FormData) {
   if (syncToWordPress) {
     try {
       console.log("[v0] Syncing new property to WordPress:", newProperty.id)
+      
+      const { data: propertyWithRelations } = await supabase
+        .from("properties")
+        .select(`
+          *,
+          property_type:property_types!property_type_id(name),
+          city:cities!city_id(name),
+          province:provinces!province_id(name),
+          country:countries!country_id(name)
+        `)
+        .eq("id", newProperty.id)
+        .single()
+      
       const wordpressId = await wordpressAPI.syncProperty({
         id: newProperty.id,
         title: newProperty.title,
         description: newProperty.description,
-        propertyType: null,
-        transactionType: newProperty.transaction_type,
+        propertyType: propertyWithRelations?.property_type?.name || null,
+        transactionType: null,
         status: newProperty.status,
         address: newProperty.address,
-        city: null,
-        state: null,
-        country: null,
-        zipCode: newProperty.zip_code,
+        city: propertyWithRelations?.city?.name || null,
+        state: propertyWithRelations?.province?.name || null,
+        country: propertyWithRelations?.country?.name || null,
+        zipCode: null,
         latitude: newProperty.latitude,
         longitude: newProperty.longitude,
         bedrooms: newProperty.bedrooms,
@@ -126,13 +127,13 @@ export async function createProperty(formData: FormData) {
         lotSize: newProperty.lot_size,
         yearBuilt: newProperty.year_built,
         price: newProperty.price,
-        pricePerM2: newProperty.price_per_m2,
-        features: newProperty.features,
+        pricePerM2: null,
+        features: newProperty.features || [],
         amenities: newProperty.amenities,
         images: newProperty.images,
-        virtualTour: newProperty.virtual_tour,
+        virtualTour: null,
         propertyLabel: newProperty.property_label,
-        published: newProperty.published,
+        published: newProperty.is_active,
       })
 
       await supabase
@@ -169,48 +170,34 @@ export async function updateProperty(propertyId: string, formData: FormData) {
     throw new Error("Propiedad no encontrada")
   }
 
-  if (property.created_by_id !== currentUser.id && currentUser.role === "VENDEDOR") {
-    throw new Error("No tienes permisos para editar esta propiedad")
-  }
-
   const title = formData.get("title") as string
   const description = formData.get("description") as string
   const ownerId = formData.get("ownerId") as string
   const propertyTypeId = formData.get("propertyTypeId") as string
-  const transactionType = formData.get("transactionType") as string
   const status = formData.get("status") as string
-  const rentalPeriod = formData.get("rentalPeriod") as string
-
   const address = formData.get("address") as string
   const countryId = formData.get("countryId") as string
   const provinceId = formData.get("provinceId") as string
   const cityId = formData.get("cityId") as string
   const neighborhoodId = formData.get("neighborhoodId") as string
-  const zipCode = formData.get("zipCode") as string
-
   const latitude = formData.get("latitude") as string
   const longitude = formData.get("longitude") as string
   const bedrooms = formData.get("bedrooms") as string
   const bathrooms = formData.get("bathrooms") as string
   const parkingSpaces = formData.get("parkingSpaces") as string
   const area = formData.get("area") as string
-  const lotSize = formData.get("lotSize") as string
   const yearBuilt = formData.get("yearBuilt") as string
   const price = formData.get("price") as string
   const currency = formData.get("currency") as string
-  const rentalPrice = formData.get("rentalPrice") as string
-  const features = formData.get("features") as string
   const amenities = formData.get("amenities") as string
   const images = formData.get("images") as string
-  const videos = formData.get("videos") as string
-  const virtualTour = formData.get("virtualTour") as string
-
+  const isFeatured = formData.get("isFeatured") === "on"
+  const lotSize = formData.get("lotSize") as string
   const propertyLabel = formData.get("propertyLabel") as string
+  const adrema = formData.get("adrema") as string
+  const features = formData.get("features") as string
+  const videos = formData.get("videos") as string
   const syncToWordPress = formData.get("syncToWordPress") === "on"
-  const published = formData.get("published") === "on"
-
-  const pricePerM2 = Number.parseFloat(price) / Number.parseFloat(area)
-  const finalPropertyLabel = propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null
 
   const { data: updatedProperty, error: updateError } = await supabase
     .from("properties")
@@ -219,15 +206,12 @@ export async function updateProperty(propertyId: string, formData: FormData) {
       description,
       owner_id: ownerId,
       property_type_id: propertyTypeId || null,
-      transaction_type: transactionType,
       status,
-      rental_period: rentalPeriod && rentalPeriod !== "" ? rentalPeriod : null,
       address,
       country_id: countryId || null,
       province_id: provinceId || null,
       city_id: cityId || null,
       neighborhood_id: neighborhoodId || null,
-      zip_code: zipCode || null,
       latitude: latitude ? Number.parseFloat(latitude) : null,
       longitude: longitude ? Number.parseFloat(longitude) : null,
       bedrooms: bedrooms ? Number.parseInt(bedrooms) : null,
@@ -237,17 +221,15 @@ export async function updateProperty(propertyId: string, formData: FormData) {
       lot_size: lotSize ? Number.parseFloat(lotSize) : null,
       year_built: yearBuilt ? Number.parseInt(yearBuilt) : null,
       price: Number.parseFloat(price),
-      price_per_m2: pricePerM2,
       currency,
-      rental_price: rentalPrice ? Number.parseFloat(rentalPrice) : null,
-      features: features ? features.split(",").map((f) => f.trim()) : [],
       amenities: amenities ? amenities.split(",").map((a) => a.trim()) : [],
       images: images ? images.split(",").map((i) => i.trim()) : [],
+      is_featured: isFeatured,
+      property_label: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
+      adrema: adrema || null,
+      features: features ? features.split(",").map((f) => f.trim()) : [],
       videos: videos ? videos.split(",").map((v) => v.trim()) : [],
-      virtual_tour: virtualTour || null,
-      property_label: finalPropertyLabel,
       sync_to_wordpress: syncToWordPress,
-      published,
     })
     .eq("id", propertyId)
     .select()
@@ -262,19 +244,31 @@ export async function updateProperty(propertyId: string, formData: FormData) {
     try {
       console.log("[v0] Syncing updated property to WordPress:", updatedProperty.id)
       
+      const { data: propertyWithRelations } = await supabase
+        .from("properties")
+        .select(`
+          *,
+          property_type:property_types!property_type_id(name),
+          city:cities!city_id(name),
+          province:provinces!province_id(name),
+          country:countries!country_id(name)
+        `)
+        .eq("id", updatedProperty.id)
+        .single()
+      
       const wordpressId = await wordpressAPI.syncProperty({
         id: updatedProperty.id,
         wordpressId: updatedProperty.wordpress_id,
         title: updatedProperty.title,
         description: updatedProperty.description,
-        propertyType: null,
-        transactionType: updatedProperty.transaction_type,
+        propertyType: propertyWithRelations?.property_type?.name || null,
+        transactionType: null,
         status: updatedProperty.status,
         address: updatedProperty.address,
-        city: null,
-        state: null,
-        country: null,
-        zipCode: updatedProperty.zip_code,
+        city: propertyWithRelations?.city?.name || null,
+        state: propertyWithRelations?.province?.name || null,
+        country: propertyWithRelations?.country?.name || null,
+        zipCode: null,
         latitude: updatedProperty.latitude,
         longitude: updatedProperty.longitude,
         bedrooms: updatedProperty.bedrooms,
@@ -284,13 +278,13 @@ export async function updateProperty(propertyId: string, formData: FormData) {
         lotSize: updatedProperty.lot_size,
         yearBuilt: updatedProperty.year_built,
         price: updatedProperty.price,
-        pricePerM2: updatedProperty.price_per_m2,
-        features: updatedProperty.features,
+        pricePerM2: null,
+        features: updatedProperty.features || [],
         amenities: updatedProperty.amenities,
         images: updatedProperty.images,
-        virtualTour: updatedProperty.virtual_tour,
+        virtualTour: null,
         propertyLabel: updatedProperty.property_label,
-        published: updatedProperty.published,
+        published: updatedProperty.is_active,
       })
 
       if (!updatedProperty.wordpress_id && wordpressId) {
@@ -333,7 +327,7 @@ export async function deleteProperty(propertyId: string) {
     throw new Error("Propiedad no encontrada")
   }
 
-  if (property.created_by_id !== currentUser.id && currentUser.role !== "ADMIN") {
+  if (currentUser.role !== "ADMIN") {
     throw new Error("No tienes permisos para eliminar esta propiedad")
   }
 
@@ -349,4 +343,29 @@ export async function deleteProperty(propertyId: string) {
 
   revalidatePath("/properties")
   revalidatePath("/dashboard")
+}
+
+export async function getPropertyById(id: string) {
+  const supabase = await createServerClient()
+  
+  const { data: property, error } = await supabase
+    .from("properties")
+    .select(`
+      *,
+      owner:owners!owner_id(id, name),
+      city:cities!city_id(id, name),
+      province:provinces!province_id(id, name),
+      country:countries!country_id(id, name),
+      neighborhood:neighborhoods!neighborhood_id(id, name),
+      property_type:property_types!property_type_id(id, name)
+    `)
+    .eq("id", id)
+    .single()
+
+  if (error) {
+    console.error("[v0] Error fetching property:", error)
+    return null
+  }
+
+  return property
 }

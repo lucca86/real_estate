@@ -247,9 +247,9 @@ export async function createAppointment(data: AppointmentInput) {
       })
       .select(`
         *,
-        property:properties!appointments_property_id_fkey(*),
-        client:clients!appointments_client_id_fkey(*),
-        agent:users!appointments_agent_id_fkey(id, name, email)
+        property:properties(*),
+        client:clients(*),
+        agent:users(id, name, email)
       `)
       .single()
 
@@ -303,7 +303,7 @@ export async function getAppointments(filters?: {
       .from('appointments')
       .select(`
         *,
-        property:properties(id, title, address, city, images),
+        property:properties(id, title, address, city_id, images),
         client:clients(id, name, email, phone),
         agent:users(id, name, email, phone)
       `)
@@ -333,9 +333,9 @@ export async function getAppointmentById(id: string) {
       .from('appointments')
       .select(`
         *,
-        property:properties!appointments_property_id_fkey(id, title, address, city, images),
-        client:clients!appointments_client_id_fkey(id, name, email, phone),
-        agent:users!appointments_agent_id_fkey(id, name, email, phone)
+        property:properties(id, title, address, city_id, images),
+        client:clients(id, name, email, phone),
+        agent:users(id, name, email)
       `)
       .eq('id', id)
       .single()
@@ -361,9 +361,9 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
       .from('appointments')
       .select(`
         *,
-        property:properties!appointments_property_id_fkey(id, title, address, city, images),
-        client:clients!appointments_client_id_fkey(id, name, email, phone),
-        agent:users!appointments_agent_id_fkey(id, name, email, phone)
+        property:properties(id, title, address, city_id, images),
+        client:clients(id, name, email, phone),
+        agent:users(id, name, email)
       `)
       .eq('id', id)
       .single()
@@ -412,9 +412,9 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
       .eq('id', id)
       .select(`
         *,
-        property:properties!appointments_property_id_fkey(id, title, address, city, images),
-        client:clients!appointments_client_id_fkey(id, name, email, phone),
-        agent:users!appointments_agent_id_fkey(id, name, email)
+        property:properties(id, title, address, city_id, images),
+        client:clients(id, name, email, phone),
+        agent:users(id, name, email)
       `)
       .single()
 
@@ -477,9 +477,9 @@ export async function updateAppointmentStatus(id: string, status: "PENDIENTE" | 
       .eq('id', id)
       .select(`
         *,
-        property:properties!appointments_property_id_fkey(id, title, address, city, images),
-        client:clients!appointments_client_id_fkey(id, name, email, phone),
-        agent:users!appointments_agent_id_fkey(id, name, email)
+        property:properties(id, title, address, city_id, images),
+        client:clients(id, name, email, phone),
+        agent:users(id, name, email)
       `)
       .single()
 

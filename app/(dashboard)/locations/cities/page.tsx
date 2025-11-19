@@ -2,11 +2,10 @@ import { getCurrentUser } from "@/lib/auth"
 import { redirect } from 'next/navigation'
 import { getAllCities } from "@/lib/actions/locations"
 import { Button } from "@/components/ui/button"
-import { Plus, MapPin, Edit, Trash2 } from 'lucide-react'
+import { Plus, MapPin } from 'lucide-react'
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
+import { CitiesTableWithFilters } from "@/components/cities-table-with-filters"
 
 export default async function CitiesPage() {
   const user = await getCurrentUser()
@@ -62,45 +61,7 @@ export default async function CitiesPage() {
               </Button>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Provincia</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Fecha de Creación</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {cities.map((city) => (
-                  <TableRow key={city.id}>
-                    <TableCell className="font-medium">{city.name}</TableCell>
-                    <TableCell>{city.province?.name || "-"}</TableCell>
-                    <TableCell>
-                      <Badge variant={city.is_active ? "default" : "secondary"}>
-                        {city.is_active ? "Activa" : "Inactiva"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{city.created_at}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button asChild variant="outline" size="sm">
-                          <Link href={`/locations/cities/${city.id}/edit`}>
-                            <Edit className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                        <Button asChild variant="outline" size="sm">
-                          <Link href={`/locations/cities/${city.id}/delete`}>
-                            <Trash2 className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <CitiesTableWithFilters cities={cities} />
           )}
         </CardContent>
       </Card>

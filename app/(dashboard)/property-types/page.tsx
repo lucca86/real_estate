@@ -1,10 +1,12 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Plus, Building2 } from 'lucide-react'
+import { Plus, Building2, Edit } from 'lucide-react'
 import { getCurrentUser } from "@/lib/auth"
 import { redirect } from 'next/navigation'
 import { createServerClient } from "@/lib/supabase/server"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
 
 export default async function PropertyTypesPage() {
   const user = await getCurrentUser()
@@ -21,7 +23,6 @@ export default async function PropertyTypesPage() {
   const { data: propertyTypes, error } = await supabase
     .from('property_types')
     .select('*')
-    .eq('is_active', true)
     .order('name', { ascending: true })
 
   if (error || !propertyTypes) {
@@ -44,39 +45,64 @@ export default async function PropertyTypesPage() {
         </Button>
       </div>
 
-      {propertyTypes.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No hay tipos de propiedad</h3>
-            <p className="text-muted-foreground text-center mb-4">
-              Comienza creando el primer tipo de propiedad para tu catálogo
-            </p>
-            <Button asChild>
-              <Link href="/property-types/new">
-                <Plus className="mr-2 h-4 w-4" />
-                Crear Primer Tipo
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {propertyTypes.map((type) => (
-            <Card key={type.id}>
-              <CardHeader>
-                <CardTitle>{type.name}</CardTitle>
-                {type.description && <CardDescription>{type.description}</CardDescription>}
-              </CardHeader>
-              <CardContent>
-                <Button asChild variant="outline" className="w-full bg-transparent">
-                  <Link href={`/property-types/${type.id}/edit`}>Editar</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Building2 className="h-5 w-5" />
+            Lista de Tipos de Propiedad
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {propertyTypes.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No hay tipos de propiedad</h3>
+              <p className="text-muted-foreground text-center mb-4">
+                Comienza creando el primer tipo de propiedad para tu catálogo
+              </p>
+              <Button asChild>
+                <Link href="/property-types/new">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Crear Primer Tipo
+                </Link>
+              </Button>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Descripción</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {propertyTypes.map((type) => (
+                  <TableRow key={type.id}>
+                    <TableCell className="font-medium">{type.name}</TableCell>
+                    <TableCell>{type.description || "-"}</TableCell>
+                    <TableCell>
+                      <Badge variant={type.is_active ? "default" : "secondary"}>
+                        {type.is_active ? "Activo" : "Inactivo"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={`/property-types/${type.id}/edit`}>
+                            <Edit className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

@@ -1,8 +1,8 @@
-import { notFound, redirect } from "next/navigation"
+import { notFound, redirect } from 'next/navigation'
 import { getCurrentUser } from "@/lib/auth"
 import { AppointmentForm } from "@/components/appointment-form"
 import { getAppointmentById } from "@/lib/actions/appointments"
-import { db } from "@/lib/db"
+import { createServerClient } from "@/lib/supabase/server"
 
 export default async function EditAppointmentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -21,30 +21,33 @@ export default async function EditAppointmentPage({ params }: { params: Promise<
 
   const appointment = result.data
 
-  const [propertiesRaw, clients, agents] = await Promise.all([
-    db.property.findMany({
-      select: { id: true, title: true, address: true, city: { select: { name: true } } },
-      orderBy: { title: "asc" },
-    }),
-    db.client.findMany({
-      select: { id: true, name: true, email: true, phone: true },
-      orderBy: { name: "asc" },
-    }),
-    db.user.findMany({
-      where: {
-        role: { in: ["ADMIN", "SUPERVISOR", "VENDEDOR"] },
-      },
-      select: { id: true, name: true, email: true },
-      orderBy: { name: "asc" },
-    }),
+  const supabase = await createServerClient()
+
+  const [propertiesResult, clientsResult, agentsResult] = await Promise.all([
+    supabase
+      .from("properties")
+      .select("id, title, address, cities!city_id(name)")
+      .order("title", { ascending: true }),
+    supabase
+      .from("clients")
+      .select("id, name, email, phone")
+      .order("name", { ascending: true }),
+    supabase
+      .from("users")
+      .select("id, name, email")
+      .in("role", ["ADMIN", "SUPERVISOR", "VENDEDOR"])
+      .order("name", { ascending: true }),
   ])
 
-  const properties = propertiesRaw.map((p) => ({
+  const properties = (propertiesResult.data || []).map((p) => ({
     id: p.id,
     title: p.title,
     address: p.address,
-    city: p.city?.name || "Sin ciudad",
+    city: p.cities?.[0]?.name || "Sin ciudad",
   }))
+
+  const clients = clientsResult.data || []
+  const agents = agentsResult.data || []
 
   return (
     <div className="max-w-4xl mx-auto">
