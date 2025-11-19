@@ -36,10 +36,10 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
 
     const supabase = await createClient()
     const { data: userData, error: userError } = await supabase
-      .from("User")
-      .select("id, email, name, role, isActive")
+      .from("users")
+      .select("id, email, name, role, is_active")
       .eq("id", payload.userId as string)
-      .eq("isActive", true)
+      .eq("is_active", true)
       .single()
 
     if (userError || !userData) {
