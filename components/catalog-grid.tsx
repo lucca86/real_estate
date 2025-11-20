@@ -1,7 +1,7 @@
 import { createServerClient } from "@/lib/supabase/server"
 import { CatalogPropertyCard } from "./catalog-property-card"
 import { Card, CardContent } from "@/components/ui/card"
-import { Building2 } from 'lucide-react'
+import { Building2 } from "lucide-react"
 
 interface CatalogGridProps {
   searchParams: { [key: string]: string | string[] | undefined }
@@ -19,56 +19,56 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
   const bathrooms = searchParams.bathrooms as string
 
   const supabase = await createServerClient()
-  
+
   let query = supabase
-    .from('properties')
+    .from("properties")
     .select(`
       *,
-      owner:owners!properties_owner_id_fkey(name, phone)
+      owner:owners!owner_id(name, phone)
     `)
-    .eq('is_active', true)
-    .order('created_at', { ascending: false })
+    .eq("is_active", true)
+    .order("created_at", { ascending: false })
 
   if (search) {
     query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
   }
 
   if (propertyType) {
-    query = query.eq('property_type', propertyType)
+    query = query.eq("property_type_id", propertyType)
   }
 
   if (transactionType) {
-    query = query.eq('transaction_type', transactionType)
+    query = query.eq("transaction_type", transactionType)
   }
 
   if (status) {
-    query = query.eq('status', status)
+    query = query.eq("status", status)
   }
 
   if (city) {
-    query = query.ilike('city', `%${city}%`)
+    query = query.eq("city_id", city)
   }
 
   if (minPrice) {
-    query = query.gte('price', Number.parseFloat(minPrice))
+    query = query.gte("price", Number.parseFloat(minPrice))
   }
 
   if (maxPrice) {
-    query = query.lte('price', Number.parseFloat(maxPrice))
+    query = query.lte("price", Number.parseFloat(maxPrice))
   }
 
   if (bedrooms) {
-    query = query.gte('bedrooms', Number.parseInt(bedrooms))
+    query = query.gte("bedrooms", Number.parseInt(bedrooms))
   }
 
   if (bathrooms) {
-    query = query.gte('bathrooms', Number.parseInt(bathrooms))
+    query = query.gte("bathrooms", Number.parseInt(bathrooms))
   }
 
   const { data: properties, error } = await query
 
   if (error || !properties) {
-    console.error('[v0] Error fetching catalog:', error)
+    console.error("[v0] Error fetching catalog:", error)
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12 text-center">

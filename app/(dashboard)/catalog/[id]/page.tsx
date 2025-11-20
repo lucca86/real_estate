@@ -1,17 +1,17 @@
 import { getCurrentUser } from "@/lib/auth"
-import { redirect, notFound } from 'next/navigation'
+import { redirect, notFound } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Building2, MapPin, Bed, Bath, Car, Maximize, Calendar, User, Phone, Mail, ChevronLeft, ExternalLink } from 'lucide-react'
+import { Building2, MapPin, Bed, Bath, Car, Maximize, Calendar, User, Mail, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { ImageGallery } from "@/components/image-gallery"
 import { PropertyMap } from "@/components/property-map"
 import { getPropertyById } from "@/lib/actions/properties"
 
-export default async function PropertyDetailPage({ params }: { params: { id: string } }) {
-  const { id } = params
+export default async function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const user = await getCurrentUser()
 
   if (!user) {
@@ -169,19 +169,21 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                         </div>
                       </div>
                       <PropertyMap
-                        properties={[{
-                          id: property.id,
-                          title: property.title,
-                          address: property.address,
-                          latitude: property.latitude,
-                          longitude: property.longitude,
-                          price: property.price,
-                          currency: property.currency,
-                          propertyType: property.property_type?.name || "Sin tipo",
-                          city: property.city?.name || "Sin ciudad",
-                          images: property.images || [],
-                          status: property.status,
-                        }]}
+                        properties={[
+                          {
+                            id: property.id,
+                            title: property.title,
+                            address: property.address,
+                            latitude: property.latitude,
+                            longitude: property.longitude,
+                            price: property.price,
+                            currency: property.currency,
+                            propertyType: property.property_type?.name || "Sin tipo",
+                            city: property.city?.name || "Sin ciudad",
+                            images: property.images || [],
+                            status: property.status,
+                          },
+                        ]}
                         defaultCenter={[property.latitude, property.longitude]}
                         defaultZoom={15}
                       />
@@ -219,10 +221,6 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                 <div className="flex items-center gap-2 text-sm">
                   <User className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium">{property.owner.name}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">{property.owner.phone}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Mail className="h-4 w-4 text-muted-foreground" />
