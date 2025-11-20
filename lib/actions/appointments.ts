@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { createServerClient } from "@/lib/supabase/server"
 import { sendAppointmentNotifications } from "@/lib/email-notifications"
+import { randomUUID } from "crypto"
 
 // Esquema de validación para citas
 const appointmentSchema = z.object({
@@ -122,19 +123,19 @@ async function checkScheduleConflict(
 
   const supabase = await createServerClient()
   let query = supabase
-    .from('appointments')
+    .from("appointments")
     .select(`
       *,
       property:properties(title),
       client:clients(name)
     `)
-    .eq('agent_id', agentId)
-    .in('status', ['PENDIENTE', 'CONFIRMADA'])
-    .gte('scheduled_date', dayStart.toISOString())
-    .lte('scheduled_date', dayEnd.toISOString())
+    .eq("agent_id", agentId)
+    .in("status", ["PENDIENTE", "CONFIRMADA"])
+    .gte("scheduled_date", dayStart.toISOString())
+    .lte("scheduled_date", dayEnd.toISOString())
 
   if (excludeAppointmentId) {
-    query = query.neq('id', excludeAppointmentId)
+    query = query.neq("id", excludeAppointmentId)
   }
 
   const { data: existingAppointments } = await query
@@ -207,11 +208,11 @@ export async function createAppointment(data: AppointmentInput) {
     console.log("[v0] ✓ No conflicts found")
 
     const supabase = await createServerClient()
-    
+
     const [propertyResult, clientResult, agentResult] = await Promise.all([
-      supabase.from('properties').select('*').eq('id', validated.propertyId).single(),
-      supabase.from('clients').select('*').eq('id', validated.clientId).single(),
-      supabase.from('users').select('*').eq('id', validated.agentId).single(),
+      supabase.from("properties").select("*").eq("id", validated.propertyId).single(),
+      supabase.from("clients").select("*").eq("id", validated.clientId).single(),
+      supabase.from("users").select("*").eq("id", validated.agentId).single(),
     ])
 
     const property = propertyResult.data
@@ -234,9 +235,12 @@ export async function createAppointment(data: AppointmentInput) {
 
     console.log("[v0] Creating appointment in database...")
 
+    const appointmentId = randomUUID()
+
     const { data: appointment, error } = await supabase
-      .from('appointments')
+      .from("appointments")
       .insert({
+        id: appointmentId,
         property_id: validated.propertyId,
         client_id: validated.clientId,
         agent_id: validated.agentId,
@@ -249,12 +253,12 @@ export async function createAppointment(data: AppointmentInput) {
         *,
         property:properties(*),
         client:clients(*),
-        agent:users(id, name, email)
+        agent:users!fk_appointments_agent(id, name, email)
       `)
       .single()
 
     if (error || !appointment) {
-      console.error('[v0] Error creating appointment:', error)
+      console.error("[v0] Error creating appointment:", error)
       return { success: false, error: "Error al crear la cita" }
     }
 
@@ -298,9 +302,9 @@ export async function getAppointments(filters?: {
 }) {
   try {
     const supabase = await createServerClient()
-    
+
     let query = supabase
-      .from('appointments')
+      .from("appointments")
       .select(`
         *,
         property:properties(
@@ -312,16 +316,16 @@ export async function getAppointments(filters?: {
           city:cities(id, name)
         ),
         client:clients(id, name, email, phone),
-        agent:users(id, name, email)
+        agent:users!fk_appointments_agent(id, name, email)
       `)
-      .order('scheduled_date', { ascending: true })
+      .order("scheduled_date", { ascending: true })
 
-    if (filters?.agentId) query = query.eq('agent_id', filters.agentId)
-    if (filters?.clientId) query = query.eq('client_id', filters.clientId)
-    if (filters?.propertyId) query = query.eq('property_id', filters.propertyId)
-    if (filters?.status) query = query.eq('status', filters.status)
-    if (filters?.startDate) query = query.gte('scheduled_date', filters.startDate)
-    if (filters?.endDate) query = query.lte('scheduled_date', filters.endDate)
+    if (filters?.agentId) query = query.eq("agent_id", filters.agentId)
+    if (filters?.clientId) query = query.eq("client_id", filters.clientId)
+    if (filters?.propertyId) query = query.eq("property_id", filters.propertyId)
+    if (filters?.status) query = query.eq("status", filters.status)
+    if (filters?.startDate) query = query.gte("scheduled_date", filters.startDate)
+    if (filters?.endDate) query = query.lte("scheduled_date", filters.endDate)
 
     const { data: appointments, error } = await query
 
@@ -331,14 +335,32 @@ export async function getAppointments(filters?: {
     }
 
     const transformedAppointments = appointments?.map((apt) => ({
-      ...apt,
+      id: apt.id,
+      scheduledAt: apt.scheduled_date, // Map scheduled_date to scheduledAt
+      duration: apt.duration,
+      status: apt.status,
+      notes: apt.notes,
       property: {
-        ...apt.property,
-        city: apt.property?.city?.[0] || null,
+        id: apt.property.id,
+        title: apt.property.title,
+        address: apt.property.address,
+        city: apt.property.city?.[0]?.name || "",
+        images: apt.property.images,
+      },
+      client: {
+        id: apt.client.id,
+        name: apt.client.name,
+        email: apt.client.email,
+        phone: apt.client.phone,
+      },
+      agent: {
+        id: apt.agent.id,
+        name: apt.agent.name,
+        email: apt.agent.email,
       },
     }))
 
-    return { success: true, data: transformedAppointments }
+    return { success: true, data: transformedAppointments || [] }
   } catch (error) {
     console.error("[v0] Error fetching appointments:", error)
     return { success: false, error: "Error al obtener las citas" }
@@ -350,14 +372,14 @@ export async function getAppointmentById(id: string) {
   try {
     const supabase = await createServerClient()
     const { data: appointment } = await supabase
-      .from('appointments')
+      .from("appointments")
       .select(`
         *,
         property:properties(id, title, address, city_id, images),
         client:clients(id, name, email, phone),
-        agent:users(id, name, email)
+        agent:users!fk_appointments_agent(id, name, email)
       `)
-      .eq('id', id)
+      .eq("id", id)
       .single()
 
     if (!appointment) {
@@ -378,14 +400,14 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
 
     const supabase = await createServerClient()
     const { data: existing } = await supabase
-      .from('appointments')
+      .from("appointments")
       .select(`
         *,
         property:properties(id, title, address, city_id, images),
         client:clients(id, name, email, phone),
-        agent:users(id, name, email)
+        agent:users!fk_appointments_agent(id, name, email)
       `)
-      .eq('id', id)
+      .eq("id", id)
       .single()
 
     if (!existing) {
@@ -427,14 +449,14 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
     if (data.notes !== undefined) updateData.notes = data.notes
 
     const { data: updatedAppointment, error } = await supabase
-      .from('appointments')
+      .from("appointments")
       .update(updateData)
-      .eq('id', id)
+      .eq("id", id)
       .select(`
         *,
         property:properties(id, title, address, city_id, images),
         client:clients(id, name, email, phone),
-        agent:users(id, name, email)
+        agent:users!fk_appointments_agent(id, name, email)
       `)
       .single()
 
@@ -472,7 +494,7 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
 export async function deleteAppointment(id: string) {
   try {
     const supabase = await createServerClient()
-    const { error } = await supabase.from('appointments').delete().eq('id', id)
+    const { error } = await supabase.from("appointments").delete().eq("id", id)
 
     if (error) {
       console.error("[v0] Error deleting appointment:", error)
@@ -488,18 +510,21 @@ export async function deleteAppointment(id: string) {
 }
 
 // Cambiar el estado de una cita
-export async function updateAppointmentStatus(id: string, status: "PENDIENTE" | "CONFIRMADA" | "COMPLETADA" | "CANCELADA" | "NO_ASISTIO") {
+export async function updateAppointmentStatus(
+  id: string,
+  status: "PENDIENTE" | "CONFIRMADA" | "COMPLETADA" | "CANCELADA" | "NO_ASISTIO",
+) {
   try {
     const supabase = await createServerClient()
     const { data: appointment, error } = await supabase
-      .from('appointments')
+      .from("appointments")
       .update({ status })
-      .eq('id', id)
+      .eq("id", id)
       .select(`
         *,
         property:properties(id, title, address, city_id, images),
         client:clients(id, name, email, phone),
-        agent:users(id, name, email)
+        agent:users!fk_appointments_agent(id, name, email)
       `)
       .single()
 

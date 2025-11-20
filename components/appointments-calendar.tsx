@@ -23,7 +23,7 @@ import { getArgentinaTime, formatArgentinaDate } from "@/lib/timezone-utils"
 
 interface Appointment {
   id: string
-  scheduledAt: Date
+  scheduledAt: string // Changed from Date to string since data comes as ISO string
   duration: number
   status: string
   property: {
@@ -54,7 +54,10 @@ export function AppointmentsCalendar({ appointments }: AppointmentsCalendarProps
   const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd })
 
   const getAppointmentsForDay = (day: Date) => {
-    return appointments.filter((apt) => isSameDay(new Date(apt.scheduledAt), day))
+    return appointments.filter((apt) => {
+      const appointmentDate = new Date(apt.scheduledAt)
+      return isSameDay(appointmentDate, day)
+    })
   }
 
   const getStatusColor = (status: string) => {
@@ -146,7 +149,10 @@ export function AppointmentsCalendar({ appointments }: AppointmentsCalendarProps
         <CardContent>
           <div className="space-y-4">
             {appointments
-              .filter((apt) => new Date(apt.scheduledAt) >= new Date() && apt.status !== "CANCELADA")
+              .filter((apt) => {
+                const appointmentDate = new Date(apt.scheduledAt)
+                return appointmentDate >= new Date() && apt.status !== "CANCELADA"
+              })
               .slice(0, 5)
               .map((apt) => (
                 <Link key={apt.id} href={`/appointments/${apt.id}/edit`}>

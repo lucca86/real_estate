@@ -32,14 +32,6 @@ export default async function AppointmentsPage() {
     )
   }
 
-  const transformedAppointments = result.data.map((appointment) => ({
-    ...appointment,
-    property: {
-      ...appointment.property,
-      city: appointment.property.city?.name || "",
-    },
-  }))
-
   return (
     <>
       <div className="flex items-center justify-between mb-6">
@@ -56,7 +48,7 @@ export default async function AppointmentsPage() {
       </div>
 
       <Suspense fallback={<div>Cargando calendario...</div>}>
-        <AppointmentsCalendar appointments={transformedAppointments} />
+        <AppointmentsCalendar appointments={result.data} />
       </Suspense>
     </>
   )
