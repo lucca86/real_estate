@@ -37,7 +37,9 @@ export async function createProperty(formData: FormData) {
   const currency = formData.get("currency") as string
   const rentalPrice = formData.get("rentalPrice") as string
   const amenities = formData.get("amenities") as string
-  const images = formData.get("images") as string
+  const imagesStr = formData.get("images") as string
+  const parsedImages = imagesStr ? JSON.parse(imagesStr) : []
+  const imageUrls = parsedImages.map((img: any) => img.url)
   const isFeatured = formData.get("isFeatured") === "on"
   const lotSize = formData.get("lotSize") as string
   const propertyLabel = formData.get("propertyLabel") as string
@@ -86,7 +88,7 @@ export async function createProperty(formData: FormData) {
       currency,
       rental_price: rentalPrice ? Number.parseFloat(rentalPrice) : null,
       amenities: amenities ? amenities.split(",").map((a) => a.trim()) : [],
-      images: images ? images.split(",").map((i) => i.trim()) : [],
+      images: imageUrls,
       is_featured: isFeatured,
       property_label: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
       adrema: adrema || null,
@@ -121,6 +123,8 @@ export async function createProperty(formData: FormData) {
         .eq("id", newProperty.id)
         .single()
 
+      const imagesToSync = parsedImages.filter((img: any) => img.syncToWordPress).map((img: any) => img.sizes.large)
+
       const wordpressId = await wordpressAPI.syncProperty({
         id: newProperty.id,
         title: newProperty.title,
@@ -145,7 +149,7 @@ export async function createProperty(formData: FormData) {
         pricePerM2: newProperty.price_per_m2,
         features: newProperty.features || [],
         amenities: newProperty.amenities,
-        images: newProperty.images,
+        images: imagesToSync,
         virtualTour: newProperty.virtual_tour,
         propertyLabel: newProperty.property_label,
         published: newProperty.published,
@@ -206,7 +210,9 @@ export async function updateProperty(propertyId: string, formData: FormData) {
   const currency = formData.get("currency") as string
   const rentalPrice = formData.get("rentalPrice") as string
   const amenities = formData.get("amenities") as string
-  const images = formData.get("images") as string
+  const imagesStr = formData.get("images") as string
+  const parsedImages = imagesStr ? JSON.parse(imagesStr) : []
+  const imageUrls = parsedImages.map((img: any) => img.url)
   const isFeatured = formData.get("isFeatured") === "on"
   const lotSize = formData.get("lotSize") as string
   const propertyLabel = formData.get("propertyLabel") as string
@@ -248,7 +254,7 @@ export async function updateProperty(propertyId: string, formData: FormData) {
       currency,
       rental_price: rentalPrice ? Number.parseFloat(rentalPrice) : null,
       amenities: amenities ? amenities.split(",").map((a) => a.trim()) : [],
-      images: images ? images.split(",").map((i) => i.trim()) : [],
+      images: imageUrls,
       is_featured: isFeatured,
       property_label: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
       adrema: adrema || null,
@@ -283,6 +289,8 @@ export async function updateProperty(propertyId: string, formData: FormData) {
         .eq("id", updatedProperty.id)
         .single()
 
+      const imagesToSync = parsedImages.filter((img: any) => img.syncToWordPress).map((img: any) => img.sizes.large)
+
       const wordpressId = await wordpressAPI.syncProperty({
         id: updatedProperty.id,
         wordpressId: updatedProperty.wordpress_id,
@@ -308,7 +316,7 @@ export async function updateProperty(propertyId: string, formData: FormData) {
         pricePerM2: updatedProperty.price_per_m2,
         features: updatedProperty.features || [],
         amenities: updatedProperty.amenities,
-        images: updatedProperty.images,
+        images: imagesToSync,
         virtualTour: updatedProperty.virtual_tour,
         propertyLabel: updatedProperty.property_label,
         published: updatedProperty.published,

@@ -73,7 +73,10 @@
     "@supabase/ssr": "0.7.0",
     "@supabase/supabase-js": "2.81.1",
     "crypto": "1.0.1",
-    "@prisma/client": "6.19.0"
+    "@prisma/client": "6.19.0",
+    "@vercel/blob": "2.0.0",
+    "sharp": "0.34.5",
+    "@hello-pangea/dnd": "18.0.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

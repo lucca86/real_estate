@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, MapPin, Sparkles, Plus } from 'lucide-react'
+import { Loader2, MapPin, Sparkles, Plus } from "lucide-react"
 import { createProperty, updateProperty } from "@/lib/actions/properties"
 import { geocodeAddress } from "@/lib/geocoding"
 import { generatePropertyTitle } from "@/lib/actions/ai-property-title"
@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast"
 import { PropertiesMap } from "@/components/property-map"
 import { CreateOwnerDialog } from "@/components/create-owner-dialog"
 import { getCountries, getProvinces, getCities, getNeighborhoods } from "@/lib/actions/locations"
+import { PropertyImageUpload } from "./property-image-upload"
 
 interface Property {
   id?: string
@@ -102,6 +103,21 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
   )
   const [selectedCityId, setSelectedCityId] = useState<string | undefined>(editProperty?.cityId || undefined)
 
+  const [images, setImages] = useState<any[]>(
+    editProperty?.images?.map((url: string, index: number) => ({
+      id: `existing-${index}`,
+      url,
+      sizes: {
+        thumbnail: url,
+        medium: url,
+        large: url,
+      },
+      isCover: index === 0,
+      syncToWordPress: true,
+      originalName: `image-${index + 1}.jpg`,
+    })) || [],
+  )
+
   useEffect(() => {
     // Save the current scroll position
     const scrollPosition = window.scrollY || window.pageYOffset
@@ -167,6 +183,8 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
 
     const formData = new FormData(event.currentTarget)
 
+    formData.append("images", JSON.stringify(images))
+
     try {
       if (editProperty) {
         if (!editProperty.id) {
@@ -208,10 +226,12 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
       const addressInput = document.getElementById("address") as HTMLInputElement
       const citySelect = document.querySelector('[name="cityId"]') as HTMLSelectElement
       const provinceSelect = document.querySelector('[name="provinceId"]') as HTMLSelectElement
+      const neighborhoodSelect = document.querySelector('[name="neighborhoodId"]') as HTMLSelectElement
 
       const address = addressInput?.value
       const cityName = cities.find((c) => c.id === citySelect?.value)?.name
       const provinceName = provinces.find((p) => p.id === provinceSelect?.value)?.name
+      const neighborhoodName = neighborhoods.find((n) => n.id === neighborhoodSelect?.value)?.name
 
       if (!address || !cityName || !provinceName) {
         setGeocodingMessage("Por favor complete la dirección, ciudad y provincia primero")
@@ -219,7 +239,12 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
         return
       }
 
-      const fullAddress = `${address}, ${cityName}, ${provinceName}, Argentina`
+      const cityLabel = cityName === "Corrientes" ? "Corrientes Capital" : cityName
+      const fullAddress = neighborhoodName
+        ? `${address}, ${neighborhoodName}, ${cityLabel}, ${provinceName}, Argentina`
+        : `${address}, ${cityLabel}, ${provinceName}, Argentina`
+
+      console.log("[v0] Geocoding address:", fullAddress)
 
       const result = await geocodeAddress(fullAddress)
 
@@ -231,7 +256,9 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
           latitudeInput.value = result.latitude.toString()
           longitudeInput.value = result.longitude.toString()
           setMapCoordinates({ lat: result.latitude, lng: result.longitude })
-          setGeocodingMessage(`Coordenadas calculadas exitosamente: ${result.latitude}, ${result.longitude}`)
+          setGeocodingMessage(
+            `Coordenadas calculadas exitosamente: ${result.latitude.toFixed(6)}, ${result.longitude.toFixed(6)}`,
+          )
         }
       } else {
         setGeocodingMessage("No se pudieron calcular las coordenadas. Verifique la dirección e intente nuevamente.")
@@ -374,6 +401,17 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
       setMapCoordinates({ lat, lng })
     } else {
       setMapCoordinates(null)
+    }
+  }
+
+  function handleMarkerDrag(lat: number, lng: number) {
+    const latitudeInput = document.getElementById("latitude") as HTMLInputElement
+    const longitudeInput = document.getElementById("longitude") as HTMLInputElement
+
+    if (latitudeInput && longitudeInput) {
+      latitudeInput.value = lat.toFixed(7)
+      longitudeInput.value = lng.toFixed(7)
+      setMapCoordinates({ lat, lng })
     }
   }
 
@@ -751,9 +789,12 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
                 ]}
                 defaultCenter={[mapCoordinates.lat, mapCoordinates.lng]}
                 defaultZoom={15}
+                draggable={true}
+                onMarkerDrag={handleMarkerDrag}
               />
               <p className="text-xs text-muted-foreground">
-                El mapa muestra la ubicación exacta basada en las coordenadas ingresadas
+                Haga click en el marcador para ver la dirección. Puede arrastrar el marcador para ajustar la ubicación
+                manualmente.
               </p>
             </div>
           )}
@@ -936,18 +977,6 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="images">URLs de Imágenes</Label>
-            <Textarea
-              id="images"
-              name="images"
-              rows={3}
-              placeholder="https://ejemplo.com/imagen1.jpg, https://ejemplo.com/imagen2.jpg"
-              defaultValue={editProperty?.images?.join(", ") ?? ""}
-              disabled={isLoading}
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="videos">URLs de Videos</Label>
             <Input
               id="videos"
@@ -968,6 +997,16 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
               disabled={isLoading}
             />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Imágenes de la Propiedad</CardTitle>
+          <CardDescription>Sube hasta {12} imágenes optimizadas automáticamente</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PropertyImageUpload images={images} onChange={setImages} maxImages={12} />
         </CardContent>
       </Card>
 

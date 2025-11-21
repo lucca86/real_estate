@@ -24,9 +24,17 @@ interface PropertiesMapProps {
   properties: Property[]
   defaultCenter?: [number, number]
   defaultZoom?: number
+  draggable?: boolean
+  onMarkerDrag?: (lat: number, lng: number) => void
 }
 
-export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, defaultZoom = 13 }: PropertiesMapProps) {
+export function PropertiesMap({
+  properties,
+  defaultCenter = CORRIENTES_CENTER,
+  defaultZoom = 13,
+  draggable = false,
+  onMarkerDrag,
+}: PropertiesMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<any[]>([])
@@ -107,19 +115,58 @@ export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, d
           const lat = property.latitude!
           const lng = property.longitude!
 
-          const marker = L.marker([lat, lng])
+          const marker = L.marker([lat, lng], {
+            draggable: draggable,
+          })
+
+          marker.bindPopup(`
+            <div class="text-sm">
+              <strong>${property.address}</strong><br/>
+              ${property.city}<br/>
+              <span class="text-xs text-muted-foreground">
+                ${lat.toFixed(6)}, ${lng.toFixed(6)}
+              </span>
+            </div>
+          `)
 
           marker.on("click", () => {
             setSelectedProperty(property)
             map.setView([lat, lng], 16, { animate: true })
+            marker.openPopup()
           })
+
+          if (draggable && onMarkerDrag) {
+            marker.on("dragend", (event) => {
+              const newPos = event.target.getLatLng()
+              onMarkerDrag(newPos.lat, newPos.lng)
+
+              marker.setPopupContent(`
+                <div class="text-sm">
+                  <strong>${property.address}</strong><br/>
+                  ${property.city}<br/>
+                  <span class="text-xs text-muted-foreground">
+                    ${newPos.lat.toFixed(6)}, ${newPos.lng.toFixed(6)}
+                  </span>
+                  <br/>
+                  <span class="text-xs text-green-600">✓ Ubicación actualizada</span>
+                </div>
+              `)
+              marker.openPopup()
+            })
+          }
 
           marker.addTo(map)
           markersRef.current.push(marker)
         })
 
         setTimeout(() => {
-          map.invalidateSize()
+          if (mapInstanceRef.current && mapRef.current) {
+            try {
+              mapInstanceRef.current.invalidateSize()
+            } catch (err) {
+              console.error("[v0] Error invalidating map size:", err)
+            }
+          }
           setIsLoading(false)
         }, 300)
       } catch (err) {
@@ -138,7 +185,7 @@ export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, d
         mapInstanceRef.current = null
       }
     }
-  }, [properties, validProperties, defaultCenter, defaultZoom])
+  }, [properties, validProperties, defaultCenter, defaultZoom, draggable, onMarkerDrag])
 
   const typeLabels: Record<string, string> = {
     CASA: "Casa",

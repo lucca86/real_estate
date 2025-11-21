@@ -26,7 +26,7 @@ interface WordPressProperty {
   }
 }
 
-class WordPressAPI {
+export class WordPressAPI {
   private baseUrl: string
   private username: string
   private password: string
@@ -200,16 +200,16 @@ class WordPressAPI {
     }
 
     if (property.images && property.images.length > 0) {
-      console.log(`[v0] Starting upload of ${property.images.length} images...`)
+      console.log(`[v0] Starting upload of ${property.images.length} images marked for WordPress...`)
       const imageIds: number[] = []
 
       for (let i = 0; i < property.images.length; i++) {
-        const image = property.images[i]
-        console.log(`[v0] Uploading image ${i + 1}/${property.images.length}: ${image}`)
+        const imageUrl = property.images[i]
+        console.log(`[v0] Uploading image ${i + 1}/${property.images.length}: ${imageUrl}`)
         const filename = `property-${property.id}-${i + 1}.jpg`
 
         try {
-          const imageId = await this.uploadImage(image, filename)
+          const imageId = await this.uploadImage(imageUrl, filename)
 
           if (imageId) {
             imageIds.push(imageId)
@@ -473,4 +473,3 @@ const WORDPRESS_TAXONOMY_MAP = {
 export const wordpressAPI = new WordPressAPI()
 export const wordpressClient = wordpressAPI
 export type { WordPressProperty }
-export { WordPressAPI }

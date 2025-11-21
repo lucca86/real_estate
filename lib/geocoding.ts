@@ -35,7 +35,7 @@ function expandAbbreviations(text: string): string {
 export async function geocodeAddress(address: string): Promise<GeocodingResult | null> {
   try {
     const encodedAddress = encodeURIComponent(address)
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=1`
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=10&countrycodes=ar&addressdetails=1`
 
     const response = await fetch(url, {
       headers: {
@@ -55,7 +55,26 @@ export async function geocodeAddress(address: string): Promise<GeocodingResult |
       return null
     }
 
-    const result = data[0]
+    const preferredResult = data.find((result: any) => {
+      const displayName = result.display_name.toLowerCase()
+      const addressDetails = result.address || {}
+
+      const isCorrientsesCapital =
+        (addressDetails.city === "Corrientes" || addressDetails.town === "Corrientes") &&
+        addressDetails.state === "Corrientes" &&
+        !displayName.includes("paso de la patria") &&
+        !displayName.includes("santa ana") &&
+        !displayName.includes("riachuelo") &&
+        !displayName.includes("empedrado")
+
+      return isCorrientsesCapital
+    })
+
+    const result = preferredResult || data[0]
+
+    console.log("[v0] Selected geocoding result:", result.display_name)
+    console.log("[v0] Coordinates:", result.lat, result.lon)
+
     return {
       latitude: Number.parseFloat(result.lat),
       longitude: Number.parseFloat(result.lon),
