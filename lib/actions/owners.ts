@@ -29,9 +29,9 @@ const quickOwnerSchema = z.object({
 export async function getOwners() {
   try {
     const supabase = await createServerClient()
-    
+
     const { data: owners, error } = await supabase
-      .from('owners')
+      .from("owners")
       .select(`
         *,
         city:cities(name),
@@ -39,16 +39,17 @@ export async function getOwners() {
         country:countries(name),
         properties:properties(count)
       `)
-      .order('created_at', { ascending: false })
+      .order("created_at", { ascending: false })
 
     if (error) throw error
 
-    const transformedOwners = owners?.map(owner => ({
-      ...owner,
-      _count: {
-        properties: owner.properties?.length || 0
-      }
-    })) || []
+    const transformedOwners =
+      owners?.map((owner) => ({
+        ...owner,
+        _count: {
+          properties: owner.properties?.length || 0,
+        },
+      })) || []
 
     return { success: true, data: transformedOwners }
   } catch (error) {
@@ -60,16 +61,16 @@ export async function getOwners() {
 export async function getOwnerById(id: string) {
   try {
     const supabase = await createServerClient()
-    
+
     const { data: owner, error } = await supabase
-      .from('owners')
+      .from("owners")
       .select(`
         *,
         city:cities(name),
         province:provinces(name),
         country:countries(name)
       `)
-      .eq('id', id)
+      .eq("id", id)
       .single()
 
     if (error) throw error
@@ -82,43 +83,34 @@ export async function getOwnerById(id: string) {
   }
 }
 
-export async function createOwner(data: {
-  name: string
-  email: string
-  phone: string
-  secondaryPhone?: string
-  address?: string
-  cityId?: string
-  provinceId?: string
-  countryId?: string
-  idNumber?: string
-  taxId?: string
-  notes?: string
-  isActive: boolean
-}) {
+export async function createOwner(formData: FormData) {
   try {
+    const name = formData.get("name") as string
+    const email = formData.get("email") as string
+    const phone = formData.get("phone") as string
+
+    if (!name || !email || !phone) {
+      return { success: false, error: "Nombre, email y teléfono son requeridos" }
+    }
+
     const ownerData = {
       id: crypto.randomUUID(),
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      secondary_phone: data.secondaryPhone || null,
-      address: data.address || null,
-      city_id: data.cityId || null,
-      province_id: data.provinceId || null,
-      country_id: data.countryId || null,
-      id_number: data.idNumber || null,
-      tax_id: data.taxId || null,
-      notes: data.notes || null,
-      is_active: data.isActive,
+      name,
+      email,
+      phone,
+      secondary_phone: null,
+      address: null,
+      city_id: null,
+      province_id: null,
+      country_id: null,
+      id_number: null,
+      tax_id: null,
+      notes: null,
+      is_active: true,
     }
 
     const supabase = await createServerClient()
-    const { data: owner, error } = await supabase
-      .from('owners')
-      .insert(ownerData)
-      .select()
-      .single()
+    const { data: owner, error } = await supabase.from("owners").insert(ownerData).select().single()
 
     if (error) throw error
 
@@ -130,20 +122,23 @@ export async function createOwner(data: {
   }
 }
 
-export async function updateOwner(id: string, data: {
-  name: string
-  email: string
-  phone: string
-  secondaryPhone?: string
-  address?: string
-  cityId?: string
-  provinceId?: string
-  countryId?: string
-  idNumber?: string
-  taxId?: string
-  notes?: string
-  isActive: boolean
-}) {
+export async function updateOwner(
+  id: string,
+  data: {
+    name: string
+    email: string
+    phone: string
+    secondaryPhone?: string
+    address?: string
+    cityId?: string
+    provinceId?: string
+    countryId?: string
+    idNumber?: string
+    taxId?: string
+    notes?: string
+    isActive: boolean
+  },
+) {
   try {
     const ownerData = {
       name: data.name,
@@ -161,12 +156,7 @@ export async function updateOwner(id: string, data: {
     }
 
     const supabase = await createServerClient()
-    const { data: owner, error } = await supabase
-      .from('owners')
-      .update(ownerData)
-      .eq('id', id)
-      .select()
-      .single()
+    const { data: owner, error } = await supabase.from("owners").update(ownerData).eq("id", id).select().single()
 
     if (error) throw error
 
@@ -182,10 +172,7 @@ export async function updateOwner(id: string, data: {
 export async function deleteOwner(id: string) {
   try {
     const supabase = await createServerClient()
-    const { error } = await supabase
-      .from('owners')
-      .delete()
-      .eq('id', id)
+    const { error } = await supabase.from("owners").delete().eq("id", id)
 
     if (error) throw error
 

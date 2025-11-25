@@ -1,18 +1,13 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { Input } from "@/components/ui/input"
+
+import { useState, useMemo, useEffect } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import Link from "next/link"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 type City = {
   id: string
@@ -29,33 +24,74 @@ type CitiesTableProps = {
 }
 
 export function CitiesTableWithFilters({ cities }: CitiesTableProps) {
+  useEffect(() => {
+    console.log("=== CITIES DATA DEBUG ===")
+    console.log("Total cities received:", cities.length)
+    console.log("First city sample:", cities[0])
+    console.log(
+      "All is_active values:",
+      cities.map((c) => ({ name: c.name, is_active: c.is_active, type: typeof c.is_active })),
+    )
+    console.log(
+      "All province names:",
+      cities.map((c) => ({ name: c.name, province: c.province?.name })),
+    )
+  }, [cities])
+
   const [searchTerm, setSearchTerm] = useState("")
   const [provinceFilter, setProvinceFilter] = useState<string>("Todos")
   const [statusFilter, setStatusFilter] = useState<string>("Todos")
   const [sortColumn, setSortColumn] = useState<"name" | "province" | null>(null)
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
 
-  // Get unique provinces for filter
+  useEffect(() => {
+    console.log("=== FILTER CHANGE ===")
+    console.log("Province filter:", provinceFilter)
+    console.log("Status filter:", statusFilter)
+    console.log("Search term:", searchTerm)
+  }, [provinceFilter, statusFilter, searchTerm])
+
   const provinces = useMemo(() => {
-    const uniqueProvinces = new Set(
-      cities.map((city) => city.province?.name).filter(Boolean) as string[]
-    )
+    const uniqueProvinces = new Set<string>()
+    cities.forEach((city) => {
+      if (city.province && city.province.name) {
+        uniqueProvinces.add(city.province.name)
+      }
+    })
     return ["Todos", ...Array.from(uniqueProvinces).sort()]
   }, [cities])
 
-  // Filter and sort cities
   const filteredAndSortedCities = useMemo(() => {
-    let filtered = cities.filter((city) => {
+    console.log("=== FILTERING CITIES ===")
+    console.log("Province filter value:", provinceFilter)
+
+    const filtered = cities.filter((city) => {
+      // Search filter
       const matchesSearch = city.name.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesProvince =
-        provinceFilter === "Todos" || city.province?.name === provinceFilter
+
+      // Province filter - explicit comparison
+      const cityProvinceName = city.province?.name || ""
+      const matchesProvince = provinceFilter === "Todos" || cityProvinceName === provinceFilter
+
+      console.log(
+        `City: ${city.name}, Province: ${cityProvinceName}, Filter: ${provinceFilter}, Matches: ${matchesProvince}`,
+      )
+
+      // Convert any possible value to boolean (handles boolean, number, or string)
+      const cityIsActive = Boolean(city.is_active)
       const matchesStatus =
         statusFilter === "Todos" ||
-        (statusFilter === "Activo" && city.is_active) ||
-        (statusFilter === "Inactivo" && !city.is_active)
+        (statusFilter === "Activo" && cityIsActive) ||
+        (statusFilter === "Inactivo" && !cityIsActive)
 
       return matchesSearch && matchesProvince && matchesStatus
     })
+
+    console.log("Filtered cities count:", filtered.length)
+    console.log(
+      "Filtered cities:",
+      filtered.map((c) => c.name),
+    )
 
     // Sort
     if (sortColumn) {
@@ -103,6 +139,16 @@ export function CitiesTableWithFilters({ cities }: CitiesTableProps) {
             className="pl-8"
           />
         </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectValue placeholder="Filtrar por estado" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Todos">Todos</SelectItem>
+            <SelectItem value="Activo">Activo</SelectItem>
+            <SelectItem value="Inactivo">Inactivo</SelectItem>
+          </SelectContent>
+        </Select>
         <Select value={provinceFilter} onValueChange={setProvinceFilter}>
           <SelectTrigger className="w-full sm:w-[200px]">
             <SelectValue placeholder="Filtrar por provincia" />
@@ -115,32 +161,16 @@ export function CitiesTableWithFilters({ cities }: CitiesTableProps) {
             ))}
           </SelectContent>
         </Select>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[200px]">
-            <SelectValue placeholder="Filtrar por estado" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Todos">Todos</SelectItem>
-            <SelectItem value="Activo">Activo</SelectItem>
-            <SelectItem value="Inactivo">Inactivo</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Table */}
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead
-              className="cursor-pointer hover:bg-muted/50"
-              onClick={() => handleSort("name")}
-            >
+            <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort("name")}>
               Nombre {sortColumn === "name" && (sortDirection === "asc" ? "↑" : "↓")}
             </TableHead>
-            <TableHead
-              className="cursor-pointer hover:bg-muted/50"
-              onClick={() => handleSort("province")}
-            >
+            <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort("province")}>
               Provincia {sortColumn === "province" && (sortDirection === "asc" ? "↑" : "↓")}
             </TableHead>
             <TableHead>Estado</TableHead>
@@ -155,33 +185,57 @@ export function CitiesTableWithFilters({ cities }: CitiesTableProps) {
               </TableCell>
             </TableRow>
           ) : (
-            filteredAndSortedCities.map((city) => (
-              <TableRow key={city.id}>
-                <TableCell className="font-medium">{city.name}</TableCell>
-                <TableCell>{city.province?.name || "-"}</TableCell>
-                <TableCell>
-                  <Badge variant={city.is_active ? "default" : "secondary"}>
-                    {city.is_active ? "Activo" : "Inactivo"}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/locations/cities/${city.id}/edit`}>
-                        {/* Added icon component for Edit button */}
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2V7a2 2 0 00-2-2zm-1 6a1 1 0 112 0v1a1 1 0 01-2 0v-1zm-1-6a1 1 0 012 0V4a1 1 0 01-2 0zm1 16a1 1 0 01-1-1V8a1 1 0 012 0v11a1 1 0 01-1 1zm-1-6a1 1 0 112 0v1a1 1 0 01-2 0v-1z"></path></svg>
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" size="sm">
-                      <Link href={`/locations/cities/${city.id}/delete`}>
-                        {/* Added icon component for Trash button */}
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0117.832 21H6.168a2 2 0 01-1.995-1.858L5 7m3 0V13a2 2 0 004 0V7m6 0V13a2 2 0 004 0V7h-14zm4 0a1 1 0 00-1 1v6a1 1 0 001 1h6a1 1 0 001-1V8a1 1 0 00-1-1h-6z"></path></svg>
-                      </Link>
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
+            filteredAndSortedCities.map((city) => {
+              const isActive = Boolean(city.is_active)
+
+              return (
+                <TableRow key={city.id}>
+                  <TableCell className="font-medium">{city.name}</TableCell>
+                  <TableCell>{city.province?.name || "-"}</TableCell>
+                  <TableCell>
+                    <Badge variant={isActive ? "default" : "secondary"}>{isActive ? "Activa" : "Inactiva"}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button asChild variant="outline" size="sm">
+                        <Link href={`/locations/cities/${city.id}/edit`}>
+                          <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-1.5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
+                            />
+                          </svg>
+                        </Link>
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )
+            })
           )}
         </TableBody>
       </Table>

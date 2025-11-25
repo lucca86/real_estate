@@ -1,12 +1,12 @@
 import { getCurrentUser } from "@/lib/auth"
-import { redirect, notFound } from 'next/navigation'
+import { redirect, notFound } from "next/navigation"
 import { getPropertyById } from "@/lib/actions/properties"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { WordPressSyncButton } from "@/components/wordpress-sync-button"
 import { ImageGallery } from "@/components/image-gallery"
 import { PropertiesMap } from "@/components/properties-map"
-import { MapPin, Bed, Bath, Car, User, ChevronLeft, Edit } from 'lucide-react'
+import { MapPin, Bed, Bath, Car, User, ChevronLeft, Edit } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
@@ -24,14 +24,15 @@ const statusLabels = {
   ALQUILADO: "Alquilado",
 }
 
-export default async function PropertyDetailPage({ params }: { params: { id: string } }) {
+export default async function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser()
 
   if (!user) {
     redirect("/login")
   }
 
-  const property = await getPropertyById(params.id)
+  const { id } = await params
+  const property = await getPropertyById(id)
 
   if (!property) {
     notFound()
@@ -53,7 +54,7 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
             syncedAt={property.synced_at}
           />
           <Button asChild variant="outline">
-            <Link href={`/properties/${params.id}/edit`}>
+            <Link href={`/properties/${id}/edit`}>
               <Edit className="mr-2 h-4 w-4" />
               Editar
             </Link>

@@ -2,7 +2,7 @@ import { createServerClient } from "@/lib/supabase/server"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Building2, Edit, MapPin, Plus } from 'lucide-react'
+import { Building2, Edit, MapPin, Plus } from "lucide-react"
 import Link from "next/link"
 import { DeletePropertyButton } from "@/components/delete-property-button"
 import type { SessionUser } from "@/lib/auth"
@@ -13,21 +13,25 @@ interface PropertiesTableProps {
 
 export async function PropertiesTable({ currentUser }: PropertiesTableProps) {
   const supabase = await createServerClient()
-  
+
   const { data: properties, error } = await supabase
-    .from('properties')
+    .from("properties")
     .select(`
       *,
-      owner:owners!properties_owner_id_fkey(name),
-      property_type:property_types(name),
-      city:cities(name),
-      province:provinces(name)
+      owner:owners!owner_id(name),
+      propertyType:property_types!property_type_id(name),
+      city:cities!city_id(name),
+      province:provinces!province_id(name)
     `)
-    .order('created_at', { ascending: false })
+    .order("created_at", { ascending: false })
 
   if (error || !properties) {
-    console.error('[v0] Error fetching properties:', error)
-    return <Card><CardContent className="p-6">Error al cargar propiedades</CardContent></Card>
+    console.error("[v0] Error fetching properties:", error)
+    return (
+      <Card>
+        <CardContent className="p-6">Error al cargar propiedades</CardContent>
+      </Card>
+    )
   }
 
   const statusColors: Record<string, string> = {
@@ -46,6 +50,20 @@ export async function PropertiesTable({ currentUser }: PropertiesTableProps) {
     ALQUILADO: "Alquilado",
     ELIMINADO: "Eliminado",
     EN_REVISION: "En Revisión",
+  }
+
+  const transactionLabels: Record<string, string> = {
+    VENTA: "Venta",
+    ALQUILER: "Alquiler",
+    VENTA_ALQUILER: "Venta/Alquiler",
+    ALQUILER_OPCION_COMPRA: "Alquiler con Opción a Compra",
+  }
+
+  const transactionColors: Record<string, string> = {
+    VENTA: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+    ALQUILER: "bg-green-500/10 text-green-500 border-green-500/20",
+    VENTA_ALQUILER: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+    ALQUILER_OPCION_COMPRA: "bg-purple-500/10 text-purple-500 border-purple-500/20",
   }
 
   return (
@@ -101,14 +119,22 @@ export async function PropertiesTable({ currentUser }: PropertiesTableProps) {
                     {property.city?.name || "Sin ciudad"}, {property.province?.name || "Sin provincia"}
                   </div>
 
-                  <div className="mb-3 text-sm text-muted-foreground">
-                    <span className="font-medium">{property.property_type?.name || "Sin tipo"}</span>
-                    {property.bedrooms && property.bathrooms && (
-                      <span className="ml-2">
-                        • {property.bedrooms} hab • {property.bathrooms} baños
-                      </span>
-                    )}
+                  <div className="mb-3 flex flex-wrap gap-2">
+                    <Badge variant="outline">{property.propertyType?.name || "Sin tipo"}</Badge>
+                    <Badge
+                      variant="outline"
+                      className={transactionColors[property.transactionType as keyof typeof transactionColors] || ""}
+                    >
+                      {transactionLabels[property.transactionType as keyof typeof transactionLabels] ||
+                        property.transactionType}
+                    </Badge>
                   </div>
+
+                  {property.bedrooms && property.bathrooms && (
+                    <div className="mb-3 text-sm text-muted-foreground">
+                      {property.bedrooms} hab • {property.bathrooms} baños
+                    </div>
+                  )}
 
                   <div className="mb-4 flex items-baseline gap-1">
                     <span className="text-2xl font-bold text-primary">${property.price.toLocaleString()}</span>
@@ -124,7 +150,7 @@ export async function PropertiesTable({ currentUser }: PropertiesTableProps) {
                           <span className="sr-only">Editar</span>
                         </Link>
                       </Button>
-                      {(currentUser.role === "ADMIN" || property.owner_id === currentUser.id) && (
+                      {(currentUser.role === "ADMIN" || property.ownerId === currentUser.id) && (
                         <DeletePropertyButton propertyId={property.id} propertyTitle={property.title} />
                       )}
                     </div>

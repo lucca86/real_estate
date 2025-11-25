@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, MapPin, Sparkles, Plus } from "lucide-react"
 import { createProperty, updateProperty } from "@/lib/actions/properties"
-import { geocodeAddress } from "@/lib/geocoding"
+import { geocodeProperty } from "@/lib/geocoding"
 import { generatePropertyTitle } from "@/lib/actions/ai-property-title"
 import { useToast } from "@/hooks/use-toast"
 import { PropertiesMap } from "@/components/property-map"
@@ -239,14 +239,9 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
         return
       }
 
-      const cityLabel = cityName === "Corrientes" ? "Corrientes Capital" : cityName
-      const fullAddress = neighborhoodName
-        ? `${address}, ${neighborhoodName}, ${cityLabel}, ${provinceName}, Argentina`
-        : `${address}, ${cityLabel}, ${provinceName}, Argentina`
+      console.log("[v0] Geocoding address:", address, cityName, provinceName, neighborhoodName)
 
-      console.log("[v0] Geocoding address:", fullAddress)
-
-      const result = await geocodeAddress(fullAddress)
+      const result = await geocodeProperty(address, cityName, provinceName, "Argentina", neighborhoodName)
 
       if (result) {
         const latitudeInput = document.getElementById("latitude") as HTMLInputElement

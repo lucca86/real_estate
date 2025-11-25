@@ -6,31 +6,23 @@ export async function getDashboardStats() {
   const supabase = await createServerClient()
 
   try {
-    const { count: totalProperties } = await supabase
-      .from("properties")
-      .select("*", { count: "exact", head: true })
+    const { count: totalProperties } = await supabase.from("properties").select("*", { count: "exact", head: true })
 
     const { count: activeProperties } = await supabase
       .from("properties")
       .select("*", { count: "exact", head: true })
       .eq("is_active", true)
 
-    const { count: totalClients } = await supabase
-      .from("clients")
-      .select("*", { count: "exact", head: true })
+    const { count: totalClients } = await supabase.from("clients").select("*", { count: "exact", head: true })
 
-    const { count: totalOwners } = await supabase
-      .from("owners")
-      .select("*", { count: "exact", head: true })
+    const { count: totalOwners } = await supabase.from("owners").select("*", { count: "exact", head: true })
 
     const { count: upcomingAppointments } = await supabase
       .from("appointments")
       .select("*", { count: "exact", head: true })
       .gte("date", new Date().toISOString())
 
-    const { data: propertiesByType } = await supabase
-      .from("properties")
-      .select(`
+    const { data: propertiesByType } = await supabase.from("properties").select(`
         property_type_id,
         property_types!inner(name)
       `)
@@ -41,17 +33,19 @@ export async function getDashboardStats() {
       return acc
     }, {})
 
-    const { data: propertiesByCity } = await supabase
-      .from("properties")
-      .select(`
-        city_id,
-        cities!inner(name)
-      `)
-      .limit(10)
+    const { data: propertiesByTransaction } = await supabase.from("properties").select("transaction_type")
 
-    const cityCounts = propertiesByCity?.reduce((acc: Record<string, number>, prop) => {
-      const cityName = (prop.cities as any)?.name || "Sin Ciudad"
-      acc[cityName] = (acc[cityName] || 0) + 1
+    const transactionCounts = propertiesByTransaction?.reduce((acc: Record<string, number>, prop) => {
+      const transactionName: string = prop.transaction_type || "Sin Definir"
+      const translationMap: Record<string, string> = {
+        VENTA: "Venta",
+        ALQUILER: "Alquiler",
+        VENTA_ALQUILER: "Venta/Alquiler",
+        ALQUILER_OPCION_COMPRA: "Alquiler con Opción a Compra",
+      }
+      const translatedName = translationMap[transactionName] || transactionName
+
+      acc[translatedName] = (acc[translatedName] || 0) + 1
       return acc
     }, {})
 
@@ -68,14 +62,15 @@ export async function getDashboardStats() {
       .order("created_at", { ascending: false })
       .limit(5)
 
-    const transformedRecentProperties = recentProperties?.map((prop: any) => ({
-      id: prop.id,
-      title: prop.title,
-      price: prop.price,
-      created_at: prop.created_at,
-      property_types: prop.property_types?.[0] || null,
-      cities: prop.cities?.[0] || null,
-    })) || []
+    const transformedRecentProperties =
+      recentProperties?.map((prop: any) => ({
+        id: prop.id,
+        title: prop.title,
+        price: prop.price,
+        created_at: prop.created_at,
+        property_types: prop.property_types?.[0] || null,
+        cities: prop.cities?.[0] || null,
+      })) || []
 
     return {
       stats: {
@@ -90,7 +85,7 @@ export async function getDashboardStats() {
           name,
           count,
         })),
-        cities: Object.entries(cityCounts || {}).slice(0, 5).map(([name, count]) => ({
+        transactionTypes: Object.entries(transactionCounts || {}).map(([name, count]) => ({
           name,
           count,
         })),
@@ -109,7 +104,7 @@ export async function getDashboardStats() {
       },
       charts: {
         propertyTypes: [],
-        cities: [],
+        transactionTypes: [],
       },
       recentProperties: [],
     }

@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from 'next/navigation'
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { createOwner, updateOwner, deleteOwner } from "@/lib/actions/owners"
-import { Loader2, Trash2 } from 'lucide-react'
+import { Loader2, Trash2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import {
   AlertDialog,
@@ -25,14 +25,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Switch } from "@/components/ui/switch"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { createServerClient } from "@/lib/supabase/server"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const ownerSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
@@ -77,8 +70,8 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [filteredProvinces, setFilteredProvinces] = useState(provinces)
-  const [filteredCities, setFilteredCities] = useState(cities)
+  const [selectedCountryId, setSelectedCountryId] = useState(owner?.country_id || "")
+  const [selectedProvinceId, setSelectedProvinceId] = useState(owner?.province_id || "")
 
   const {
     register,
@@ -105,36 +98,45 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
   })
 
   const isActive = watch("isActive")
-  const countryId = watch("countryId")
-  const provinceId = watch("provinceId")
+  const cityId = watch("cityId")
 
-  useEffect(() => {
-    if (countryId) {
-      const filtered = provinces.filter(p => p.country_id === countryId)
-      setFilteredProvinces(filtered)
-      const currentProvince = provinces.find(p => p.id === provinceId)
-      if (currentProvince && currentProvince.country_id !== countryId) {
-        setValue("provinceId", "")
-        setValue("cityId", "")
-      }
-    } else {
-      setFilteredProvinces(provinces)
-    }
-  }, [countryId, provinces, provinceId, setValue])
+  const filteredProvinces = selectedCountryId ? provinces.filter((p) => p.country_id === selectedCountryId) : []
 
-  useEffect(() => {
-    if (provinceId) {
-      const filtered = cities.filter(c => c.province_id === provinceId)
-      setFilteredCities(filtered)
-    } else {
-      setFilteredCities(cities)
-    }
-  }, [provinceId, cities])
+  const filteredCities = selectedProvinceId ? cities.filter((c) => c.province_id === selectedProvinceId) : []
+
+  const handleCountryChange = (value: string) => {
+    setSelectedCountryId(value)
+    setValue("countryId", value)
+    setSelectedProvinceId("")
+    setValue("provinceId", "")
+    setValue("cityId", "")
+  }
+
+  const handleProvinceChange = (value: string) => {
+    setSelectedProvinceId(value)
+    setValue("provinceId", value)
+    setValue("cityId", "")
+  }
 
   const onSubmit = async (data: OwnerFormData) => {
     setIsSubmitting(true)
     try {
-      const result = owner ? await updateOwner(owner.id, data) : await createOwner(data)
+      const formData = new FormData()
+      formData.append("name", data.name)
+      formData.append("email", data.email)
+      formData.append("phone", data.phone)
+      formData.append("countryId", data.countryId)
+      formData.append("isActive", String(data.isActive))
+
+      if (data.secondaryPhone) formData.append("secondaryPhone", data.secondaryPhone)
+      if (data.address) formData.append("address", data.address)
+      if (data.cityId) formData.append("cityId", data.cityId)
+      if (data.provinceId) formData.append("provinceId", data.provinceId)
+      if (data.idNumber) formData.append("idNumber", data.idNumber)
+      if (data.taxId) formData.append("taxId", data.taxId)
+      if (data.notes) formData.append("notes", data.notes)
+
+      const result = owner ? await updateOwner(owner.id, data) : await createOwner(formData)
 
       if (result.success) {
         toast({
@@ -251,7 +253,7 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
               <Label htmlFor="countryId">
                 País <span className="text-destructive">*</span>
               </Label>
-              <Select value={countryId} onValueChange={(value) => setValue("countryId", value)}>
+              <Select value={selectedCountryId} onValueChange={handleCountryChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar país" />
                 </SelectTrigger>
@@ -268,9 +270,11 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
 
             <div className="space-y-2">
               <Label htmlFor="provinceId">Provincia/Estado</Label>
-              <Select value={provinceId} onValueChange={(value) => setValue("provinceId", value)} disabled={!countryId}>
+              <Select value={selectedProvinceId} onValueChange={handleProvinceChange} disabled={!selectedCountryId}>
                 <SelectTrigger>
-                  <SelectValue placeholder={countryId ? "Seleccionar provincia" : "Seleccione un país primero"} />
+                  <SelectValue
+                    placeholder={selectedCountryId ? "Seleccionar provincia" : "Seleccione un país primero"}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {filteredProvinces.map((province) => (
@@ -284,9 +288,15 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
 
             <div className="space-y-2">
               <Label htmlFor="cityId">Ciudad</Label>
-              <Select value={watch("cityId")} onValueChange={(value) => setValue("cityId", value)} disabled={!provinceId}>
+              <Select
+                value={cityId}
+                onValueChange={(value) => setValue("cityId", value)}
+                disabled={!selectedProvinceId}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder={provinceId ? "Seleccionar ciudad" : "Seleccione una provincia primero"} />
+                  <SelectValue
+                    placeholder={selectedProvinceId ? "Seleccionar ciudad" : "Seleccione una provincia primero"}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {filteredCities.map((city) => (

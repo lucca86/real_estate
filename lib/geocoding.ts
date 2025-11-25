@@ -5,6 +5,31 @@ interface GeocodingResult {
 }
 
 /**
+ * Correct common misspellings of Argentine street names
+ */
+function correctStreetName(street: string): string {
+  const corrections: Record<string, string> = {
+    // Hipólito Yrigoyen variations
+    irogyen: "yrigoyen",
+    irigoyen: "yrigoyen",
+    "hipolito irogyen": "hipolito yrigoyen",
+    "hipólito irogyen": "hipólito yrigoyen",
+    // Other common corrections
+    "san martin": "san martín",
+    colon: "colón",
+    cordoba: "córdoba",
+  }
+
+  let corrected = street.toLowerCase()
+  for (const [wrong, right] of Object.entries(corrections)) {
+    corrected = corrected.replace(new RegExp(wrong, "gi"), right)
+  }
+
+  // Capitalize first letter of each word
+  return corrected.replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+/**
  * Expand common Spanish address abbreviations
  */
 function expandAbbreviations(text: string): string {
@@ -37,6 +62,8 @@ export async function geocodeAddress(address: string): Promise<GeocodingResult |
     const encodedAddress = encodeURIComponent(address)
     const url = `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=10&countrycodes=ar&addressdetails=1`
 
+    console.log("[v0] Geocoding URL:", url)
+
     const response = await fetch(url, {
       headers: {
         "User-Agent": "Real Estate Management App",
@@ -60,8 +87,10 @@ export async function geocodeAddress(address: string): Promise<GeocodingResult |
       const addressDetails = result.address || {}
 
       const isCorrientsesCapital =
-        (addressDetails.city === "Corrientes" || addressDetails.town === "Corrientes") &&
-        addressDetails.state === "Corrientes" &&
+        (addressDetails.city === "Corrientes" ||
+          addressDetails.town === "Corrientes" ||
+          addressDetails.municipality === "Corrientes") &&
+        (addressDetails.state === "Corrientes" || addressDetails.state === "Provincia de Corrientes") &&
         !displayName.includes("paso de la patria") &&
         !displayName.includes("santa ana") &&
         !displayName.includes("riachuelo") &&
@@ -95,50 +124,58 @@ export async function geocodeProperty(
   city: string,
   state: string,
   country = "Argentina",
+  neighborhood?: string,
 ): Promise<GeocodingResult | null> {
-  // Strategy 1: Try with expanded abbreviations
-  const expandedAddress = expandAbbreviations(address)
-  const fullAddress = `${expandedAddress}, ${city}, ${state}, ${country}`
-  console.log("[v0] Trying geocoding with expanded address:", fullAddress)
+  console.log("[v0] Starting geocoding with:", { address, city, state, neighborhood })
 
-  let result = await geocodeAddress(fullAddress)
-  if (result) {
-    console.log("[v0] Geocoding successful with expanded address")
-    return result
+  // Normalize city name - don't use "Capital"
+  const normalizedCity = city === "Capital" ? "Corrientes" : city
+
+  // Strategy 1: Correct common street name errors
+  const correctedAddress = correctStreetName(address)
+  if (correctedAddress !== address) {
+    console.log("[v0] Corrected street name:", address, "->", correctedAddress)
   }
 
-  // Strategy 2: Try with original address
-  if (expandedAddress !== address) {
-    const originalFullAddress = `${address}, ${city}, ${state}, ${country}`
-    console.log("[v0] Trying geocoding with original address:", originalFullAddress)
-    result = await geocodeAddress(originalFullAddress)
+  // Strategy 2: Expand abbreviations
+  const expandedAddress = expandAbbreviations(correctedAddress)
+
+  const strategies = [
+    // Try with corrected address, neighborhood, and city
+    neighborhood ? `${expandedAddress}, ${neighborhood}, ${normalizedCity}, ${state}, ${country}` : null,
+
+    // Try with corrected address and city (no neighborhood)
+    `${expandedAddress}, ${normalizedCity}, ${state}, ${country}`,
+
+    // Try without street number
+    `${expandedAddress.replace(/\d+/g, "").trim()}, ${normalizedCity}, ${state}, ${country}`,
+
+    // Try with just street name and city (very broad)
+    `${expandedAddress.split(" ")[0]}, ${normalizedCity}, ${country}`,
+
+    // Try with original address (in case correction was wrong)
+    address !== correctedAddress ? `${address}, ${normalizedCity}, ${state}, ${country}` : null,
+
+    // Last resort: just city and state
+    `${normalizedCity}, ${state}, ${country}`,
+  ].filter(Boolean) as string[]
+
+  for (let i = 0; i < strategies.length; i++) {
+    const strategyAddress = strategies[i]
+    console.log(`[v0] Strategy ${i + 1}/${strategies.length}:`, strategyAddress)
+
+    const result = await geocodeAddress(strategyAddress)
     if (result) {
-      console.log("[v0] Geocoding successful with original address")
+      console.log(`[v0] ✓ Geocoding successful with strategy ${i + 1}`)
       return result
+    }
+
+    // Small delay to avoid rate limiting
+    if (i < strategies.length - 1) {
+      await new Promise((resolve) => setTimeout(resolve, 500))
     }
   }
 
-  // Strategy 3: Try without street number
-  const addressWithoutNumber = address.replace(/\d+/g, "").trim()
-  if (addressWithoutNumber !== address) {
-    const addressNoNumber = `${addressWithoutNumber}, ${city}, ${state}, ${country}`
-    console.log("[v0] Trying geocoding without street number:", addressNoNumber)
-    result = await geocodeAddress(addressNoNumber)
-    if (result) {
-      console.log("[v0] Geocoding successful without street number")
-      return result
-    }
-  }
-
-  // Strategy 4: Try with just city and state
-  const cityStateAddress = `${city}, ${state}, ${country}`
-  console.log("[v0] Trying geocoding with just city and state:", cityStateAddress)
-  result = await geocodeAddress(cityStateAddress)
-  if (result) {
-    console.log("[v0] Geocoding successful with city and state (approximate location)")
-    return result
-  }
-
-  console.error("[v0] All geocoding strategies failed for:", { address, city, state, country })
+  console.error("[v0] All geocoding strategies failed")
   return null
 }
