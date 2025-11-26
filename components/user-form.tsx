@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,17 +11,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2 } from 'lucide-react'
+import { Loader2, X } from "lucide-react"
 import { createUser, updateUser } from "@/lib/actions/users"
 import type { SessionUser } from "@/lib/auth"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 type User = {
   id: string
-  first_name: string
-  last_name: string
+  name: string
   email: string
   role: "ADMIN" | "SUPERVISOR" | "VENDEDOR"
   is_active: boolean
+  avatar?: string | null
 }
 
 interface UserFormProps {
@@ -33,6 +34,26 @@ export function UserForm({ currentUser, editUser }: UserFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(editUser?.avatar || null)
+
+  function handleAvatarChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  function handleRemoveAvatar() {
+    setAvatarPreview(null)
+    const fileInput = document.getElementById("avatar") as HTMLInputElement
+    if (fileInput) {
+      fileInput.value = ""
+    }
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -56,6 +77,15 @@ export function UserForm({ currentUser, editUser }: UserFormProps) {
     }
   }
 
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
   return (
     <form onSubmit={handleSubmit}>
       <Card>
@@ -70,15 +100,44 @@ export function UserForm({ currentUser, editUser }: UserFormProps) {
             </Alert>
           )}
 
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="firstName">Nombre</Label>
-              <Input id="firstName" name="firstName" defaultValue={editUser?.first_name} required disabled={isLoading} />
+          <div className="flex items-center gap-6">
+            <Avatar className="h-20 w-20">
+              <AvatarImage src={avatarPreview || undefined} />
+              <AvatarFallback className="text-lg">{editUser ? getInitials(editUser.name) : "NU"}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 space-y-2">
+              <Label htmlFor="avatar">Foto de perfil</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="avatar"
+                  name="avatar"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  disabled={isLoading}
+                  className="cursor-pointer"
+                />
+                {avatarPreview && (
+                  <Button type="button" variant="outline" size="icon" onClick={handleRemoveAvatar} disabled={isLoading}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">Formatos: JPG, PNG, GIF (máx. 2MB)</p>
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="lastName">Apellido</Label>
-              <Input id="lastName" name="lastName" defaultValue={editUser?.last_name} required disabled={isLoading} />
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="name">Nombre Completo</Label>
+              <Input
+                id="name"
+                name="name"
+                defaultValue={editUser?.name}
+                placeholder="Ej: Juan Pérez"
+                required
+                disabled={isLoading}
+              />
             </div>
 
             <div className="space-y-2">

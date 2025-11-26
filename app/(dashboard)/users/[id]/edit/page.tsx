@@ -1,7 +1,7 @@
 import { getCurrentUser, hasPermission } from "@/lib/auth"
-import { redirect, notFound } from 'next/navigation'
+import { redirect, notFound } from "next/navigation"
 import { UserForm } from "@/components/user-form"
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { createServerClient } from "@/lib/supabase/server"
@@ -18,14 +18,19 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
     redirect("/dashboard")
   }
 
+  console.log("[v0] Fetching user with ID:", id)
+
   const supabase = await createServerClient()
   const { data: editUser, error } = await supabase
     .from("users")
-    .select("id, first_name, last_name, email, role, is_active")
+    .select("id, name, email, role, is_active, avatar")
     .eq("id", id)
     .single()
 
+  console.log("[v0] Query result:", { editUser, error })
+
   if (error || !editUser) {
+    console.error("[v0] Error fetching user:", error)
     notFound()
   }
 

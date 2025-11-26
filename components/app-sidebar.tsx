@@ -12,6 +12,8 @@ import {
   Calendar,
   Tag,
   MapPin,
+  BookUser,
+  Wrench,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -74,6 +76,18 @@ export function AppSidebar({ user }: AppSidebarProps) {
       href: "/clients",
       icon: UserCircle,
       roles: ["ADMIN", "SUPERVISOR", "VENDEDOR"],
+    },
+    {
+      name: "Agenda de Contactos",
+      href: "/contacts",
+      icon: BookUser,
+      roles: ["ADMIN", "SUPERVISOR", "VENDEDOR"],
+    },
+    {
+      name: "Servicios",
+      href: "/services",
+      icon: Wrench,
+      roles: ["ADMIN", "SUPERVISOR"],
     },
     {
       name: "Citas",

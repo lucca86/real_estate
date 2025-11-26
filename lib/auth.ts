@@ -4,15 +4,14 @@ import { jwtVerify } from "jose"
 import { hash, compare } from "bcryptjs"
 import { authenticator } from "otplib"
 
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
-)
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "your-secret-key-change-this-in-production")
 
 export interface SessionUser {
   id: string
   email: string
   name: string
   role: "ADMIN" | "SUPERVISOR" | "VENDEDOR"
+  avatar?: string | null
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -37,7 +36,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     const supabase = await createClient()
     const { data: userData, error: userError } = await supabase
       .from("users")
-      .select("id, email, name, role, is_active")
+      .select("id, email, name, role, is_active, avatar")
       .eq("id", payload.userId as string)
       .eq("is_active", true)
       .single()
@@ -51,6 +50,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       email: userData.email,
       name: userData.name,
       role: userData.role as "ADMIN" | "SUPERVISOR" | "VENDEDOR",
+      avatar: userData.avatar,
     }
   } catch (error) {
     console.error("[getCurrentUser] Error:", error)
