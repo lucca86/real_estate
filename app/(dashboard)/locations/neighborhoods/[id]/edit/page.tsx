@@ -1,14 +1,14 @@
 import { getCurrentUser } from "@/lib/auth"
-import { redirect, notFound } from 'next/navigation'
+import { redirect, notFound } from "next/navigation"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { NeighborhoodForm } from "@/components/neighborhood-form"
 import { Button } from "@/components/ui/button"
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { getNeighborhoodById, getAllCities } from "@/lib/actions/locations"
 
-export default async function EditNeighborhoodPage({ params }: { params: { id: string } }) {
-  const { id } = params
+export default async function EditNeighborhoodPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const user = await getCurrentUser()
 
   if (!user) {
@@ -19,24 +19,22 @@ export default async function EditNeighborhoodPage({ params }: { params: { id: s
     redirect("/dashboard")
   }
 
-  const [neighborhood, citiesResult] = await Promise.all([
-    getNeighborhoodById(id),
-    getAllCities(),
-  ])
+  const [neighborhood, citiesResult] = await Promise.all([getNeighborhoodById(id), getAllCities()])
 
   if (!neighborhood) {
     notFound()
   }
 
-  const cities = citiesResult.success && citiesResult.data
-    ? citiesResult.data.map((c: any) => ({
-        id: c.id,
-        name: c.name,
-        province: {
-          name: c.province?.name || ''
-        }
-      }))
-    : []
+  const cities =
+    citiesResult.success && citiesResult.data
+      ? citiesResult.data.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          province: {
+            name: c.province?.name || "",
+          },
+        }))
+      : []
 
   return (
     <DashboardLayout user={user}>
@@ -53,14 +51,14 @@ export default async function EditNeighborhoodPage({ params }: { params: { id: s
           <p className="text-muted-foreground">Modifica la información del barrio</p>
         </div>
 
-        <NeighborhoodForm 
+        <NeighborhoodForm
           neighborhood={{
             id: neighborhood.id,
             name: neighborhood.name,
             cityId: neighborhood.city_id,
-            isActive: neighborhood.is_active
+            isActive: neighborhood.is_active,
           }}
-          cities={cities} 
+          cities={cities}
         />
       </div>
     </DashboardLayout>

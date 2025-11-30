@@ -28,11 +28,59 @@ interface PropertyImageUploadProps {
   maxImages?: number
 }
 
+const getImageUrl = (image: any): string => {
+  // Base case: if it's a string starting with http, it's a real URL
+  if (typeof image === "string") {
+    if (image.startsWith("http")) {
+      return image
+    }
+    // Try to parse as JSON
+    try {
+      const parsed = JSON.parse(image)
+      return getImageUrl(parsed) // Recursive call
+    } catch (e) {
+      return "/placeholder.svg"
+    }
+  }
+
+  // If image is an object
+  if (typeof image === "object" && image !== null) {
+    // Try to extract and recursively parse the url field
+    if (image.url) {
+      return getImageUrl(image.url) // Recursive call
+    }
+    // Try sizes
+    if (image.sizes?.medium) {
+      return getImageUrl(image.sizes.medium)
+    }
+    if (image.sizes?.large) {
+      return getImageUrl(image.sizes.large)
+    }
+    if (image.sizes?.thumbnail) {
+      return getImageUrl(image.sizes.thumbnail)
+    }
+  }
+
+  return "/placeholder.svg"
+}
+
 export function PropertyImageUpload({ images, onChange, maxImages = 12 }: PropertyImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
+
+  const isImageVertical = async (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const img = new window.Image()
+      img.onload = () => {
+        const isVertical = img.height > img.width
+        resolve(isVertical)
+      }
+      img.onerror = () => resolve(false)
+      img.src = URL.createObjectURL(file)
+    })
+  }
 
   const uploadFiles = async (files: File[]) => {
     if (images.length + files.length > maxImages) {
@@ -60,6 +108,8 @@ export function PropertyImageUpload({ images, onChange, maxImages = 12 }: Proper
           continue
         }
 
+        const isVertical = await isImageVertical(file)
+
         const formData = new FormData()
         formData.append("file", file)
 
@@ -84,11 +134,19 @@ export function PropertyImageUpload({ images, onChange, maxImages = 12 }: Proper
             large: result.sizes.large.url,
           },
           isCover: images.length === 0 && uploadedImages.length === 0,
-          syncToWordPress: true,
+          syncToWordPress: !isVertical,
           originalName: result.originalName,
         }
 
         uploadedImages.push(newImage)
+
+        if (isVertical) {
+          toast({
+            title: "Imagen vertical detectada",
+            description: `${file.name} no se sincronizará con WordPress (orientación vertical)`,
+            variant: "default",
+          })
+        }
       }
 
       const newImages = [...images, ...uploadedImages]
@@ -191,6 +249,10 @@ export function PropertyImageUpload({ images, onChange, maxImages = 12 }: Proper
       isCover: img.id === imageId,
     }))
     onChange(newImages)
+    toast({
+      title: "Portada actualizada",
+      description: "La imagen de portada ha sido cambiada",
+    })
   }
 
   const toggleWordPressSync = (imageId: string) => {
@@ -208,6 +270,11 @@ export function PropertyImageUpload({ images, onChange, maxImages = 12 }: Proper
     newImages.splice(result.destination.index, 0, reorderedItem)
 
     onChange(newImages)
+
+    toast({
+      title: "Orden actualizado",
+      description: "Las imágenes han sido reordenadas",
+    })
   }
 
   return (
@@ -290,27 +357,28 @@ export function PropertyImageUpload({ images, onChange, maxImages = 12 }: Proper
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           className={`group relative overflow-hidden transition-shadow ${
-                            snapshot.isDragging ? "shadow-lg" : ""
+                            snapshot.isDragging ? "shadow-lg ring-2 ring-primary" : ""
                           } ${image.isCover ? "ring-2 ring-primary" : ""}`}
                         >
                           <div className="aspect-video w-full overflow-hidden bg-muted">
                             <img
-                              src={image.sizes.medium || "/placeholder.svg"}
-                              alt={image.originalName}
+                              src={getImageUrl(image) || "/placeholder.svg"}
+                              alt={image.originalName || "Property image"}
                               className="h-full w-full object-cover"
                             />
                           </div>
 
-                          <div className="absolute inset-0 bg-black/60 opacity-0 transition-opacity group-hover:opacity-100">
+                          <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-black/40 opacity-0 transition-opacity group-hover:opacity-100">
                             <div
                               {...provided.dragHandleProps}
-                              className="absolute left-2 top-2 cursor-move rounded bg-black/50 p-1"
+                              className="absolute left-2 top-2 cursor-grab rounded bg-black/70 p-1.5 active:cursor-grabbing"
+                              title="Arrastra para reordenar"
                             >
-                              <GripVertical className="h-4 w-4 text-white" />
+                              <GripVertical className="h-5 w-5 text-white" />
                             </div>
 
                             {image.isCover && (
-                              <div className="absolute right-2 top-2 flex items-center gap-1 rounded bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground">
+                              <div className="absolute right-2 top-2 flex items-center gap-1 rounded bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground shadow-lg">
                                 <Star className="h-3 w-3 fill-current" />
                                 Portada
                               </div>
@@ -321,29 +389,46 @@ export function PropertyImageUpload({ images, onChange, maxImages = 12 }: Proper
                                 type="button"
                                 size="icon"
                                 variant="secondary"
-                                onClick={() => setCoverImage(image.id)}
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  setCoverImage(image.id)
+                                }}
                                 title="Marcar como portada"
+                                className="shadow-lg"
                               >
-                                <Star className={`h-4 w-4 ${image.isCover ? "fill-current" : ""}`} />
+                                <Star className={`h-4 w-4 ${image.isCover ? "fill-current text-yellow-500" : ""}`} />
                               </Button>
                               <Button
                                 type="button"
                                 size="icon"
                                 variant="destructive"
-                                onClick={() => deleteImage(image)}
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  deleteImage(image)
+                                }}
                                 title="Eliminar imagen"
+                                className="shadow-lg"
                               >
                                 <X className="h-4 w-4" />
                               </Button>
                             </div>
 
-                            <div className="absolute bottom-2 left-2 right-2 flex items-center gap-2 rounded bg-black/50 p-2">
+                            <div className="absolute bottom-2 left-2 right-2 flex items-center gap-2 rounded bg-black/70 p-2 backdrop-blur-sm">
                               <Checkbox
                                 checked={image.syncToWordPress}
-                                onCheckedChange={() => toggleWordPressSync(image.id)}
+                                onCheckedChange={(checked) => {
+                                  toggleWordPressSync(image.id)
+                                }}
                                 id={`sync-${image.id}`}
+                                onClick={(e) => e.stopPropagation()}
                               />
-                              <label htmlFor={`sync-${image.id}`} className="text-xs text-white cursor-pointer">
+                              <label
+                                htmlFor={`sync-${image.id}`}
+                                className="text-xs text-white cursor-pointer select-none"
+                                onClick={(e) => e.stopPropagation()}
+                              >
                                 Sincronizar con WordPress
                               </label>
                             </div>

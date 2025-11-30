@@ -6,6 +6,18 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { isValidCoordinate, normalizeCoordinate, CORRIENTES_CENTER } from "@/lib/map-utils"
 
+interface PropertyImage {
+  url: string
+  sizes?: {
+    thumbnail?: string
+    medium?: string
+    large?: string
+    full?: string
+  }
+  isCover?: boolean
+  syncToWordPress?: boolean
+}
+
 interface Property {
   id: string
   title: string
@@ -17,7 +29,7 @@ interface Property {
   currency: string
   propertyType: string
   status: string
-  images: string[]
+  images: PropertyImage[]
 }
 
 interface PropertiesMapProps {
@@ -39,15 +51,12 @@ export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, d
     .map((p) => {
       if (!p.latitude || !p.longitude) return null
 
-      // Check if coordinates are valid
       if (isValidCoordinate(p.latitude, p.longitude)) {
         return p
       }
 
-      // Try to normalize invalid coordinates
       const normalized = normalizeCoordinate(p.latitude, p.longitude)
       if (normalized) {
-        console.warn(`[v0] PropertiesMap: Normalized coordinates for "${p.title}"`)
         return {
           ...p,
           latitude: normalized.lat,
@@ -55,9 +64,6 @@ export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, d
         }
       }
 
-      console.error(
-        `[v0] PropertiesMap: Skipping property "${p.title}" with invalid coordinates: [${p.latitude}, ${p.longitude}]`,
-      )
       return null
     })
     .filter((p): p is Property => p !== null)
@@ -67,32 +73,18 @@ export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, d
 
     const initTimeout = setTimeout(async () => {
       try {
-        console.log("[v0] PropertiesMap: Starting initialization...")
-        console.log("[v0] PropertiesMap: Total properties:", properties.length)
-        console.log("[v0] PropertiesMap: Valid properties:", validProperties.length)
-
         if (validProperties.length === 0) {
-          console.warn("[v0] PropertiesMap: No properties with valid coordinates")
           setError("No se encontraron propiedades con coordenadas válidas")
           setIsLoading(false)
           return
         }
 
-        validProperties.forEach((p, i) => {
-          console.log(`[v0] PropertiesMap: Property ${i + 1}: ${p.title} at [${p.latitude}, ${p.longitude}]`)
-        })
-
         const L = await import("leaflet")
-        console.log("[v0] PropertiesMap: Leaflet imported")
 
         if (!mapRef.current) {
-          console.error("[v0] PropertiesMap: Container not found")
           setError("Map container not found")
           return
         }
-
-        const { offsetHeight, offsetWidth } = mapRef.current
-        console.log("[v0] PropertiesMap: Container size:", { width: offsetWidth, height: offsetHeight })
 
         let center: [number, number] = defaultCenter
         const zoom = defaultZoom
@@ -100,12 +92,8 @@ export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, d
         if (validProperties.length > 0) {
           const bounds = L.latLngBounds(validProperties.map((p) => [p.latitude!, p.longitude!]))
           center = [bounds.getCenter().lat, bounds.getCenter().lng]
-          console.log("[v0] PropertiesMap: Calculated center:", center)
-        } else {
-          console.log("[v0] PropertiesMap: Using default center:", center)
         }
 
-        console.log("[v0] PropertiesMap: Creating map...")
         const map = L.map(mapRef.current, {
           center,
           zoom,
@@ -115,58 +103,38 @@ export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, d
         })
 
         mapInstanceRef.current = map
-        console.log("[v0] PropertiesMap: Map created")
 
-        console.log("[v0] PropertiesMap: Adding tile layer...")
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
           maxZoom: 19,
           minZoom: 1,
         }).addTo(map)
 
-        console.log("[v0] PropertiesMap: Tile layer added")
-
         if (validProperties.length > 0) {
           const bounds = L.latLngBounds(validProperties.map((p) => [p.latitude!, p.longitude!]))
           map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 })
-          console.log("[v0] PropertiesMap: Bounds fitted")
         }
 
-        console.log("[v0] PropertiesMap: Adding markers...")
-        validProperties.forEach((property, index) => {
+        validProperties.forEach((property) => {
           const lat = property.latitude!
           const lng = property.longitude!
-
-          console.log(`[v0] PropertiesMap: Adding marker ${index + 1}/${validProperties.length}:`, {
-            title: property.title,
-            coords: [lat, lng],
-          })
 
           const marker = L.marker([lat, lng])
 
           marker.on("click", () => {
-            console.log("[v0] PropertiesMap: Marker clicked:", property.title)
             setSelectedProperty(property)
             map.setView([lat, lng], 16, { animate: true })
           })
 
           marker.addTo(map)
           markersRef.current.push(marker)
-
-          console.log(`[v0] PropertiesMap: Marker ${index + 1} added successfully`)
         })
-
-        console.log("[v0] PropertiesMap: All markers added. Total:", markersRef.current.length)
 
         setTimeout(() => {
           map.invalidateSize()
-          console.log("[v0] PropertiesMap: Size invalidated")
           setIsLoading(false)
         }, 300)
-
-        console.log("[v0] PropertiesMap: Initialization complete")
       } catch (err) {
-        console.error("[v0] PropertiesMap: Error:", err)
         setError("Error initializing map")
         setIsLoading(false)
       }
@@ -178,7 +146,6 @@ export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, d
       markersRef.current = []
 
       if (mapInstanceRef.current) {
-        console.log("[v0] PropertiesMap: Cleaning up")
         mapInstanceRef.current.remove()
         mapInstanceRef.current = null
       }
@@ -221,7 +188,7 @@ export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, d
             <div className="flex gap-4">
               {selectedProperty.images[0] && (
                 <img
-                  src={selectedProperty.images[0] || "/placeholder.svg"}
+                  src={selectedProperty.images[0].url || "/placeholder.svg"}
                   alt={selectedProperty.title}
                   className="h-24 w-24 rounded-lg object-cover"
                 />

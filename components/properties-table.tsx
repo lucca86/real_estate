@@ -6,6 +6,7 @@ import { Building2, Edit, MapPin, Plus } from "lucide-react"
 import Link from "next/link"
 import { DeletePropertyButton } from "@/components/delete-property-button"
 import type { SessionUser } from "@/lib/auth"
+import { normalizeImageUrl } from "@/lib/image-utils"
 
 interface PropertiesTableProps {
   currentUser: SessionUser
@@ -83,81 +84,88 @@ export async function PropertiesTable({ currentUser }: PropertiesTableProps) {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {properties.map((property) => (
-              <div
-                key={property.id}
-                className="group relative overflow-hidden rounded-lg border border-border transition-all hover:shadow-lg"
-              >
-                <Link href={`/properties/${property.id}`}>
-                  <div className="aspect-video w-full overflow-hidden bg-muted">
-                    {property.images && property.images[0] ? (
-                      <img
-                        src={property.images[0] || "/placeholder.svg"}
-                        alt={property.title}
-                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center">
-                        <Building2 className="h-12 w-12 text-muted-foreground/50" />
+            {properties.map((property) => {
+              const propertyImages = Array.isArray(property.images) ? property.images : []
+              const imageUrl = propertyImages.length > 0 ? normalizeImageUrl(propertyImages[0]) : ""
+
+              return (
+                <div
+                  key={property.id}
+                  className="group relative overflow-hidden rounded-lg border border-border transition-all hover:shadow-lg"
+                >
+                  <Link href={`/properties/${property.id}`}>
+                    <div className="aspect-video w-full overflow-hidden bg-muted">
+                      {propertyImages.length > 0 ? (
+                        <img
+                          src={imageUrl || "/placeholder.svg"}
+                          alt={property.title}
+                          className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center">
+                          <Building2 className="h-12 w-12 text-muted-foreground/50" />
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+
+                  <div className="p-4">
+                    <div className="mb-2 flex items-start justify-between gap-2">
+                      <Link href={`/properties/${property.id}`} className="flex-1">
+                        <h3 className="font-semibold leading-tight text-balance hover:text-primary">
+                          {property.title}
+                        </h3>
+                      </Link>
+                      <Badge variant="secondary" className={statusColors[property.status] || ""}>
+                        {statusLabels[property.status] || property.status}
+                      </Badge>
+                    </div>
+
+                    <div className="mb-3 flex items-center gap-1 text-sm text-muted-foreground">
+                      <MapPin className="h-3 w-3" />
+                      {property.city?.name || "Sin ciudad"}, {property.province?.name || "Sin provincia"}
+                    </div>
+
+                    <div className="mb-3 flex flex-wrap gap-2">
+                      <Badge variant="outline">{property.propertyType?.name || "Sin tipo"}</Badge>
+                      <Badge
+                        variant="outline"
+                        className={transactionColors[property.transactionType as keyof typeof transactionColors] || ""}
+                      >
+                        {transactionLabels[property.transactionType as keyof typeof transactionLabels] ||
+                          property.transactionType}
+                      </Badge>
+                    </div>
+
+                    {property.bedrooms && property.bathrooms && (
+                      <div className="mb-3 text-sm text-muted-foreground">
+                        {property.bedrooms} hab • {property.bathrooms} baños
                       </div>
                     )}
-                  </div>
-                </Link>
 
-                <div className="p-4">
-                  <div className="mb-2 flex items-start justify-between gap-2">
-                    <Link href={`/properties/${property.id}`} className="flex-1">
-                      <h3 className="font-semibold leading-tight text-balance hover:text-primary">{property.title}</h3>
-                    </Link>
-                    <Badge variant="secondary" className={statusColors[property.status] || ""}>
-                      {statusLabels[property.status] || property.status}
-                    </Badge>
-                  </div>
-
-                  <div className="mb-3 flex items-center gap-1 text-sm text-muted-foreground">
-                    <MapPin className="h-3 w-3" />
-                    {property.city?.name || "Sin ciudad"}, {property.province?.name || "Sin provincia"}
-                  </div>
-
-                  <div className="mb-3 flex flex-wrap gap-2">
-                    <Badge variant="outline">{property.propertyType?.name || "Sin tipo"}</Badge>
-                    <Badge
-                      variant="outline"
-                      className={transactionColors[property.transactionType as keyof typeof transactionColors] || ""}
-                    >
-                      {transactionLabels[property.transactionType as keyof typeof transactionLabels] ||
-                        property.transactionType}
-                    </Badge>
-                  </div>
-
-                  {property.bedrooms && property.bathrooms && (
-                    <div className="mb-3 text-sm text-muted-foreground">
-                      {property.bedrooms} hab • {property.bathrooms} baños
+                    <div className="mb-4 flex items-baseline gap-1">
+                      <span className="text-2xl font-bold text-primary">${property.price.toLocaleString()}</span>
+                      <span className="text-sm text-muted-foreground">{property.currency}</span>
                     </div>
-                  )}
 
-                  <div className="mb-4 flex items-baseline gap-1">
-                    <span className="text-2xl font-bold text-primary">${property.price.toLocaleString()}</span>
-                    <span className="text-sm text-muted-foreground">{property.currency}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between border-t border-border pt-3">
-                    <span className="text-xs text-muted-foreground">Por {property.owner?.name}</span>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/properties/${property.id}/edit`}>
-                          <Edit className="h-4 w-4" />
-                          <span className="sr-only">Editar</span>
-                        </Link>
-                      </Button>
-                      {(currentUser.role === "ADMIN" || property.ownerId === currentUser.id) && (
-                        <DeletePropertyButton propertyId={property.id} propertyTitle={property.title} />
-                      )}
+                    <div className="flex items-center justify-between border-t border-border pt-3">
+                      <span className="text-xs text-muted-foreground">Por {property.owner?.name}</span>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" asChild>
+                          <Link href={`/properties/${property.id}/edit`}>
+                            <Edit className="h-4 w-4" />
+                            <span className="sr-only">Editar</span>
+                          </Link>
+                        </Button>
+                        {(currentUser.role === "ADMIN" || property.ownerId === currentUser.id) && (
+                          <DeletePropertyButton propertyId={property.id} propertyTitle={property.title} />
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </CardContent>

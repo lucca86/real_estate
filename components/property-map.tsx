@@ -6,6 +6,18 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { isValidCoordinate, normalizeCoordinate, CORRIENTES_CENTER } from "@/lib/map-utils"
 
+interface PropertyImage {
+  url: string
+  sizes?: {
+    thumbnail?: string
+    medium?: string
+    large?: string
+    full?: string
+  }
+  isCover?: boolean
+  syncToWordPress?: boolean
+}
+
 interface Property {
   id: string
   title: string
@@ -17,7 +29,7 @@ interface Property {
   currency: string
   propertyType: string
   status: string
-  images: string[]
+  images: PropertyImage[]
 }
 
 interface PropertiesMapProps {
@@ -223,7 +235,7 @@ export function PropertiesMap({
             <div className="flex gap-4">
               {selectedProperty.images[0] && (
                 <img
-                  src={selectedProperty.images[0] || "/placeholder.svg"}
+                  src={selectedProperty.images[0].url || "/placeholder.svg"}
                   alt={selectedProperty.title}
                   className="h-24 w-24 rounded-lg object-cover"
                 />

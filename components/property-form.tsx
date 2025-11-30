@@ -16,10 +16,31 @@ import { createProperty, updateProperty } from "@/lib/actions/properties"
 import { geocodeProperty } from "@/lib/geocoding"
 import { generatePropertyTitle } from "@/lib/actions/ai-property-title"
 import { useToast } from "@/hooks/use-toast"
-import { PropertiesMap } from "@/components/property-map"
 import { CreateOwnerDialog } from "@/components/create-owner-dialog"
-import { getCountries, getProvinces, getCities, getNeighborhoods } from "@/lib/actions/locations"
+import {
+  getCountries,
+  getProvinces,
+  getCities,
+  getNeighborhoods,
+  getCitiesByProvince,
+  getNeighborhoodsByCity,
+} from "@/lib/actions/locations"
 import { PropertyImageUpload } from "./property-image-upload"
+import { normalizeImages } from "@/lib/image-utils" // Fixed import to use normalizeImages from correct file
+
+// Define a type for image objects
+interface PropertyImage {
+  id: string
+  url: string
+  sizes: {
+    thumbnail: string
+    medium: string
+    large: string
+  }
+  isCover: boolean
+  syncToWordPress: boolean
+  originalName: string
+}
 
 interface Property {
   id?: string
@@ -47,7 +68,7 @@ interface Property {
   price?: number
   currency?: string | null
   amenities?: string[]
-  images?: string[]
+  images?: string[] | PropertyImage[] // Updated to allow objects
   isFeatured?: boolean
   featured?: boolean
   views?: number
@@ -73,6 +94,42 @@ interface Property {
 
 interface PropertyFormProps {
   editProperty?: Property
+}
+
+interface PropertyFormData {
+  title?: string
+  description?: string | null
+  ownerId?: string
+  propertyTypeId?: string
+  status?: string
+  address?: string
+  cityId?: string | undefined
+  countryId?: string | undefined
+  state?: string | undefined
+  provinceId?: string | undefined
+  neighborhoodId?: string | undefined
+  latitude?: number | null
+  longitude?: number | null
+  bedrooms?: number
+  bathrooms?: number
+  parkingSpaces?: number | null
+  area?: number
+  yearBuilt?: number | null
+  price?: number
+  currency?: string | null
+  amenities?: string[]
+  features?: string[]
+  transactionType?: string
+  rentalPeriod?: string | null
+  zipCode?: string | null
+  lotSize?: number | null
+  rentalPrice?: number | null
+  virtualTour?: string | null
+  propertyLabel?: string | null
+  syncToWordPress?: boolean
+  published?: boolean
+  adrema?: string | null
+  videos?: string[] // Added videos field
 }
 
 export function PropertyForm({ editProperty }: PropertyFormProps) {
@@ -102,21 +159,65 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
     editProperty?.provinceId || undefined,
   )
   const [selectedCityId, setSelectedCityId] = useState<string | undefined>(editProperty?.cityId || undefined)
-
-  const [images, setImages] = useState<any[]>(
-    editProperty?.images?.map((url: string, index: number) => ({
-      id: `existing-${index}`,
-      url,
-      sizes: {
-        thumbnail: url,
-        medium: url,
-        large: url,
-      },
-      isCover: index === 0,
-      syncToWordPress: true,
-      originalName: `image-${index + 1}.jpg`,
-    })) || [],
+  const [selectedNeighborhoodId, setSelectedNeighborhoodId] = useState<string | undefined>(
+    editProperty?.neighborhoodId || undefined,
   )
+  const [neighborhoodValue, setNeighborhoodValue] = useState<string | undefined>(
+    editProperty?.neighborhoodId || undefined,
+  )
+
+  const initialImages: PropertyImage[] = editProperty?.images
+    ? (normalizeImages(editProperty.images).map((img, index) => ({
+        ...img,
+        id: img.id || `existing-${index}`,
+      })) as PropertyImage[])
+    : []
+
+  const [images, setImages] = useState<PropertyImage[]>(initialImages)
+
+  const [addressValue, setAddressValue] = useState<string>(editProperty?.address || "")
+  const [selectedProvinceName, setSelectedProvinceName] = useState<string>("")
+  const [selectedCityName, setSelectedCityName] = useState<string>("")
+  const [selectedNeighborhoodName, setSelectedNeighborhoodName] = useState<string | undefined>(
+    editProperty?.neighborhoodId ? neighborhoods.find((n) => n.id === editProperty.neighborhoodId)?.name : undefined,
+  )
+
+  const [isSubmitting, setIsSubmitting] = useState(false) // Renamed from isLoading for clarity in form context
+  const [formData, setFormData] = useState<PropertyFormData>({
+    title: editProperty?.title,
+    description: editProperty?.description,
+    ownerId: editProperty?.ownerId,
+    propertyTypeId: editProperty?.propertyTypeId,
+    status: editProperty?.status || "ACTIVO",
+    address: editProperty?.address,
+    cityId: editProperty?.cityId || undefined,
+    countryId: editProperty?.countryId || undefined,
+    state: editProperty?.state || undefined,
+    provinceId: editProperty?.provinceId || undefined,
+    neighborhoodId: editProperty?.neighborhoodId || undefined,
+    latitude: editProperty?.latitude,
+    longitude: editProperty?.longitude,
+    bedrooms: editProperty?.bedrooms ?? undefined,
+    bathrooms: editProperty?.bathrooms ?? undefined,
+    parkingSpaces: editProperty?.parkingSpaces,
+    area: editProperty?.area,
+    yearBuilt: editProperty?.yearBuilt,
+    price: editProperty?.price,
+    currency: editProperty?.currency,
+    amenities: editProperty?.amenities,
+    features: editProperty?.features,
+    transactionType: editProperty?.transactionType || "VENTA",
+    rentalPeriod: editProperty?.rentalPeriod,
+    zipCode: editProperty?.zipCode,
+    lotSize: editProperty?.lotSize,
+    rentalPrice: editProperty?.rentalPrice,
+    virtualTour: editProperty?.virtualTour,
+    propertyLabel: editProperty?.propertyLabel || "NONE",
+    syncToWordPress: editProperty?.syncToWordPress ?? true,
+    published: editProperty?.published ?? true,
+    adrema: editProperty?.adrema,
+    videos: editProperty?.videos, // Initialize videos
+  })
 
   useEffect(() => {
     // Save the current scroll position
@@ -179,24 +280,35 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setError(null)
-    setIsLoading(true)
+    setIsSubmitting(true)
 
-    const formData = new FormData(event.currentTarget)
+    const finalFormData = new FormData(event.currentTarget)
 
-    formData.append("images", JSON.stringify(images))
+    // Append current formData state, ensuring all fields are present
+    Object.entries(formData).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        if (Array.isArray(value)) {
+          finalFormData.append(key, JSON.stringify(value))
+        } else {
+          finalFormData.append(key, String(value))
+        }
+      }
+    })
+
+    finalFormData.append("images", JSON.stringify(images))
 
     try {
       if (editProperty) {
         if (!editProperty.id) {
           throw new Error("ID de propiedad no válido")
         }
-        await updateProperty(editProperty.id, formData)
+        await updateProperty(editProperty.id, finalFormData)
         toast({
           title: "Propiedad actualizada",
           description: "La propiedad se ha actualizado exitosamente",
         })
       } else {
-        await createProperty(formData)
+        await createProperty(finalFormData)
         toast({
           title: "Propiedad creada",
           description: "La propiedad se ha creado exitosamente",
@@ -214,7 +326,7 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
         variant: "destructive",
       })
     } finally {
-      setIsLoading(false)
+      setIsSubmitting(false)
     }
   }
 
@@ -223,15 +335,12 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
     setIsGeocoding(true)
 
     try {
-      const addressInput = document.getElementById("address") as HTMLInputElement
-      const citySelect = document.querySelector('[name="cityId"]') as HTMLSelectElement
-      const provinceSelect = document.querySelector('[name="provinceId"]') as HTMLSelectElement
-      const neighborhoodSelect = document.querySelector('[name="neighborhoodId"]') as HTMLSelectElement
+      const address = formData.address
+      const cityName = selectedCityName
+      const provinceName = selectedProvinceName
+      const neighborhoodName = "" // Optional from Georef, not from select
 
-      const address = addressInput?.value
-      const cityName = cities.find((c) => c.id === citySelect?.value)?.name
-      const provinceName = provinces.find((p) => p.id === provinceSelect?.value)?.name
-      const neighborhoodName = neighborhoods.find((n) => n.id === neighborhoodSelect?.value)?.name
+      console.log("[v0] Geocoding with:", { address, cityName, provinceName, neighborhoodName })
 
       if (!address || !cityName || !provinceName) {
         setGeocodingMessage("Por favor complete la dirección, ciudad y provincia primero")
@@ -244,17 +353,15 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
       const result = await geocodeProperty(address, cityName, provinceName, "Argentina", neighborhoodName)
 
       if (result) {
-        const latitudeInput = document.getElementById("latitude") as HTMLInputElement
-        const longitudeInput = document.getElementById("longitude") as HTMLInputElement
-
-        if (latitudeInput && longitudeInput) {
-          latitudeInput.value = result.latitude.toString()
-          longitudeInput.value = result.longitude.toString()
-          setMapCoordinates({ lat: result.latitude, lng: result.longitude })
-          setGeocodingMessage(
-            `Coordenadas calculadas exitosamente: ${result.latitude.toFixed(6)}, ${result.longitude.toFixed(6)}`,
-          )
-        }
+        setFormData((prev) => ({
+          ...prev,
+          latitude: result.latitude,
+          longitude: result.longitude,
+        }))
+        setMapCoordinates({ lat: result.latitude, lng: result.longitude })
+        setGeocodingMessage(
+          `Coordenadas calculadas exitosamente: ${result.latitude.toFixed(6)}, ${result.longitude.toFixed(6)}`,
+        )
       } else {
         setGeocodingMessage("No se pudieron calcular las coordenadas. Verifique la dirección e intente nuevamente.")
       }
@@ -271,39 +378,26 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
     setIsGeneratingTitle(true)
 
     try {
-      const form = document.querySelector("form") as HTMLFormElement
-      const formData = new FormData(form)
-
-      const propertyTypeId = formData.get("propertyTypeId") as string
+      const propertyTypeId = formData.propertyTypeId
       const propertyTypeName = propertyTypes.find((t) => t.id === propertyTypeId)?.name || ""
 
-      const cityId = formData.get("cityId") as string
-      const provinceId = formData.get("provinceId") as string
+      const cityId = formData.cityId
+      const provinceId = formData.provinceId
       const cityName = cities.find((c) => c.id === cityId)?.name || ""
       const provinceName = provinces.find((p) => p.id === provinceId)?.name || ""
 
       const details = {
         propertyType: propertyTypeName,
-        transactionType: formData.get("transactionType") as string,
-        bedrooms: formData.get("bedrooms") ? Number(formData.get("bedrooms")) : undefined,
-        bathrooms: formData.get("bathrooms") ? Number(formData.get("bathrooms")) : undefined,
-        area: formData.get("area") ? Number(formData.get("area")) : undefined,
+        transactionType: formData.transactionType as string,
+        bedrooms: formData.bedrooms,
+        bathrooms: formData.bathrooms,
+        area: formData.area,
         city: cityName,
         state: provinceName,
-        price: formData.get("price") ? Number(formData.get("price")) : undefined,
-        currency: formData.get("currency") as string,
-        features: formData.get("features")
-          ? (formData.get("features") as string)
-              .split(",")
-              .map((f) => f.trim())
-              .filter(Boolean)
-          : [],
-        amenities: formData.get("amenities")
-          ? (formData.get("amenities") as string)
-              .split(",")
-              .map((a) => a.trim())
-              .filter(Boolean)
-          : [],
+        price: formData.price,
+        currency: formData.currency as string,
+        features: formData.features || [],
+        amenities: formData.amenities || [],
       }
 
       console.log("[v0] Property details for AI:", details)
@@ -313,11 +407,7 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
       console.log("[v0] AI result:", result)
 
       if (result.success && result.title) {
-        const titleInput = document.getElementById("title") as HTMLInputElement
-        if (titleInput) {
-          titleInput.value = result.title
-          console.log("[v0] Title set to:", result.title)
-        }
+        setFormData((prev) => ({ ...prev, title: result.title }))
         toast({
           title: "Título generado",
           description: "El título ha sido generado exitosamente con AI",
@@ -345,10 +435,7 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
 
   async function handleOwnerCreated(newOwner: { id: string; name: string }) {
     setOwners((prev) => [...prev, newOwner])
-    const ownerSelect = document.querySelector('[name="ownerId"]') as HTMLSelectElement
-    if (ownerSelect) {
-      ownerSelect.value = newOwner.id
-    }
+    setFormData((prev) => ({ ...prev, ownerId: newOwner.id }))
     toast({
       title: "Propietario creado",
       description: `${newOwner.name} ha sido agregado exitosamente`,
@@ -358,31 +445,76 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
   async function handleCountryChange(countryId: string) {
     setSelectedCountryId(countryId)
     setSelectedProvinceId(undefined)
+    setSelectedProvinceName("") // Clear province name
     setSelectedCityId(undefined)
+    setSelectedCityName("") // Clear city name
     setProvinces([])
     setCities([])
     setNeighborhoods([])
+    setFormData((prev) => ({ ...prev, countryId, provinceId: undefined, cityId: undefined, neighborhoodId: undefined }))
 
-    const provincesData = await getProvinces(countryId)
-    setProvinces(provincesData)
+    if (countryId) {
+      setIsLoading(true)
+      try {
+        const countryProvinces = await getProvinces(countryId)
+        setProvinces(countryProvinces)
+      } catch (error) {
+        console.error("[v0] Error loading provinces:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
   }
 
-  async function handleProvinceChange(provinceId: string) {
-    setSelectedProvinceId(provinceId)
-    setSelectedCityId(undefined)
-    setCities([])
-    setNeighborhoods([])
+  const handleProvinceChange = async (provinceId: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      provinceId,
+      cityId: "",
+      neighborhoodId: "",
+    }))
 
-    const citiesData = await getCities(provinceId)
-    setCities(citiesData)
+    const province = provinces.find((p) => p.id === provinceId)
+    setSelectedProvinceName(province?.name || "")
+    setSelectedProvinceId(provinceId || undefined) // Update selectedProvinceId
+
+    if (provinceId) {
+      const provinceCities = await getCitiesByProvince(provinceId)
+      setCities(provinceCities)
+    } else {
+      setCities([])
+    }
+    setNeighborhoods([])
   }
 
-  async function handleCityChange(cityId: string) {
-    setSelectedCityId(cityId)
-    setNeighborhoods([])
+  const handleCityChange = async (cityId: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      cityId,
+      neighborhoodId: "",
+    }))
 
-    const neighborhoodsData = await getNeighborhoods(cityId)
-    setNeighborhoods(neighborhoodsData)
+    const city = cities.find((c) => c.id === cityId)
+    setSelectedCityName(city?.name || "")
+    setSelectedCityId(cityId || undefined) // Update selectedCityId
+
+    if (cityId) {
+      const cityNeighborhoods = await getNeighborhoodsByCity(cityId)
+      setNeighborhoods(cityNeighborhoods)
+    } else {
+      setNeighborhoods([])
+    }
+  }
+
+  async function handleNeighborhoodChange(neighborhoodId: string) {
+    setSelectedNeighborhoodId(neighborhoodId)
+    setFormData((prev) => ({ ...prev, neighborhoodId }))
+
+    const selectedNeighborhood = neighborhoods.find((n) => n.id === neighborhoodId)
+    if (selectedNeighborhood) {
+      setSelectedNeighborhoodName(selectedNeighborhood.name)
+      console.log("[v0] Neighborhood changed to:", selectedNeighborhood.name)
+    }
   }
 
   function handleCoordinateChange() {
@@ -394,20 +526,16 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
 
     if (lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng)) {
       setMapCoordinates({ lat, lng })
+      setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng }))
     } else {
       setMapCoordinates(null)
+      setFormData((prev) => ({ ...prev, latitude: null, longitude: null }))
     }
   }
 
   function handleMarkerDrag(lat: number, lng: number) {
-    const latitudeInput = document.getElementById("latitude") as HTMLInputElement
-    const longitudeInput = document.getElementById("longitude") as HTMLInputElement
-
-    if (latitudeInput && longitudeInput) {
-      latitudeInput.value = lat.toFixed(7)
-      longitudeInput.value = lng.toFixed(7)
-      setMapCoordinates({ lat, lng })
-    }
+    setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng }))
+    setMapCoordinates({ lat, lng })
   }
 
   return (
@@ -430,16 +558,17 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
               <Input
                 id="title"
                 name="title"
-                defaultValue={editProperty?.title}
+                value={formData.title || ""}
+                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
                 required
-                disabled={isLoading}
+                disabled={isSubmitting}
                 className="flex-1"
               />
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleGenerateTitle}
-                disabled={isLoading || isGeneratingTitle}
+                disabled={isSubmitting || isGeneratingTitle}
                 className="shrink-0 bg-transparent"
               >
                 {isGeneratingTitle ? (
@@ -464,16 +593,23 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
               id="description"
               name="description"
               rows={4}
-              defaultValue={editProperty?.description ?? undefined}
+              value={formData.description ?? ""}
+              onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
               required
-              disabled={isLoading}
+              disabled={isSubmitting}
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="ownerId">Propietario *</Label>
             <div className="flex gap-2">
-              <Select name="ownerId" defaultValue={editProperty?.ownerId ?? undefined} disabled={isLoading} required>
+              <Select
+                name="ownerId"
+                defaultValue={formData.ownerId}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, ownerId: value }))}
+                disabled={isSubmitting}
+                required
+              >
                 <SelectTrigger className="flex-1">
                   <SelectValue placeholder="Seleccione un propietario" />
                 </SelectTrigger>
@@ -493,7 +629,7 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
                   console.log("[v0] Create owner button clicked")
                   setShowCreateOwner(true)
                 }}
-                disabled={isLoading}
+                disabled={isSubmitting}
                 title="Crear nuevo propietario"
               >
                 <Plus className="h-4 w-4" />
@@ -511,8 +647,9 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
               <Label htmlFor="propertyTypeId">Tipo de Propiedad *</Label>
               <Select
                 name="propertyTypeId"
-                defaultValue={editProperty?.propertyTypeId ?? undefined}
-                disabled={isLoading}
+                value={formData.propertyTypeId}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, propertyTypeId: value }))}
+                disabled={isSubmitting}
                 required
               >
                 <SelectTrigger>
@@ -540,8 +677,9 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
               <Label htmlFor="transactionType">Tipo de Transacción</Label>
               <Select
                 name="transactionType"
-                defaultValue={editProperty?.transactionType || "VENTA"}
-                disabled={isLoading}
+                value={formData.transactionType}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, transactionType: value }))}
+                disabled={isSubmitting}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -557,7 +695,12 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
 
             <div className="space-y-2">
               <Label htmlFor="status">Estado</Label>
-              <Select name="status" defaultValue={editProperty?.status || "ACTIVO"} disabled={isLoading}>
+              <Select
+                name="status"
+                value={formData.status}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, status: value }))}
+                disabled={isSubmitting}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -578,15 +721,21 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
             <Input
               id="adrema"
               name="adrema"
-              defaultValue={editProperty?.adrema || ""}
-              disabled={isLoading}
+              value={formData.adrema || ""}
+              onChange={(e) => setFormData((prev) => ({ ...prev, adrema: e.target.value }))}
+              disabled={isSubmitting}
               placeholder="Código Adrema de la propiedad"
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="rentalPeriod">Período de Renta (opcional)</Label>
-            <Select name="rentalPeriod" defaultValue={editProperty?.rentalPeriod || undefined} disabled={isLoading}>
+            <Select
+              name="rentalPeriod"
+              value={formData.rentalPeriod || ""}
+              onValueChange={(value) => setFormData((prev) => ({ ...prev, rentalPeriod: value }))}
+              disabled={isSubmitting}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Seleccione un período" />
               </SelectTrigger>
@@ -607,11 +756,6 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
           <CardDescription>Dirección y localización de la propiedad</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="address">Dirección *</Label>
-            <Input id="address" name="address" defaultValue={editProperty?.address} required disabled={isLoading} />
-          </div>
-
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="countryId">País *</Label>
@@ -619,7 +763,7 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
                 name="countryId"
                 value={selectedCountryId}
                 onValueChange={handleCountryChange}
-                disabled={isLoading}
+                disabled={isSubmitting}
                 required
               >
                 <SelectTrigger>
@@ -636,15 +780,14 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="provinceId">Provincia/Estado *</Label>
+              <Label htmlFor="provinceId">Provincia</Label>
               <Select
                 name="provinceId"
-                value={selectedProvinceId}
+                value={formData.provinceId || ""}
                 onValueChange={handleProvinceChange}
-                disabled={isLoading || !selectedCountryId}
-                required
+                disabled={isSubmitting || !selectedCountryId}
               >
-                <SelectTrigger>
+                <SelectTrigger id="provinceId">
                   <SelectValue placeholder="Seleccione una provincia" />
                 </SelectTrigger>
                 <SelectContent>
@@ -660,15 +803,14 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="cityId">Ciudad *</Label>
+              <Label htmlFor="cityId">Ciudad</Label>
               <Select
                 name="cityId"
-                value={selectedCityId}
+                value={formData.cityId || ""}
                 onValueChange={handleCityChange}
-                disabled={isLoading || !selectedProvinceId}
-                required
+                disabled={!formData.provinceId || isSubmitting}
               >
-                <SelectTrigger>
+                <SelectTrigger id="cityId">
                   <SelectValue placeholder="Seleccione una ciudad" />
                 </SelectTrigger>
                 <SelectContent>
@@ -684,14 +826,19 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
             <div className="space-y-2">
               <Label htmlFor="neighborhoodId">Barrio (opcional)</Label>
               <Select
-                name="neighborhoodId"
-                defaultValue={editProperty?.neighborhoodId || undefined}
-                disabled={isLoading || !selectedCityId}
+                value={formData.neighborhoodId || ""}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, neighborhoodId: value }))}
+                disabled={!formData.cityId || isSubmitting}
               >
-                <SelectTrigger>
+                <SelectTrigger id="neighborhoodId">
                   <SelectValue placeholder="Seleccione un barrio" />
                 </SelectTrigger>
                 <SelectContent>
+                  {neighborhoods.length === 0 && formData.cityId && (
+                    <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                      No hay barrios registrados para esta ciudad
+                    </div>
+                  )}
                   {neighborhoods.map((neighborhood) => (
                     <SelectItem key={neighborhood.id} value={neighborhood.id}>
                       {neighborhood.name}
@@ -699,12 +846,40 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
                   ))}
                 </SelectContent>
               </Select>
+              {neighborhoods.length === 0 && formData.cityId && (
+                <p className="text-xs text-muted-foreground">Puede dejar este campo vacío si no encuentra el barrio</p>
+              )}
             </div>
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="address">
+              Dirección (Calle y Altura) <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="address"
+              value={formData.address || ""}
+              onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
+              placeholder="Ej: Av. Corrientes 1234"
+              required
+              disabled={isSubmitting}
+            />
+            <p className="text-xs text-muted-foreground">Escriba la dirección completa con calle y número</p>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="zipCode">Código Postal</Label>
-            <Input id="zipCode" name="zipCode" defaultValue={editProperty?.zipCode || ""} disabled={isLoading} />
+            <p className="text-sm text-muted-foreground">
+              Ingrese el código postal manualmente (La API de Georef no proporciona códigos postales)
+            </p>
+            <Input
+              id="zipCode"
+              name="zipCode"
+              value={formData.zipCode || ""}
+              onChange={(e) => setFormData((prev) => ({ ...prev, zipCode: e.target.value }))}
+              disabled={isSubmitting}
+              placeholder="Ej: C1043"
+            />
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -715,9 +890,9 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
                 name="latitude"
                 type="number"
                 step="any"
-                defaultValue={editProperty?.latitude || ""}
-                disabled={isLoading}
-                onChange={handleCoordinateChange}
+                value={formData.latitude ?? ""}
+                onChange={(e) => setFormData((prev) => ({ ...prev, latitude: Number(e.target.value) }))}
+                disabled={isSubmitting}
               />
             </div>
 
@@ -728,9 +903,9 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
                 name="longitude"
                 type="number"
                 step="any"
-                defaultValue={editProperty?.longitude || ""}
-                disabled={isLoading}
-                onChange={handleCoordinateChange}
+                value={formData.longitude ?? ""}
+                onChange={(e) => setFormData((prev) => ({ ...prev, longitude: Number(e.target.value) }))}
+                disabled={isSubmitting}
               />
             </div>
           </div>
@@ -740,7 +915,7 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
               type="button"
               variant="outline"
               onClick={handleGeocodeAddress}
-              disabled={isLoading || isGeocoding}
+              disabled={isSubmitting || isGeocoding || !formData.address || !selectedProvinceName || !selectedCityName}
               className="w-full md:w-auto bg-transparent"
             >
               {isGeocoding ? (
@@ -766,7 +941,7 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
           {mapCoordinates && (
             <div className="space-y-2">
               <Label>Vista Previa del Mapa</Label>
-              <PropertiesMap
+              {/* <PropertiesMap
                 properties={[
                   {
                     id: editProperty?.id || "preview",
@@ -778,7 +953,11 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
                     currency: editProperty?.currency || "USD",
                     propertyType: propertyTypes.find((t) => t.id === editProperty?.propertyTypeId)?.name || "Sin tipo",
                     city: cities.find((c) => c.id === editProperty?.cityId)?.name || "Sin ciudad",
-                    images: editProperty?.images || [],
+                    images: editProperty?.images
+                      ? Array.isArray(editProperty.images)
+                        ? editProperty.images.map((img) => (typeof img === "string" ? img : img.url))
+                        : []
+                      : [], // Handle string or object array for images
                     status: editProperty?.status || "ACTIVO",
                   },
                 ]}
@@ -786,7 +965,7 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
                 defaultZoom={15}
                 draggable={true}
                 onMarkerDrag={handleMarkerDrag}
-              />
+              /> */}
               <p className="text-xs text-muted-foreground">
                 Haga click en el marcador para ver la dirección. Puede arrastrar el marcador para ajustar la ubicación
                 manualmente.
@@ -810,8 +989,9 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
                 name="bedrooms"
                 type="number"
                 min="0"
-                defaultValue={editProperty?.bedrooms || ""}
-                disabled={isLoading}
+                value={formData.bedrooms ?? ""}
+                onChange={(e) => setFormData((prev) => ({ ...prev, bedrooms: Number(e.target.value) }))}
+                disabled={isSubmitting}
               />
             </div>
 
@@ -822,8 +1002,9 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
                 name="bathrooms"
                 type="number"
                 min="0"
-                defaultValue={editProperty?.bathrooms || ""}
-                disabled={isLoading}
+                value={formData.bathrooms ?? ""}
+                onChange={(e) => setFormData((prev) => ({ ...prev, bathrooms: Number(e.target.value) }))}
+                disabled={isSubmitting}
               />
             </div>
 
@@ -834,8 +1015,9 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
                 name="parkingSpaces"
                 type="number"
                 min="0"
-                defaultValue={editProperty?.parkingSpaces || ""}
-                disabled={isLoading}
+                value={formData.parkingSpaces ?? ""}
+                onChange={(e) => setFormData((prev) => ({ ...prev, parkingSpaces: Number(e.target.value) }))}
+                disabled={isSubmitting}
               />
             </div>
 
@@ -847,8 +1029,9 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
                 type="number"
                 min="1900"
                 max={new Date().getFullYear()}
-                defaultValue={editProperty?.yearBuilt || ""}
-                disabled={isLoading}
+                value={formData.yearBuilt ?? ""}
+                onChange={(e) => setFormData((prev) => ({ ...prev, yearBuilt: Number(e.target.value) }))}
+                disabled={isSubmitting}
               />
             </div>
           </div>
@@ -862,9 +1045,10 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
                 type="number"
                 step="0.01"
                 min="0"
-                defaultValue={editProperty?.area}
+                value={formData.area ?? ""}
+                onChange={(e) => setFormData((prev) => ({ ...prev, area: Number(e.target.value) }))}
                 required
-                disabled={isLoading}
+                disabled={isSubmitting}
               />
             </div>
 
@@ -876,8 +1060,9 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
                 type="number"
                 step="0.01"
                 min="0"
-                defaultValue={editProperty?.lotSize || ""}
-                disabled={isLoading}
+                value={formData.lotSize ?? ""}
+                onChange={(e) => setFormData((prev) => ({ ...prev, lotSize: Number(e.target.value) }))}
+                disabled={isSubmitting}
               />
             </div>
           </div>
@@ -899,15 +1084,21 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
                 type="number"
                 step="0.01"
                 min="0"
-                defaultValue={editProperty?.price}
+                value={formData.price ?? ""}
+                onChange={(e) => setFormData((prev) => ({ ...prev, price: Number(e.target.value) }))}
                 required
-                disabled={isLoading}
+                disabled={isSubmitting}
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="currency">Moneda</Label>
-              <Select name="currency" defaultValue={editProperty?.currency || "USD"} disabled={isLoading}>
+              <Select
+                name="currency"
+                value={formData.currency || ""}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, currency: value }))}
+                disabled={isSubmitting}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -927,8 +1118,9 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
                 type="number"
                 step="0.01"
                 min="0"
-                defaultValue={editProperty?.rentalPrice || ""}
-                disabled={isLoading}
+                value={formData.rentalPrice ?? ""}
+                onChange={(e) => setFormData((prev) => ({ ...prev, rentalPrice: Number(e.target.value) }))}
+                disabled={isSubmitting}
               />
             </div>
           </div>
@@ -947,8 +1139,17 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
               id="features"
               name="features"
               placeholder="Piscina, Jardín, Terraza, etc."
-              defaultValue={editProperty?.features?.join(", ") ?? ""}
-              disabled={isLoading}
+              value={formData.features?.join(", ") ?? ""}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  features: e.target.value
+                    .split(",")
+                    .map((f) => f.trim())
+                    .filter(Boolean),
+                }))
+              }
+              disabled={isSubmitting}
             />
           </div>
 
@@ -958,8 +1159,17 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
               id="amenities"
               name="amenities"
               placeholder="Gimnasio, Seguridad 24/7, Área de juegos, etc."
-              defaultValue={editProperty?.amenities?.join(", ") ?? ""}
-              disabled={isLoading}
+              value={formData.amenities?.join(", ") ?? ""}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  amenities: e.target.value
+                    .split(",")
+                    .map((a) => a.trim())
+                    .filter(Boolean),
+                }))
+              }
+              disabled={isSubmitting}
             />
           </div>
         </CardContent>
@@ -970,15 +1180,24 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
           <CardTitle>Multimedia</CardTitle>
           <CardDescription>URLs de imágenes y videos (separadas por comas)</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
           <div className="space-y-2">
             <Label htmlFor="videos">URLs de Videos</Label>
             <Input
               id="videos"
               name="videos"
               placeholder="https://youtube.com/watch?v=..."
-              defaultValue={editProperty?.videos?.join(", ") ?? ""}
-              disabled={isLoading}
+              value={formData.videos?.join(", ") ?? ""}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  videos: e.target.value
+                    .split(",")
+                    .map((v) => v.trim())
+                    .filter(Boolean),
+                }))
+              }
+              disabled={isSubmitting}
             />
           </div>
 
@@ -988,8 +1207,9 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
               id="virtualTour"
               name="virtualTour"
               placeholder="https://..."
-              defaultValue={editProperty?.virtualTour || ""}
-              disabled={isLoading}
+              value={formData.virtualTour || ""}
+              onChange={(e) => setFormData((prev) => ({ ...prev, virtualTour: e.target.value }))}
+              disabled={isSubmitting}
             />
           </div>
         </CardContent>
@@ -1013,7 +1233,12 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="propertyLabel">Etiqueta de Propiedad</Label>
-            <Select name="propertyLabel" defaultValue={editProperty?.propertyLabel || "NONE"} disabled={isLoading}>
+            <Select
+              name="propertyLabel"
+              value={formData.propertyLabel || ""}
+              onValueChange={(value) => setFormData((prev) => ({ ...prev, propertyLabel: value }))}
+              disabled={isSubmitting}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Sin etiqueta" />
               </SelectTrigger>
@@ -1039,8 +1264,9 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
             <Switch
               id="syncToWordPress"
               name="syncToWordPress"
-              defaultChecked={editProperty?.syncToWordPress ?? true}
-              disabled={isLoading}
+              checked={formData.syncToWordPress ?? true}
+              onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, syncToWordPress: checked }))}
+              disabled={isSubmitting}
             />
           </div>
 
@@ -1052,19 +1278,20 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
             <Switch
               id="published"
               name="published"
-              defaultChecked={editProperty?.published ?? true}
-              disabled={isLoading}
+              checked={formData.published ?? true}
+              onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, published: checked }))}
+              disabled={isSubmitting}
             />
           </div>
         </CardContent>
       </Card>
 
       <div className="flex justify-end gap-4">
-        <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>
+        <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {editProperty ? "Actualizar" : "Crear"} Propiedad
         </Button>
       </div>

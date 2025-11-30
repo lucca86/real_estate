@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { z } from "zod"
 import { Button } from "@/components/ui/button"
@@ -10,16 +10,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createClient, updateClient } from "@/lib/actions/clients"
-import { Loader2 } from 'lucide-react'
+import { Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { createBrowserClient } from "@/lib/supabase/client"
 
 const clientFormSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
-  email: z.string().email("Email inválido"),
+  email: z.string().email("Email inválido").optional().or(z.literal("")),
   phone: z.string().min(1, "El teléfono es requerido"),
   secondaryPhone: z.string().optional(),
   idNumber: z.string().optional(),
@@ -72,16 +72,18 @@ export function ClientForm({ client }: ClientFormProps) {
   const [propertyTypes, setPropertyTypes] = useState<Array<{ id: string; name: string }>>([])
   const [selectedCountry, setSelectedCountry] = useState<string | undefined>(client?.country_id ?? undefined)
   const [selectedProvince, setSelectedProvince] = useState<string | undefined>(client?.province_id ?? undefined)
+  const [selectedProvinceName, setSelectedProvinceName] = useState("")
+  const [selectedCityName, setSelectedCityName] = useState("")
 
   useEffect(() => {
     const loadData = async () => {
       const supabase = createBrowserClient()
-      
+
       const [countriesRes, provincesRes, citiesRes, propertyTypesRes] = await Promise.all([
-        supabase.from('countries').select('id, name').eq('is_active', true).order('name'),
-        supabase.from('provinces').select('id, name, country_id').eq('is_active', true).order('name'),
-        supabase.from('cities').select('id, name, province_id').eq('is_active', true).order('name'),
-        supabase.from('property_types').select('id, name').eq('is_active', true).order('name'),
+        supabase.from("countries").select("id, name").eq("is_active", true).order("name"),
+        supabase.from("provinces").select("id, name, country_id").eq("is_active", true).order("name"),
+        supabase.from("cities").select("id, name, province_id").eq("is_active", true).order("name"),
+        supabase.from("property_types").select("id, name").eq("is_active", true).order("name"),
       ])
 
       if (countriesRes.data) setCountries(countriesRes.data)
@@ -148,8 +150,8 @@ export function ClientForm({ client }: ClientFormProps) {
     }
   }
 
-  const filteredProvinces = provinces.filter(p => p.country_id === selectedCountry)
-  const filteredCities = cities.filter(c => c.province_id === selectedProvince)
+  const filteredProvinces = provinces.filter((p) => p.country_id === selectedCountry)
+  const filteredCities = cities.filter((c) => c.province_id === selectedProvince)
 
   return (
     <Form {...form}>
@@ -265,7 +267,7 @@ export function ClientForm({ client }: ClientFormProps) {
                 <FormItem>
                   <FormLabel>Dirección</FormLabel>
                   <FormControl>
-                    <Input placeholder="Calle Principal 123" {...field} />
+                    <Input placeholder="Ingrese la dirección..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -279,14 +281,16 @@ export function ClientForm({ client }: ClientFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>País</FormLabel>
-                    <Select 
+                    <Select
                       onValueChange={(value) => {
                         field.onChange(value)
                         setSelectedCountry(value)
-                        form.setValue('provinceId', '')
-                        form.setValue('cityId', '')
+                        form.setValue("provinceId", "")
+                        form.setValue("cityId", "")
                         setSelectedProvince(undefined)
-                      }} 
+                        setSelectedProvinceName("")
+                        setSelectedCityName("")
+                      }}
                       defaultValue={field.value}
                     >
                       <FormControl>
@@ -313,28 +317,33 @@ export function ClientForm({ client }: ClientFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Provincia/Estado</FormLabel>
-                    <Select 
-                      onValueChange={(value) => {
-                        field.onChange(value)
-                        setSelectedProvince(value)
-                        form.setValue('cityId', '')
-                      }} 
-                      defaultValue={field.value}
-                      disabled={!selectedCountry}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecciona una provincia" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {filteredProvinces.map((province) => (
-                          <SelectItem key={province.id} value={province.id}>
-                            {province.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Select
+                        name="provinceId"
+                        value={selectedProvinceName}
+                        onValueChange={(value: string) => {
+                          setSelectedProvinceName(value)
+                          field.onChange(value || "")
+                          setSelectedProvince(value || "")
+                          form.setValue("cityId", "")
+                          setSelectedCityName("")
+                        }}
+                        disabled={!selectedCountry || selectedCountry !== "argentina-id"}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona una provincia" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {filteredProvinces.map((province) => (
+                            <SelectItem key={province.id} value={province.id}>
+                              {province.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -346,20 +355,30 @@ export function ClientForm({ client }: ClientFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Ciudad</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={!selectedProvince}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecciona una ciudad" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {filteredCities.map((city) => (
-                          <SelectItem key={city.id} value={city.id}>
-                            {city.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Select
+                        name="cityId"
+                        value={selectedCityName}
+                        onValueChange={(value: string) => {
+                          setSelectedCityName(value)
+                          field.onChange(value || "")
+                        }}
+                        disabled={!selectedProvince}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona una ciudad" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {filteredCities.map((city) => (
+                            <SelectItem key={city.id} value={city.id}>
+                              {city.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

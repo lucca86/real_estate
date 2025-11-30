@@ -39,7 +39,18 @@ export async function createProperty(formData: FormData) {
   const amenities = formData.get("amenities") as string
   const imagesStr = formData.get("images") as string
   const parsedImages = imagesStr ? JSON.parse(imagesStr) : []
-  const imageUrls = parsedImages.map((img: any) => img.url)
+
+  if (!parsedImages || parsedImages.length === 0) {
+    throw new Error("Debes agregar al menos una imagen a la propiedad")
+  }
+
+  const sortedImages = [...parsedImages].sort((a: any, b: any) => {
+    if (a.isCover) return -1
+    if (b.isCover) return 1
+    return 0
+  })
+
+  const imageUrls = sortedImages.map((img: any) => img.url)
   const isFeatured = formData.get("isFeatured") === "on"
   const lotSize = formData.get("lotSize") as string
   const propertyLabel = formData.get("propertyLabel") as string
@@ -88,7 +99,7 @@ export async function createProperty(formData: FormData) {
       currency,
       rental_price: rentalPrice ? Number.parseFloat(rentalPrice) : null,
       amenities: amenities ? amenities.split(",").map((a) => a.trim()) : [],
-      images: imageUrls,
+      images: sortedImages, // Keep full image objects with metadata
       is_featured: isFeatured,
       property_label: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
       adrema: adrema || null,
@@ -111,6 +122,13 @@ export async function createProperty(formData: FormData) {
     try {
       console.log("[v0] Syncing new property to WordPress:", newProperty.id)
 
+      const imagesToSync = sortedImages.filter((img: any) => img.syncToWordPress).map((img: any) => img.sizes.large)
+
+      if (imagesToSync.length === 0) {
+        console.log("[v0] Skipping WordPress sync: No images marked for sync")
+        throw new Error("Al menos una imagen debe estar marcada para sincronizar con WordPress")
+      }
+
       const { data: propertyWithRelations } = await supabase
         .from("properties")
         .select(`
@@ -122,8 +140,6 @@ export async function createProperty(formData: FormData) {
         `)
         .eq("id", newProperty.id)
         .single()
-
-      const imagesToSync = parsedImages.filter((img: any) => img.syncToWordPress).map((img: any) => img.sizes.large)
 
       const wordpressId = await wordpressAPI.syncProperty({
         id: newProperty.id,
@@ -160,6 +176,9 @@ export async function createProperty(formData: FormData) {
       console.log("[v0] Property synced successfully to WordPress with ID:", wordpressId)
     } catch (error) {
       console.error("[v0] Error syncing property to WordPress:", error)
+      throw new Error(
+        `Error al sincronizar con WordPress: ${error instanceof Error ? error.message : "Error desconocido"}`,
+      )
     }
   }
 
@@ -212,7 +231,18 @@ export async function updateProperty(propertyId: string, formData: FormData) {
   const amenities = formData.get("amenities") as string
   const imagesStr = formData.get("images") as string
   const parsedImages = imagesStr ? JSON.parse(imagesStr) : []
-  const imageUrls = parsedImages.map((img: any) => img.url)
+
+  if (!parsedImages || parsedImages.length === 0) {
+    throw new Error("Debes agregar al menos una imagen a la propiedad")
+  }
+
+  const sortedImages = [...parsedImages].sort((a: any, b: any) => {
+    if (a.isCover) return -1
+    if (b.isCover) return 1
+    return 0
+  })
+
+  const imageUrls = sortedImages.map((img: any) => img.url)
   const isFeatured = formData.get("isFeatured") === "on"
   const lotSize = formData.get("lotSize") as string
   const propertyLabel = formData.get("propertyLabel") as string
@@ -254,7 +284,7 @@ export async function updateProperty(propertyId: string, formData: FormData) {
       currency,
       rental_price: rentalPrice ? Number.parseFloat(rentalPrice) : null,
       amenities: amenities ? amenities.split(",").map((a) => a.trim()) : [],
-      images: imageUrls,
+      images: sortedImages, // Keep full image objects with metadata
       is_featured: isFeatured,
       property_label: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
       adrema: adrema || null,
@@ -277,6 +307,13 @@ export async function updateProperty(propertyId: string, formData: FormData) {
     try {
       console.log("[v0] Syncing updated property to WordPress:", updatedProperty.id)
 
+      const imagesToSync = sortedImages.filter((img: any) => img.syncToWordPress).map((img: any) => img.sizes.large)
+
+      if (imagesToSync.length === 0) {
+        console.log("[v0] Skipping WordPress sync: No images marked for sync")
+        throw new Error("Al menos una imagen debe estar marcada para sincronizar con WordPress")
+      }
+
       const { data: propertyWithRelations } = await supabase
         .from("properties")
         .select(`
@@ -288,8 +325,6 @@ export async function updateProperty(propertyId: string, formData: FormData) {
         `)
         .eq("id", updatedProperty.id)
         .single()
-
-      const imagesToSync = parsedImages.filter((img: any) => img.syncToWordPress).map((img: any) => img.sizes.large)
 
       const wordpressId = await wordpressAPI.syncProperty({
         id: updatedProperty.id,

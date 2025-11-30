@@ -29,7 +29,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 const ownerSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
-  email: z.string().email("Email inválido"),
+  email: z.string().email("Email inválido").optional().or(z.literal("")),
   phone: z.string().min(1, "El teléfono es requerido"),
   secondaryPhone: z.string().optional(),
   address: z.string().optional(),
@@ -72,6 +72,8 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
   const [isDeleting, setIsDeleting] = useState(false)
   const [selectedCountryId, setSelectedCountryId] = useState(owner?.country_id || "")
   const [selectedProvinceId, setSelectedProvinceId] = useState(owner?.province_id || "")
+  const [selectedProvinceName, setSelectedProvinceName] = useState("")
+  const [selectedCityName, setSelectedCityName] = useState("")
 
   const {
     register,
@@ -100,22 +102,27 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
   const isActive = watch("isActive")
   const cityId = watch("cityId")
 
-  const filteredProvinces = selectedCountryId ? provinces.filter((p) => p.country_id === selectedCountryId) : []
-
-  const filteredCities = selectedProvinceId ? cities.filter((c) => c.province_id === selectedProvinceId) : []
-
   const handleCountryChange = (value: string) => {
     setSelectedCountryId(value)
     setValue("countryId", value)
     setSelectedProvinceId("")
     setValue("provinceId", "")
     setValue("cityId", "")
+    setSelectedProvinceName("")
+    setSelectedCityName("")
   }
 
   const handleProvinceChange = (value: string) => {
-    setSelectedProvinceId(value)
+    setSelectedProvinceName(value)
     setValue("provinceId", value)
+    setSelectedProvinceId(value)
     setValue("cityId", "")
+    setSelectedCityName("")
+  }
+
+  const handleCityChange = (value: string) => {
+    setSelectedCityName(value)
+    setValue("cityId", value)
   }
 
   const onSubmit = async (data: OwnerFormData) => {
@@ -123,7 +130,7 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
     try {
       const formData = new FormData()
       formData.append("name", data.name)
-      formData.append("email", data.email)
+      if (data.email) formData.append("email", data.email)
       formData.append("phone", data.phone)
       formData.append("countryId", data.countryId)
       formData.append("isActive", String(data.isActive))
@@ -210,9 +217,7 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="email">
-                Email <span className="text-destructive">*</span>
-              </Label>
+              <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" {...register("email")} placeholder="juan@example.com" />
               {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
             </div>
@@ -245,7 +250,7 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
 
           <div className="space-y-2">
             <Label htmlFor="address">Dirección</Label>
-            <Input id="address" {...register("address")} placeholder="Calle 123, Ciudad" />
+            <Input id="address" {...register("address")} placeholder="Ingrese la dirección..." />
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
@@ -270,14 +275,17 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
 
             <div className="space-y-2">
               <Label htmlFor="provinceId">Provincia/Estado</Label>
-              <Select value={selectedProvinceId} onValueChange={handleProvinceChange} disabled={!selectedCountryId}>
+              <Select
+                name="provinceId"
+                value={selectedProvinceId}
+                onValueChange={handleProvinceChange}
+                disabled={!selectedCountryId || selectedCountryId !== "argentina-id"}
+              >
                 <SelectTrigger>
-                  <SelectValue
-                    placeholder={selectedCountryId ? "Seleccionar provincia" : "Seleccione un país primero"}
-                  />
+                  <SelectValue placeholder="Escriba para buscar provincia..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {filteredProvinces.map((province) => (
+                  {provinces.map((province) => (
                     <SelectItem key={province.id} value={province.id}>
                       {province.name}
                     </SelectItem>
@@ -288,18 +296,12 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
 
             <div className="space-y-2">
               <Label htmlFor="cityId">Ciudad</Label>
-              <Select
-                value={cityId}
-                onValueChange={(value) => setValue("cityId", value)}
-                disabled={!selectedProvinceId}
-              >
+              <Select name="cityId" value={cityId} onValueChange={handleCityChange} disabled={!selectedProvinceId}>
                 <SelectTrigger>
-                  <SelectValue
-                    placeholder={selectedProvinceId ? "Seleccionar ciudad" : "Seleccione una provincia primero"}
-                  />
+                  <SelectValue placeholder="Escriba para buscar ciudad..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {filteredCities.map((city) => (
+                  {cities.map((city) => (
                     <SelectItem key={city.id} value={city.id}>
                       {city.name}
                     </SelectItem>

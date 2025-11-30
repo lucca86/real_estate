@@ -60,7 +60,7 @@ function expandAbbreviations(text: string): string {
 export async function geocodeAddress(address: string): Promise<GeocodingResult | null> {
   try {
     const encodedAddress = encodeURIComponent(address)
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=10&countrycodes=ar&addressdetails=1`
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=20&countrycodes=ar&addressdetails=1&bounded=1&viewbox=-58.9,-27.3,-58.7,-27.6`
 
     console.log("[v0] Geocoding URL:", url)
 
@@ -82,26 +82,58 @@ export async function geocodeAddress(address: string): Promise<GeocodingResult |
       return null
     }
 
-    const preferredResult = data.find((result: any) => {
+    const scoredResults = data.map((result: any) => {
       const displayName = result.display_name.toLowerCase()
       const addressDetails = result.address || {}
+      let score = 0
 
+      // Check if it's in Corrientes Capital
       const isCorrientsesCapital =
         (addressDetails.city === "Corrientes" ||
           addressDetails.town === "Corrientes" ||
           addressDetails.municipality === "Corrientes") &&
-        (addressDetails.state === "Corrientes" || addressDetails.state === "Provincia de Corrientes") &&
-        !displayName.includes("paso de la patria") &&
-        !displayName.includes("santa ana") &&
-        !displayName.includes("riachuelo") &&
-        !displayName.includes("empedrado")
+        (addressDetails.state === "Corrientes" || addressDetails.state === "Provincia de Corrientes")
 
-      return isCorrientsesCapital
+      if (isCorrientsesCapital) {
+        score += 100
+      }
+
+      // Exclude nearby towns that often appear in results
+      const excludedLocations = ["paso de la patria", "santa ana", "riachuelo", "empedrado", "san luis del palmar"]
+      if (excludedLocations.some((location) => displayName.includes(location))) {
+        score -= 200
+      }
+
+      // Prioritize results with house numbers
+      if (addressDetails.house_number) {
+        score += 50
+      }
+
+      // Prioritize results with road/street names
+      if (addressDetails.road) {
+        score += 30
+      }
+
+      // Check importance score from Nominatim (higher is better)
+      if (result.importance) {
+        score += result.importance * 10
+      }
+
+      // Prioritize results with type "house" or "building"
+      if (result.type === "house" || result.type === "building" || result.type === "residential") {
+        score += 40
+      }
+
+      return { ...result, score }
     })
 
-    const result = preferredResult || data[0]
+    // Sort by score descending
+    scoredResults.sort((a: any, b: any) => b.score - a.score)
+
+    const result = scoredResults[0]
 
     console.log("[v0] Selected geocoding result:", result.display_name)
+    console.log("[v0] Score:", result.score)
     console.log("[v0] Coordinates:", result.lat, result.lon)
 
     return {
@@ -117,7 +149,7 @@ export async function geocodeAddress(address: string): Promise<GeocodingResult |
 
 /**
  * Geocode a property address by combining address components
- * Tries multiple strategies to find the location
+ * Uses OpenStreetMap Nominatim for geocoding
  */
 export async function geocodeProperty(
   address: string,
@@ -126,7 +158,7 @@ export async function geocodeProperty(
   country = "Argentina",
   neighborhood?: string,
 ): Promise<GeocodingResult | null> {
-  console.log("[v0] Starting geocoding with:", { address, city, state, neighborhood })
+  console.log("[v0] Starting geocoding with:", { address, city, state, neighborhood, country })
 
   // Normalize city name - don't use "Capital"
   const normalizedCity = city === "Capital" ? "Corrientes" : city
@@ -141,20 +173,23 @@ export async function geocodeProperty(
   const expandedAddress = expandAbbreviations(correctedAddress)
 
   const strategies = [
-    // Try with corrected address, neighborhood, and city
-    neighborhood ? `${expandedAddress}, ${neighborhood}, ${normalizedCity}, ${state}, ${country}` : null,
-
-    // Try with corrected address and city (no neighborhood)
+    // PRIORITY 1: Exact address with street number and city
     `${expandedAddress}, ${normalizedCity}, ${state}, ${country}`,
 
-    // Try without street number
+    // PRIORITY 2: With neighborhood if available
+    neighborhood ? `${expandedAddress}, ${neighborhood}, ${normalizedCity}, ${state}, ${country}` : null,
+
+    // PRIORITY 3: Try original address (in case expansion caused issues)
+    address !== expandedAddress ? `${address}, ${normalizedCity}, ${state}, ${country}` : null,
+
+    // PRIORITY 4: Just address and city (no state for simpler search)
+    `${expandedAddress}, ${normalizedCity}, ${country}`,
+
+    // PRIORITY 5: Without street number (if above failed)
     `${expandedAddress.replace(/\d+/g, "").trim()}, ${normalizedCity}, ${state}, ${country}`,
 
-    // Try with just street name and city (very broad)
-    `${expandedAddress.split(" ")[0]}, ${normalizedCity}, ${country}`,
-
-    // Try with original address (in case correction was wrong)
-    address !== correctedAddress ? `${address}, ${normalizedCity}, ${state}, ${country}` : null,
+    // PRIORITY 6: Just street name and city (very broad)
+    `${expandedAddress.split(",")[0]}, ${normalizedCity}, ${country}`,
 
     // Last resort: just city and state
     `${normalizedCity}, ${state}, ${country}`,
@@ -162,17 +197,17 @@ export async function geocodeProperty(
 
   for (let i = 0; i < strategies.length; i++) {
     const strategyAddress = strategies[i]
-    console.log(`[v0] Strategy ${i + 1}/${strategies.length}:`, strategyAddress)
+    console.log(`[v0] Nominatim strategy ${i + 1}/${strategies.length}:`, strategyAddress)
 
     const result = await geocodeAddress(strategyAddress)
     if (result) {
-      console.log(`[v0] ✓ Geocoding successful with strategy ${i + 1}`)
+      console.log(`[v0] ✓ Nominatim geocoding successful with strategy ${i + 1}`)
       return result
     }
 
     // Small delay to avoid rate limiting
     if (i < strategies.length - 1) {
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      await new Promise((resolve) => setTimeout(resolve, 1000))
     }
   }
 

@@ -31,6 +31,10 @@ export async function syncPropertyToWordPress(propertyId: string) {
     throw new Error("Propiedad no encontrada")
   }
 
+  if (!property.images || property.images.length === 0) {
+    throw new Error("La propiedad debe tener al menos una imagen para sincronizar con WordPress")
+  }
+
   console.log("[v0] Syncing property from sync button:", {
     id: property.id,
     title: property.title,
@@ -124,6 +128,10 @@ export async function syncAllPropertiesToWordPress() {
 
   for (const property of properties || []) {
     try {
+      if (!property.images || property.images.length === 0) {
+        throw new Error("La propiedad debe tener al menos una imagen para sincronizar con WordPress")
+      }
+
       const wordpressId = await wordpressAPI.syncProperty({
         id: property.id,
         wordpressId: property.wordpress_id,
@@ -184,11 +192,7 @@ export async function deletePropertyFromWordPress(propertyId: string) {
   }
 
   const supabase = await createServerClient()
-  const { data: property } = await supabase
-    .from("properties")
-    .select("id, wordpress_id")
-    .eq("id", propertyId)
-    .single()
+  const { data: property } = await supabase.from("properties").select("id, wordpress_id").eq("id", propertyId).single()
 
   if (!property || !property.wordpress_id) {
     throw new Error("Propiedad no encontrada o no sincronizada")

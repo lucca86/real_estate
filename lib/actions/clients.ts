@@ -7,7 +7,7 @@ import crypto from "crypto"
 
 const clientSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
-  email: z.string().email("Email inválido"),
+  email: z.string().email("Email inválido").optional().or(z.literal("")),
   phone: z.string().min(1, "El teléfono es requerido"),
   secondaryPhone: z.string().optional(),
   idNumber: z.string().optional(),
@@ -28,9 +28,9 @@ const clientSchema = z.object({
 export async function getClients() {
   try {
     const supabase = await createServerClient()
-    
+
     const { data: clients, error } = await supabase
-      .from('clients')
+      .from("clients")
       .select(`
         *,
         city:cities(name),
@@ -38,17 +38,18 @@ export async function getClients() {
         country:countries(name),
         appointments:appointments(count)
       `)
-      .order('created_at', { ascending: false })
+      .order("created_at", { ascending: false })
 
     if (error) throw error
-    
-    const transformedClients = clients?.map(client => ({
-      ...client,
-      _count: {
-        appointments: client.appointments?.length || 0
-      }
-    })) || []
-    
+
+    const transformedClients =
+      clients?.map((client) => ({
+        ...client,
+        _count: {
+          appointments: client.appointments?.length || 0,
+        },
+      })) || []
+
     return { success: true, data: transformedClients }
   } catch (error) {
     console.error("[getClients] Error:", error)
@@ -59,16 +60,16 @@ export async function getClients() {
 export async function getClientById(id: string) {
   try {
     const supabase = await createServerClient()
-    
+
     const { data: client, error } = await supabase
-      .from('clients')
+      .from("clients")
       .select(`
         *,
         city:cities(name),
         province:provinces(name),
         country:countries(name)
       `)
-      .eq('id', id)
+      .eq("id", id)
       .single()
 
     if (error) throw error
@@ -107,11 +108,7 @@ export async function createClient(data: z.infer<typeof clientSchema>) {
       is_active: validated.isActive,
     }
 
-    const { data: client, error } = await supabase
-      .from('clients')
-      .insert(clientData)
-      .select()
-      .single()
+    const { data: client, error } = await supabase.from("clients").insert(clientData).select().single()
 
     if (error) throw error
 
@@ -152,12 +149,7 @@ export async function updateClient(id: string, data: z.infer<typeof clientSchema
       updated_at: new Date().toISOString(),
     }
 
-    const { data: client, error } = await supabase
-      .from('clients')
-      .update(clientData)
-      .eq('id', id)
-      .select()
-      .single()
+    const { data: client, error } = await supabase.from("clients").update(clientData).eq("id", id).select().single()
 
     if (error) throw error
 
@@ -176,10 +168,7 @@ export async function updateClient(id: string, data: z.infer<typeof clientSchema
 export async function deleteClient(id: string) {
   try {
     const supabase = await createServerClient()
-    const { error } = await supabase
-      .from('clients')
-      .delete()
-      .eq('id', id)
+    const { error } = await supabase.from("clients").delete().eq("id", id)
 
     if (error) throw error
 

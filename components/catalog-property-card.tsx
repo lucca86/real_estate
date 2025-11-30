@@ -6,13 +6,14 @@ import { useState } from "react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { PropertyImage } from "@/components/property-image"
+import { PropertyImage as PropertyImageComponent } from "@/components/property-image"
 import { Building2, MapPin, Bed, Bath, Car, Maximize, ChevronLeft, ChevronRight } from "lucide-react"
+import { normalizeImageUrl } from "@/lib/image-utils"
 
 interface Property {
   id: string
   title: string
-  images: string[]
+  images: any[] | string[]
   city: { name: string } | null
   province: { name: string } | null
   status: string
@@ -77,6 +78,8 @@ const labelTexts = {
 export function CatalogPropertyCard({ property }: CatalogPropertyCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
+  const currentImageUrl = normalizeImageUrl(property.images[currentImageIndex])
+
   const goToPrevious = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -105,11 +108,11 @@ export function CatalogPropertyCard({ property }: CatalogPropertyCardProps) {
       <div className="relative aspect-video w-full overflow-hidden bg-muted">
         {property.images.length > 0 ? (
           <>
-            <PropertyImage
-              src={property.images[currentImageIndex]}
+            <PropertyImageComponent
+              src={currentImageUrl || "/placeholder.svg"}
               alt={property.title}
               fill
-              className="transition-transform group-hover:scale-105"
+              className="object-cover transition-transform group-hover:scale-105"
             />
 
             {property.images.length > 1 && (

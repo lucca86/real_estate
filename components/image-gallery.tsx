@@ -7,13 +7,49 @@ import { Dialog, DialogContent } from "./ui/dialog"
 import { ChevronLeft, ChevronRight, X } from "lucide-react"
 
 interface ImageGalleryProps {
-  images: string[]
+  images: (string | { url: string; sizes?: { medium?: string; large?: string } })[]
   title: string
+}
+
+function normalizeImageUrl(image: string | { url: string; sizes?: { medium?: string; large?: string } }): string {
+  // Base case: if it's a string starting with http, it's a real URL
+  if (typeof image === "string") {
+    if (image.startsWith("http")) {
+      return image
+    }
+    // Try to parse as JSON
+    try {
+      const parsed = JSON.parse(image)
+      return normalizeImageUrl(parsed) // Recursive call
+    } catch (e) {
+      return ""
+    }
+  }
+
+  // If image is an object
+  if (typeof image === "object" && image !== null) {
+    // Try to extract and recursively parse the url field
+    if ((image as any).url) {
+      return normalizeImageUrl((image as any).url) // Recursive call
+    }
+    // Try sizes
+    if (image.sizes?.large) {
+      return normalizeImageUrl(image.sizes.large)
+    }
+    if (image.sizes?.medium) {
+      return normalizeImageUrl(image.sizes.medium)
+    }
+  }
+
+  return ""
 }
 
 export function ImageGallery({ images, title }: ImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
+
+  console.log("[v0] ImageGallery - Received images:", images)
+  console.log("[v0] ImageGallery - Images length:", images?.length)
 
   if (images.length === 0) {
     return null
@@ -32,13 +68,15 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
     setIsLightboxOpen(true)
   }
 
+  const currentImageUrl = normalizeImageUrl(images[currentIndex])
+
   return (
     <>
       <div className="space-y-4">
         {/* Main Image */}
         <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-muted group cursor-pointer">
           <PropertyImage
-            src={images[currentIndex]}
+            src={currentImageUrl}
             alt={`${title} - Imagen ${currentIndex + 1}`}
             fill
             priority
@@ -91,7 +129,12 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
                   index === currentIndex ? "ring-2 ring-primary" : ""
                 }`}
               >
-                <PropertyImage src={image} alt={`${title} - Miniatura ${index + 1}`} fill className="rounded-lg" />
+                <PropertyImage
+                  src={normalizeImageUrl(image)}
+                  alt={`${title} - Miniatura ${index + 1}`}
+                  fill
+                  className="rounded-lg"
+                />
               </button>
             ))}
           </div>
@@ -103,7 +146,7 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
         <DialogContent className="max-w-7xl p-0 bg-black/95">
           <div className="relative h-[90vh] w-full">
             <PropertyImage
-              src={images[currentIndex]}
+              src={currentImageUrl}
               alt={`${title} - Imagen ${currentIndex + 1}`}
               fill
               className="object-contain"

@@ -33,6 +33,7 @@ export function ContactForm({ services, contact }: ContactFormProps) {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -139,7 +140,7 @@ export function ContactForm({ services, contact }: ContactFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="address">Dirección</Label>
-            <Input id="address" {...register("address")} placeholder="Calle 123, Ciudad" />
+            <Input id="address" {...register("address")} placeholder="Ingrese la dirección..." />
           </div>
 
           <div className="space-y-2">

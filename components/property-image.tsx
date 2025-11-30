@@ -5,7 +5,7 @@ import Image from "next/image"
 import { Building2 } from "lucide-react"
 
 interface PropertyImageProps {
-  src: string
+  src: string | any
   alt: string
   className?: string
   fill?: boolean
@@ -23,7 +23,9 @@ export function PropertyImage({
 }: PropertyImageProps) {
   const [error, setError] = useState(false)
 
-  if (!src || error) {
+  const imageUrl = typeof src === "string" ? src : ""
+
+  if (!imageUrl || error) {
     return (
       <div className={`flex items-center justify-center bg-muted ${className}`}>
         <Building2 className="h-12 w-12 text-muted-foreground/30" />
@@ -33,7 +35,7 @@ export function PropertyImage({
 
   return (
     <Image
-      src={src || "/placeholder.svg"}
+      src={imageUrl || "/placeholder.svg"}
       alt={alt}
       className={className}
       fill={fill}

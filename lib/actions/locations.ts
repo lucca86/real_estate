@@ -17,7 +17,7 @@ export async function createCountry(formData: FormData) {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('countries')
+      .from("countries")
       .insert({
         id: crypto.randomUUID(),
         name,
@@ -49,13 +49,13 @@ export async function updateCountry(id: string, formData: FormData) {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('countries')
+      .from("countries")
       .update({
         name,
         code: code.toUpperCase(),
         is_active: isActive,
       })
-      .eq('id', id)
+      .eq("id", id)
       .select()
       .single()
 
@@ -81,13 +81,13 @@ export async function createProvince(formData: FormData) {
 
   try {
     const supabase = await createServerClient()
-    const { data, error} = await supabase
-      .from('provinces')
-      .insert({ 
+    const { data, error } = await supabase
+      .from("provinces")
+      .insert({
         id: crypto.randomUUID(),
-        name, 
-        country_id: countryId, 
-        is_active: isActive 
+        name,
+        country_id: countryId,
+        is_active: isActive,
       })
       .select()
       .single()
@@ -114,9 +114,9 @@ export async function updateProvince(id: string, formData: FormData) {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('provinces')
+      .from("provinces")
       .update({ name, country_id: countryId, is_active: isActive })
-      .eq('id', id)
+      .eq("id", id)
       .select()
       .single()
 
@@ -143,12 +143,12 @@ export async function createCity(formData: FormData) {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('cities')
-      .insert({ 
+      .from("cities")
+      .insert({
         id: crypto.randomUUID(),
-        name, 
-        province_id: provinceId, 
-        is_active: isActive 
+        name,
+        province_id: provinceId,
+        is_active: isActive,
       })
       .select()
       .single()
@@ -175,9 +175,9 @@ export async function updateCity(id: string, formData: FormData) {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('cities')
+      .from("cities")
       .update({ name, province_id: provinceId, is_active: isActive })
-      .eq('id', id)
+      .eq("id", id)
       .select()
       .single()
 
@@ -204,12 +204,12 @@ export async function createNeighborhood(formData: FormData) {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('neighborhoods')
-      .insert({ 
+      .from("neighborhoods")
+      .insert({
         id: crypto.randomUUID(),
-        name, 
-        city_id: cityId, 
-        is_active: isActive 
+        name,
+        city_id: cityId,
+        is_active: isActive,
       })
       .select()
       .single()
@@ -236,9 +236,9 @@ export async function updateNeighborhood(id: string, formData: FormData) {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('neighborhoods')
+      .from("neighborhoods")
       .update({ name, city_id: cityId, is_active: isActive })
-      .eq('id', id)
+      .eq("id", id)
       .select()
       .single()
 
@@ -252,21 +252,39 @@ export async function updateNeighborhood(id: string, formData: FormData) {
   }
 }
 
+export async function getNeighborhoods(cityId: string) {
+  try {
+    const supabase = await createServerClient()
+    const { data, error } = await supabase
+      .from("neighborhoods")
+      .select("id, name")
+      .eq("city_id", cityId)
+      .eq("is_active", true)
+      .order("name", { ascending: true })
+
+    if (error) throw error
+    return data || []
+  } catch (error) {
+    console.error("[getNeighborhoods] Error:", error)
+    return []
+  }
+}
+
+export const getCitiesByProvince = getCities
+export const getNeighborhoodsByCity = getNeighborhoods
+
 // Delete action for all location types
 export async function deleteLocation(type: "country" | "province" | "city" | "neighborhood", id: string) {
   try {
     const supabase = await createServerClient()
     const tableMap = {
-      country: 'countries',
-      province: 'provinces',
-      city: 'cities',
-      neighborhood: 'neighborhoods'
+      country: "countries",
+      province: "provinces",
+      city: "cities",
+      neighborhood: "neighborhoods",
     }
-    
-    const { error } = await supabase
-      .from(tableMap[type])
-      .delete()
-      .eq('id', id)
+
+    const { error } = await supabase.from(tableMap[type]).delete().eq("id", id)
 
     if (error) throw error
 
@@ -282,10 +300,10 @@ export async function getCountries() {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('countries')
-      .select('id, name, code')
-      .eq('is_active', true)
-      .order('name', { ascending: true })
+      .from("countries")
+      .select("id, name, code")
+      .eq("is_active", true)
+      .order("name", { ascending: true })
 
     if (error) throw error
     return data || []
@@ -299,11 +317,11 @@ export async function getProvinces(countryId: string) {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('provinces')
-      .select('id, name')
-      .eq('country_id', countryId)
-      .eq('is_active', true)
-      .order('name', { ascending: true })
+      .from("provinces")
+      .select("id, name")
+      .eq("country_id", countryId)
+      .eq("is_active", true)
+      .order("name", { ascending: true })
 
     if (error) throw error
     return data || []
@@ -317,11 +335,11 @@ export async function getCities(provinceId: string) {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('cities')
-      .select('id, name')
-      .eq('province_id', provinceId)
-      .eq('is_active', true)
-      .order('name', { ascending: true })
+      .from("cities")
+      .select("id, name")
+      .eq("province_id", provinceId)
+      .eq("is_active", true)
+      .order("name", { ascending: true })
 
     if (error) throw error
     return data || []
@@ -331,31 +349,13 @@ export async function getCities(provinceId: string) {
   }
 }
 
-export async function getNeighborhoods(cityId: string) {
-  try {
-    const supabase = await createServerClient()
-    const { data, error } = await supabase
-      .from('neighborhoods')
-      .select('id, name')
-      .eq('city_id', cityId)
-      .eq('is_active', true)
-      .order('name', { ascending: true })
-
-    if (error) throw error
-    return data || []
-  } catch (error) {
-    console.error("[getNeighborhoods] Error:", error)
-    return []
-  }
-}
-
 export async function getAllCountries() {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('countries')
-      .select('id, name, code, is_active, created_at')
-      .order('name', { ascending: true })
+      .from("countries")
+      .select("id, name, code, is_active, created_at")
+      .order("name", { ascending: true })
 
     if (error) throw error
     return { success: true, data: data || [] }
@@ -369,7 +369,7 @@ export async function getAllProvinces() {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('provinces')
+      .from("provinces")
       .select(`
         id,
         name,
@@ -377,17 +377,15 @@ export async function getAllProvinces() {
         created_at,
         country:countries(id, name)
       `)
-      .order('name', { ascending: true })
+      .order("name", { ascending: true })
 
     if (error) throw error
-    
-    const transformedData = (data || []).map(province => ({
+
+    const transformedData = (data || []).map((province) => ({
       ...province,
-      country: Array.isArray(province.country) && province.country.length > 0 
-        ? province.country[0] 
-        : null
+      country: Array.isArray(province.country) && province.country.length > 0 ? province.country[0] : null,
     }))
-    
+
     return { success: true, data: transformedData }
   } catch (error: any) {
     console.error("[getAllProvinces] Error:", error)
@@ -399,7 +397,7 @@ export async function getAllCities() {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('cities')
+      .from("cities")
       .select(`
         id,
         name,
@@ -407,17 +405,15 @@ export async function getAllCities() {
         created_at,
         province:provinces(id, name)
       `)
-      .order('name', { ascending: true })
+      .order("name", { ascending: true })
 
     if (error) throw error
-    
-    const transformedData = (data || []).map(city => ({
+
+    const transformedData = (data || []).map((city) => ({
       ...city,
-      province: Array.isArray(city.province) && city.province.length > 0 
-        ? city.province[0] 
-        : null
+      province: Array.isArray(city.province) && city.province.length > 0 ? city.province[0] : null,
     }))
-    
+
     return { success: true, data: transformedData }
   } catch (error: any) {
     console.error("[getAllCities] Error:", error)
@@ -429,7 +425,7 @@ export async function getAllNeighborhoods() {
   try {
     const supabase = await createServerClient()
     const { data, error } = await supabase
-      .from('neighborhoods')
+      .from("neighborhoods")
       .select(`
         id,
         name,
@@ -437,17 +433,15 @@ export async function getAllNeighborhoods() {
         created_at,
         city:cities(id, name)
       `)
-      .order('name', { ascending: true })
+      .order("name", { ascending: true })
 
     if (error) throw error
-    
-    const transformedData = (data || []).map(neighborhood => ({
+
+    const transformedData = (data || []).map((neighborhood) => ({
       ...neighborhood,
-      city: Array.isArray(neighborhood.city) && neighborhood.city.length > 0 
-        ? neighborhood.city[0] 
-        : null
+      city: Array.isArray(neighborhood.city) && neighborhood.city.length > 0 ? neighborhood.city[0] : null,
     }))
-    
+
     return { success: true, data: transformedData }
   } catch (error: any) {
     console.error("[getAllNeighborhoods] Error:", error)
@@ -459,11 +453,7 @@ export async function getAllNeighborhoods() {
 export async function getCountryById(id: string) {
   try {
     const supabase = await createServerClient()
-    const { data, error } = await supabase
-      .from('countries')
-      .select('*')
-      .eq('id', id)
-      .single()
+    const { data, error } = await supabase.from("countries").select("*").eq("id", id).single()
 
     if (error) throw error
     return data
@@ -476,11 +466,7 @@ export async function getCountryById(id: string) {
 export async function getCityById(id: string) {
   try {
     const supabase = await createServerClient()
-    const { data, error } = await supabase
-      .from('cities')
-      .select('*')
-      .eq('id', id)
-      .single()
+    const { data, error } = await supabase.from("cities").select("*").eq("id", id).single()
 
     if (error) throw error
     return data
@@ -493,11 +479,7 @@ export async function getCityById(id: string) {
 export async function getProvinceById(id: string) {
   try {
     const supabase = await createServerClient()
-    const { data, error } = await supabase
-      .from('provinces')
-      .select('*')
-      .eq('id', id)
-      .single()
+    const { data, error } = await supabase.from("provinces").select("*").eq("id", id).single()
 
     if (error) throw error
     return data
@@ -510,11 +492,7 @@ export async function getProvinceById(id: string) {
 export async function getNeighborhoodById(id: string) {
   try {
     const supabase = await createServerClient()
-    const { data, error } = await supabase
-      .from('neighborhoods')
-      .select('*')
-      .eq('id', id)
-      .single()
+    const { data, error } = await supabase.from("neighborhoods").select("*").eq("id", id).single()
 
     if (error) throw error
     return data

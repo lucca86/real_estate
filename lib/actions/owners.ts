@@ -7,7 +7,7 @@ import crypto from "crypto"
 
 const ownerSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
-  email: z.string().email("Email inválido"),
+  email: z.string().email("Email inválido").optional().or(z.literal("")),
   phone: z.string().min(1, "El teléfono es requerido"),
   secondary_phone: z.string().optional(),
   address: z.string().optional(),
@@ -126,7 +126,7 @@ export async function updateOwner(
   id: string,
   data: {
     name: string
-    email: string
+    email?: string
     phone: string
     secondaryPhone?: string
     address?: string
@@ -142,7 +142,7 @@ export async function updateOwner(
   try {
     const ownerData = {
       name: data.name,
-      email: data.email,
+      email: data.email || null,
       phone: data.phone,
       secondary_phone: data.secondaryPhone || null,
       address: data.address || null,

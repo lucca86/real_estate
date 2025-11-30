@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Cloud, CloudOff, Loader2, RefreshCw } from "lucide-react"
+import { Cloud, CloudOff, Loader2, RefreshCw, AlertCircle } from "lucide-react"
 import { syncPropertyToWordPress, deletePropertyFromWordPress } from "@/lib/actions/wordpress"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
@@ -23,15 +23,25 @@ interface WordPressSyncButtonProps {
   propertyId: string
   wordpressId: number | null
   syncedAt: Date | null
+  hasImages?: boolean
 }
 
-export function WordPressSyncButton({ propertyId, wordpressId, syncedAt }: WordPressSyncButtonProps) {
+export function WordPressSyncButton({ propertyId, wordpressId, syncedAt, hasImages = true }: WordPressSyncButtonProps) {
   const [isSyncing, setIsSyncing] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
 
   const handleSync = async () => {
+    if (!hasImages) {
+      toast({
+        title: "No se puede sincronizar",
+        description: "La propiedad debe tener al menos una imagen para sincronizar con WordPress",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSyncing(true)
     try {
       const result = await syncPropertyToWordPress(propertyId)
@@ -84,7 +94,13 @@ export function WordPressSyncButton({ propertyId, wordpressId, syncedAt }: WordP
               {new Date(syncedAt).toLocaleDateString()} {new Date(syncedAt).toLocaleTimeString()}
             </span>
           )}
-          <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing}>
+          {!hasImages && (
+            <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-500">
+              <AlertCircle className="mr-1 h-3 w-3" />
+              Sin imágenes
+            </Badge>
+          )}
+          <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing || !hasImages}>
             {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
             Actualizar
           </Button>
@@ -115,7 +131,13 @@ export function WordPressSyncButton({ propertyId, wordpressId, syncedAt }: WordP
             <CloudOff className="mr-1 h-3 w-3" />
             No sincronizado
           </Badge>
-          <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing}>
+          {!hasImages && (
+            <Badge variant="secondary" className="bg-red-500/10 text-red-500">
+              <AlertCircle className="mr-1 h-3 w-3" />
+              Sin imágenes
+            </Badge>
+          )}
+          <Button variant="outline" size="sm" onClick={handleSync} disabled={isSyncing || !hasImages}>
             {isSyncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Cloud className="mr-2 h-4 w-4" />}
             Sincronizar
           </Button>
