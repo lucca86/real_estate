@@ -26,11 +26,12 @@ interface Appointment {
   scheduledAt: string // Changed from Date to string since data comes as ISO string
   duration: number
   status: string
-  property: {
+  property?: {
     title: string
     address: string
     city: string
   }
+  otherLocation?: string // New field added for other location
   client: {
     name: string
   }
@@ -161,7 +162,9 @@ export function AppointmentsCalendar({ appointments }: AppointmentsCalendarProps
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center gap-2">
                         <Badge className={getStatusColor(apt.status)}>{apt.status}</Badge>
-                        <span className="font-medium">{apt.property.title}</span>
+                        <span className="font-medium">
+                          {apt.property?.title || apt.otherLocation || "Ubicación no especificada"}
+                        </span>
                       </div>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1">
@@ -174,7 +177,7 @@ export function AppointmentsCalendar({ appointments }: AppointmentsCalendarProps
                         </div>
                         <div className="flex items-center gap-1">
                           <MapPin className="h-4 w-4" />
-                          {apt.property.city}
+                          {apt.property?.city || "Ciudad no especificada"}
                         </div>
                       </div>
                       <div className="text-sm text-muted-foreground">Agente: {apt.agent.name}</div>

@@ -122,15 +122,21 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
     : []
 
   const onSubmit = async (data: AppointmentFormData) => {
+    console.log("[v0] Form submitted with data:", data)
+    console.log("[v0] Validation errors:", errors)
+
     setIsSubmitting(true)
 
     try {
       const scheduledAtISO = datetimeLocalToISO(data.scheduledAt)
+      console.log("[v0] Scheduled time converted to ISO:", scheduledAtISO)
 
       const appointmentData = {
         ...data,
         scheduledAt: scheduledAtISO,
       }
+
+      console.log("[v0] Sending appointment data:", appointmentData)
 
       const result = appointment
         ? await updateAppointment(appointment.id, appointmentData)
@@ -244,6 +250,25 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
             />
             {errors.contactName && <p className="text-sm text-destructive">{errors.contactName.message}</p>}
             <p className="text-xs text-muted-foreground">Ingresa el nombre de la persona interesada en la propiedad</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="agentId" className={errors.agentId ? "text-destructive" : ""}>
+              Agente Asignado *
+            </Label>
+            <Select value={watch("agentId")} onValueChange={(value) => setValue("agentId", value)}>
+              <SelectTrigger className={errors.agentId ? "border-destructive" : ""}>
+                <SelectValue placeholder="Selecciona un agente" />
+              </SelectTrigger>
+              <SelectContent>
+                {agents.map((agent) => (
+                  <SelectItem key={agent.id} value={agent.id}>
+                    {agent.name} {agent.email && `(${agent.email})`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.agentId && <p className="text-sm text-destructive">{errors.agentId.message}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
