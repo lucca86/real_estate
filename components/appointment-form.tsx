@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2 } from 'lucide-react'
+import { Loader2 } from "lucide-react"
 import { datetimeLocalToISO, dateToDatetimeLocal } from "@/lib/timezone-utils"
 
 const AppointmentStatus = {
@@ -23,17 +23,23 @@ const AppointmentStatus = {
   CANCELADA: "CANCELADA",
 } as const
 
-type AppointmentStatus = typeof AppointmentStatus[keyof typeof AppointmentStatus]
+type AppointmentStatus = (typeof AppointmentStatus)[keyof typeof AppointmentStatus]
 
-const appointmentSchema = z.object({
-  propertyId: z.string().min(1, "Selecciona una propiedad"),
-  clientId: z.string().min(1, "Selecciona un cliente"),
-  agentId: z.string().min(1, "Selecciona un agente"),
-  scheduledAt: z.string().min(1, "Selecciona fecha y hora"),
-  duration: z.number().min(15).max(480),
-  status: z.nativeEnum(AppointmentStatus),
-  notes: z.string().optional(),
-})
+const appointmentSchema = z
+  .object({
+    propertyId: z.string().optional(),
+    otherLocation: z.string().optional(),
+    contactName: z.string().min(1, "Ingresa el nombre del contacto"),
+    agentId: z.string().min(1, "Selecciona un agente"),
+    scheduledAt: z.string().min(1, "Selecciona fecha y hora"),
+    duration: z.number().min(15).max(480),
+    status: z.nativeEnum(AppointmentStatus),
+    notes: z.string().optional(),
+  })
+  .refine((data) => data.propertyId || data.otherLocation, {
+    message: "Debes seleccionar una propiedad o ingresar otro lugar",
+    path: ["propertyId"],
+  })
 
 type AppointmentFormData = z.infer<typeof appointmentSchema>
 
@@ -48,6 +54,33 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [propertySearch, setPropertySearch] = useState("")
+  const [showPropertyResults, setShowPropertyResults] = useState(false)
+
+  const initialProperty = appointment?.property_id
+    ? properties.find((p) => p.id === appointment.property_id) ||
+      (appointment.property
+        ? {
+            id: appointment.property.id,
+            title: appointment.property.title,
+            address: appointment.property.address,
+            city: "Sin ciudad",
+          }
+        : null)
+    : null
+
+  const [selectedProperty, setSelectedProperty] = useState<{
+    id: string
+    title: string
+    address: string
+    city: string
+  } | null>(initialProperty)
+
+  useEffect(() => {
+    if (initialProperty) {
+      setPropertySearch(initialProperty.address)
+    }
+  }, [initialProperty])
 
   const {
     register,
@@ -59,17 +92,19 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
     resolver: zodResolver(appointmentSchema),
     defaultValues: appointment
       ? {
-          propertyId: appointment.propertyId,
-          clientId: appointment.clientId,
-          agentId: appointment.agentId,
-          scheduledAt: dateToDatetimeLocal(appointment.scheduledAt),
+          propertyId: appointment.property_id || "",
+          otherLocation: appointment.other_location || "",
+          contactName: appointment.contact_name || appointment.client?.name || "",
+          agentId: appointment.agent_id || "",
+          scheduledAt: dateToDatetimeLocal(appointment.scheduled_date),
           duration: appointment.duration,
           status: appointment.status,
           notes: appointment.notes || "",
         }
       : {
           propertyId: "",
-          clientId: "",
+          otherLocation: "",
+          contactName: "",
           agentId: "",
           scheduledAt: "",
           duration: 60,
@@ -77,6 +112,14 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
           notes: "",
         },
   })
+
+  const filteredProperties = propertySearch.trim()
+    ? properties.filter(
+        (property) =>
+          property.address.toLowerCase().includes(propertySearch.toLowerCase()) ||
+          property.city.toLowerCase().includes(propertySearch.toLowerCase()),
+      )
+    : []
 
   const onSubmit = async (data: AppointmentFormData) => {
     setIsSubmitting(true)
@@ -129,60 +172,78 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="propertyId" className={errors.propertyId ? "text-destructive" : ""}>
-              Propiedad *
+            <Label htmlFor="propertySearch" className={errors.propertyId ? "text-destructive" : ""}>
+              Propiedad
             </Label>
-            <Select value={watch("propertyId")} onValueChange={(value) => setValue("propertyId", value)}>
-              <SelectTrigger className={errors.propertyId ? "border-destructive" : ""}>
-                <SelectValue placeholder="Selecciona una propiedad" />
-              </SelectTrigger>
-              <SelectContent>
-                {properties.map((property) => (
-                  <SelectItem key={property.id} value={property.id}>
-                    {property.title} - {property.address}, {property.city}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="relative">
+              <Input
+                id="propertySearch"
+                type="text"
+                placeholder="Busca por dirección..."
+                value={selectedProperty ? `${selectedProperty.address}, ${selectedProperty.city}` : propertySearch}
+                onChange={(e) => {
+                  setPropertySearch(e.target.value)
+                  setShowPropertyResults(true)
+                  if (selectedProperty) {
+                    setSelectedProperty(null)
+                    setValue("propertyId", "")
+                  }
+                }}
+                onFocus={() => setShowPropertyResults(true)}
+                className={errors.propertyId ? "border-destructive" : ""}
+              />
+              {showPropertyResults && !selectedProperty && filteredProperties.length > 0 && (
+                <div className="absolute z-50 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
+                  {filteredProperties.map((property) => (
+                    <button
+                      key={property.id}
+                      type="button"
+                      className="w-full px-4 py-2 text-left hover:bg-muted transition-colors text-sm"
+                      onClick={() => {
+                        setSelectedProperty(property)
+                        setValue("propertyId", property.id)
+                        setPropertySearch("")
+                        setShowPropertyResults(false)
+                      }}
+                    >
+                      <div className="font-medium">{property.title}</div>
+                      <div className="text-muted-foreground text-xs">
+                        {property.address}, {property.city}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             {errors.propertyId && <p className="text-sm text-destructive">{errors.propertyId.message}</p>}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="clientId" className={errors.clientId ? "text-destructive" : ""}>
-              Cliente *
-            </Label>
-            <Select value={watch("clientId")} onValueChange={(value) => setValue("clientId", value)}>
-              <SelectTrigger className={errors.clientId ? "border-destructive" : ""}>
-                <SelectValue placeholder="Selecciona un cliente" />
-              </SelectTrigger>
-              <SelectContent>
-                {clients.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>
-                    {client.name} {client.email && `- ${client.email}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.clientId && <p className="text-sm text-destructive">{errors.clientId.message}</p>}
+            <Label htmlFor="otherLocation">Otro lugar</Label>
+            <Input
+              id="otherLocation"
+              type="text"
+              placeholder="Ej: Café Central, Oficina, etc."
+              {...register("otherLocation")}
+            />
+            <p className="text-xs text-muted-foreground">
+              Si la cita no es en una propiedad, ingresa el lugar donde se realizará
+            </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="agentId" className={errors.agentId ? "text-destructive" : ""}>
-              Agente Asignado *
+            <Label htmlFor="contactName" className={errors.contactName ? "text-destructive" : ""}>
+              Contacto *
             </Label>
-            <Select value={watch("agentId")} onValueChange={(value) => setValue("agentId", value)}>
-              <SelectTrigger className={errors.agentId ? "border-destructive" : ""}>
-                <SelectValue placeholder="Selecciona un agente" />
-              </SelectTrigger>
-              <SelectContent>
-                {agents.map((agent) => (
-                  <SelectItem key={agent.id} value={agent.id}>
-                    {agent.name} {agent.email && `- ${agent.email}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.agentId && <p className="text-sm text-destructive">{errors.agentId.message}</p>}
+            <Input
+              id="contactName"
+              type="text"
+              placeholder="Nombre del contacto"
+              {...register("contactName")}
+              className={errors.contactName ? "border-destructive" : ""}
+            />
+            {errors.contactName && <p className="text-sm text-destructive">{errors.contactName.message}</p>}
+            <p className="text-xs text-muted-foreground">Ingresa el nombre de la persona interesada en la propiedad</p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

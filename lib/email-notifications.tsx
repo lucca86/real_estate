@@ -10,6 +10,7 @@ interface AppointmentEmailData {
   agentEmail: string
   scheduledAt: Date
   duration: number
+  status?: string
   notes?: string
 }
 
@@ -22,11 +23,11 @@ interface AppointmentEmailData {
  * 3. Implementar el envío real de emails
  *
  * Ejemplo con Resend:
- * ```
+ * \`\`\`
  * import { Resend } from 'resend'
  * const resend = new Resend(process.env.RESEND_API_KEY)
  * await resend.emails.send({ ... })
- * ```
+ * \`\`\`
  */
 export async function sendAppointmentNotifications(data: AppointmentEmailData): Promise<{
   success: boolean
@@ -64,7 +65,7 @@ export async function sendAppointmentNotifications(data: AppointmentEmailData): 
     const clientEmailContent = `
       <h2>Confirmación de Visita a Propiedad</h2>
       <p>Hola ${data.clientName},</p>
-      <p>Tu visita a la propiedad ha sido confirmada:</p>
+      <p>Tu visita a la propiedad ha sido ${data.status || "confirmada"}:</p>
       <ul>
         <li><strong>Propiedad:</strong> ${data.propertyTitle}</li>
         <li><strong>Dirección:</strong> ${data.propertyAddress}</li>
@@ -82,7 +83,7 @@ export async function sendAppointmentNotifications(data: AppointmentEmailData): 
     const agentEmailContent = `
       <h2>Nueva Cita Agendada</h2>
       <p>Hola ${data.agentName},</p>
-      <p>Se ha agendado una nueva visita:</p>
+      <p>Se ha ${data.status || "agendado"} una nueva visita:</p>
       <ul>
         <li><strong>Cliente:</strong> ${data.clientName}</li>
         <li><strong>Propiedad:</strong> ${data.propertyTitle}</li>

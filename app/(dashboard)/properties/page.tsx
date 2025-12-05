@@ -1,15 +1,98 @@
 import { getCurrentUser } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { PropertiesTable } from "@/components/properties-table"
+import { PropertiesFilters } from "@/components/properties-filters"
 import { Button } from "@/components/ui/button"
 import { Plus, FileText } from "lucide-react"
 import Link from "next/link"
+import { createServerClient } from "@/lib/supabase/server"
 
-export default async function PropertiesPage() {
+export default async function PropertiesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const user = await getCurrentUser()
 
   if (!user) {
     redirect("/login")
+  }
+
+  const params = await searchParams
+
+  const search = params.search as string
+  const propertyType = params.propertyType as string
+  const transactionType = (params.transactionType as string) || "VENTA"
+  const status = params.status as string
+  const city = params.city as string
+  const neighborhood = params.neighborhood as string
+  const minPrice = params.minPrice as string
+  const maxPrice = params.maxPrice as string
+  const bedrooms = params.bedrooms as string
+  const bathrooms = params.bathrooms as string
+  const activeOnly = params.activeOnly !== "false"
+
+  const supabase = await createServerClient()
+
+  let query = supabase
+    .from("properties")
+    .select(`
+      *,
+      owner:owners!owner_id(name),
+      propertyType:property_types!property_type_id(name),
+      city:cities!city_id(name),
+      province:provinces!province_id(name)
+    `)
+    .order("created_at", { ascending: false })
+
+  if (activeOnly) {
+    query = query.eq("status", "ACTIVO")
+  }
+
+  if (search) {
+    query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
+  }
+
+  if (propertyType && propertyType !== "Todos") {
+    query = query.eq("property_type_id", propertyType)
+  }
+
+  if (transactionType && transactionType !== "Todas") {
+    query = query.eq("transaction_type", transactionType)
+  }
+
+  if (status && status !== "Todos") {
+    query = query.eq("status", status)
+  }
+
+  if (city) {
+    query = query.eq("city_id", city)
+  }
+
+  if (neighborhood) {
+    query = query.eq("neighborhood_id", neighborhood)
+  }
+
+  if (minPrice) {
+    query = query.gte("price", Number.parseFloat(minPrice))
+  }
+
+  if (maxPrice) {
+    query = query.lte("price", Number.parseFloat(maxPrice))
+  }
+
+  if (bedrooms && bedrooms !== "Cualquiera") {
+    query = query.gte("bedrooms", Number.parseInt(bedrooms))
+  }
+
+  if (bathrooms && bathrooms !== "Cualquiera") {
+    query = query.gte("bathrooms", Number.parseInt(bathrooms))
+  }
+
+  const { data: properties, error } = await query
+
+  if (error) {
+    console.error("[v0] Error fetching properties:", error)
   }
 
   return (
@@ -35,7 +118,15 @@ export default async function PropertiesPage() {
         </div>
       </div>
 
-      <PropertiesTable currentUser={user} />
+      <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+        <aside className="space-y-4">
+          <PropertiesFilters activeOnly={activeOnly} />
+        </aside>
+
+        <main>
+          <PropertiesTable properties={properties || []} currentUser={user} />
+        </main>
+      </div>
     </div>
   )
 }

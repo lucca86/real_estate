@@ -1103,9 +1103,8 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="DOP">DOP</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
+                  <SelectItem value="DOP">Pesos</SelectItem>
+                  <SelectItem value="USD">Dólares</SelectItem>
                 </SelectContent>
               </Select>
             </div>

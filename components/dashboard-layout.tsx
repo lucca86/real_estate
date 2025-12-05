@@ -3,6 +3,7 @@
 import * as React from "react"
 import { AppSidebar } from "@/components/app-sidebar"
 import { AppHeader } from "@/components/app-header"
+import { AppFooter } from "@/components/app-footer"
 import type { SessionUser } from "@/lib/auth"
 
 interface DashboardLayoutProps {
@@ -37,7 +38,10 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <AppHeader user={user} onMenuClick={() => setSidebarOpen((prev) => !prev)} />
-        <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">{children}</main>
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">{children}</main>
+          <AppFooter />
+        </div>
       </div>
     </div>
   )

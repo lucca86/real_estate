@@ -9,9 +9,12 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Real Estate Manager - Sistema de Gestión Inmobiliaria",
+  title: "Gestión Inmobiliaria RE - Sistema de Gestión Inmobiliaria",
   description: "Sistema completo de gestión de negocios inmobiliarios",
   generator: "v0.app",
+  icons: {
+    icon: "/favicon.ico",
+  },
 }
 
 export default function RootLayout({

@@ -75,6 +75,11 @@ const labelTexts = {
   REBAJADA: "Rebajada",
 }
 
+const currencyLabels: Record<string, string> = {
+  USD: "Dólares",
+  DOP: "Pesos",
+}
+
 export function CatalogPropertyCard({ property }: CatalogPropertyCardProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
@@ -202,7 +207,9 @@ export function CatalogPropertyCard({ property }: CatalogPropertyCardProps) {
 
         <div className="flex items-baseline gap-1 border-t border-border pt-3">
           <span className="text-2xl font-bold text-primary">${property.price.toLocaleString()}</span>
-          <span className="text-sm text-muted-foreground">{property.currency}</span>
+          <span className="text-sm text-muted-foreground">
+            {currencyLabels[property.currency] || property.currency}
+          </span>
           {property.price_per_m2 && (
             <span className="ml-auto text-xs text-muted-foreground">${property.price_per_m2.toFixed(0)}/m²</span>
           )}

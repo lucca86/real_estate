@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Edit } from 'lucide-react'
+import { Edit } from "lucide-react"
 import Link from "next/link"
 import { DeleteUserButton } from "@/components/delete-user-button"
 import type { SessionUser } from "@/lib/auth"
@@ -14,15 +14,19 @@ interface UsersTableProps {
 
 export async function UsersTable({ currentUser }: UsersTableProps) {
   const supabase = await createServerClient()
-  
+
   const { data: users, error } = await supabase
-    .from('users')
-    .select('id, name, email, role, is_active, created_at')
-    .order('created_at', { ascending: false })
+    .from("users")
+    .select("id, name, email, role, is_active, created_at, avatar")
+    .order("created_at", { ascending: false })
 
   if (error || !users) {
-    console.error('[v0] Error fetching users:', error)
-    return <Card><CardContent className="p-0">Error al cargar usuarios</CardContent></Card>
+    console.error("[v0] Error fetching users:", error)
+    return (
+      <Card>
+        <CardContent className="p-0">Error al cargar usuarios</CardContent>
+      </Card>
+    )
   }
 
   const roleColors: Record<string, string> = {
@@ -34,7 +38,7 @@ export async function UsersTable({ currentUser }: UsersTableProps) {
   const roleLabels: Record<string, string> = {
     ADMIN: "Administrador",
     SUPERVISOR: "Supervisor",
-    VENDEDOR: "Vendedor",
+    VENDEDOR: "Agente Inmobiliario",
   }
 
   return (
@@ -64,6 +68,7 @@ export async function UsersTable({ currentUser }: UsersTableProps) {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10">
+                        {user.avatar && <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />}
                         <AvatarFallback className="bg-primary text-primary-foreground">
                           {user.name
                             .split(" ")

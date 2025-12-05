@@ -37,6 +37,7 @@ interface Appointment {
   agent: {
     name: string
   }
+  contactName?: string // New field added for contact name
 }
 
 interface AppointmentsCalendarProps {
@@ -126,7 +127,7 @@ export function AppointmentsCalendar({ appointments }: AppointmentsCalendarProps
                     {dayAppointments.slice(0, 2).map((apt) => (
                       <Link key={apt.id} href={`/appointments/${apt.id}/edit`}>
                         <div className={`text-xs p-1 rounded truncate ${getStatusColor(apt.status)}`}>
-                          {getArgentinaTime(apt.scheduledAt)} - {apt.client.name}
+                          {getArgentinaTime(apt.scheduledAt)} - {apt.contactName || apt.client?.name || "Sin nombre"}
                         </div>
                       </Link>
                     ))}
@@ -169,7 +170,7 @@ export function AppointmentsCalendar({ appointments }: AppointmentsCalendarProps
                         </div>
                         <div className="flex items-center gap-1">
                           <User className="h-4 w-4" />
-                          {apt.client.name}
+                          {apt.contactName || apt.client?.name || "Sin nombre"}
                         </div>
                         <div className="flex items-center gap-1">
                           <MapPin className="h-4 w-4" />

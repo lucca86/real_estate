@@ -214,3 +214,63 @@ export async function updateProfile(formData: FormData) {
     return { error: "Error al actualizar el perfil" }
   }
 }
+
+export async function changeUserPassword(
+  userId: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<{ error: string } | { success: true; message: string }> {
+  try {
+    const currentUser = await getCurrentUser()
+
+    // Users can only change their own password unless they're ADMIN
+    if (!currentUser || (currentUser.id !== userId && currentUser.role !== "ADMIN")) {
+      return { error: "No tienes permisos para cambiar esta contraseña" }
+    }
+
+    if (newPassword.length < 6) {
+      return { error: "La contraseña debe tener al menos 6 caracteres" }
+    }
+
+    const supabase = await createServerClient()
+
+    // Get user to verify current password (only if changing own password)
+    if (currentUser.id === userId) {
+      const { data: user } = await supabase.from("users").select("password").eq("id", userId).single()
+
+      if (!user) {
+        return { error: "Usuario no encontrado" }
+      }
+
+      const bcrypt = await import("bcryptjs")
+      const isValid = await bcrypt.compare(currentPassword, user.password)
+
+      if (!isValid) {
+        return { error: "La contraseña actual es incorrecta" }
+      }
+    }
+
+    // Hash new password
+    const hashedPassword = await hashPassword(newPassword)
+
+    // Update password
+    const { error } = await supabase
+      .from("users")
+      .update({
+        password: hashedPassword,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userId)
+
+    if (error) {
+      console.error("[v0] Error updating password:", error)
+      return { error: "Error al actualizar la contraseña" }
+    }
+
+    revalidatePath(`/users/${userId}/edit`)
+    return { success: true, message: "Contraseña actualizada exitosamente" }
+  } catch (error) {
+    console.error("[v0] Error in changeUserPassword:", error)
+    return { error: "Error al cambiar la contraseña" }
+  }
+}

@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, X } from "lucide-react"
-import { createUser, updateUser } from "@/lib/actions/users"
+import { createUser, updateUser, changeUserPassword } from "@/lib/actions/users"
 import type { SessionUser } from "@/lib/auth"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
@@ -35,6 +35,9 @@ export function UserForm({ currentUser, editUser }: UserFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(editUser?.avatar || null)
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null)
 
   function handleAvatarChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
@@ -77,6 +80,42 @@ export function UserForm({ currentUser, editUser }: UserFormProps) {
     }
   }
 
+  async function handlePasswordChange(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setPasswordError(null)
+    setPasswordSuccess(null)
+    setIsChangingPassword(true)
+
+    const formData = new FormData(event.currentTarget)
+    const currentPassword = formData.get("currentPassword") as string
+    const newPassword = formData.get("newPassword") as string
+    const confirmNewPassword = formData.get("confirmNewPassword") as string
+
+    if (newPassword !== confirmNewPassword) {
+      setPasswordError("Las contraseñas no coinciden")
+      setIsChangingPassword(false)
+      return
+    }
+
+    try {
+      const result = await changeUserPassword(editUser!.id, currentPassword, newPassword)
+
+      if ("error" in result) {
+        setPasswordError(result.error)
+      } else {
+        // TypeScript now knows result has success and message
+        setPasswordSuccess(result.message)
+        // Clear form
+        const form = event.currentTarget
+        form.reset()
+      }
+    } catch (err) {
+      setPasswordError(err instanceof Error ? err.message : "Error al cambiar la contraseña")
+    } finally {
+      setIsChangingPassword(false)
+    }
+  }
+
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -87,123 +126,191 @@ export function UserForm({ currentUser, editUser }: UserFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <Card>
-        <CardHeader>
-          <CardTitle>Información del Usuario</CardTitle>
-          <CardDescription>Completa los datos del usuario</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <div className="flex items-center gap-6">
-            <Avatar className="h-20 w-20">
-              <AvatarImage src={avatarPreview || undefined} />
-              <AvatarFallback className="text-lg">{editUser ? getInitials(editUser.name) : "NU"}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 space-y-2">
-              <Label htmlFor="avatar">Foto de perfil</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="avatar"
-                  name="avatar"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAvatarChange}
-                  disabled={isLoading}
-                  className="cursor-pointer"
-                />
-                {avatarPreview && (
-                  <Button type="button" variant="outline" size="icon" onClick={handleRemoveAvatar} disabled={isLoading}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              <p className="text-sm text-muted-foreground">Formatos: JPG, PNG, GIF (máx. 2MB)</p>
-            </div>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="name">Nombre Completo</Label>
-              <Input
-                id="name"
-                name="name"
-                defaultValue={editUser?.name}
-                placeholder="Ej: Juan Pérez"
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                defaultValue={editUser?.email}
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            {!editUser && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Contraseña</Label>
-                  <Input id="password" name="password" type="password" required disabled={isLoading} />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
-                  <Input id="confirmPassword" name="confirmPassword" type="password" required disabled={isLoading} />
-                </div>
-              </>
+    <div className="space-y-6">
+      <form onSubmit={handleSubmit}>
+        <Card>
+          <CardHeader>
+            <CardTitle>Información del Usuario</CardTitle>
+            <CardDescription>Completa los datos del usuario</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="role">Rol</Label>
-              <Select
-                name="role"
-                defaultValue={editUser?.role || "VENDEDOR"}
-                disabled={isLoading || currentUser.role !== "ADMIN"}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un rol" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="VENDEDOR">Vendedor</SelectItem>
-                  <SelectItem value="SUPERVISOR">Supervisor</SelectItem>
-                  {currentUser.role === "ADMIN" && <SelectItem value="ADMIN">Administrador</SelectItem>}
-                </SelectContent>
-              </Select>
+            <div className="flex items-center gap-6">
+              <Avatar className="h-20 w-20">
+                <AvatarImage src={avatarPreview || undefined} />
+                <AvatarFallback className="text-lg">{editUser ? getInitials(editUser.name) : "NU"}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 space-y-2">
+                <Label htmlFor="avatar">Foto de perfil</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="avatar"
+                    name="avatar"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                    disabled={isLoading}
+                    className="cursor-pointer"
+                  />
+                  {avatarPreview && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={handleRemoveAvatar}
+                      disabled={isLoading}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">Formatos: JPG, PNG, GIF (máx. 2MB)</p>
+              </div>
             </div>
-          </div>
 
-          <div className="flex items-center justify-between rounded-lg border border-border p-4">
-            <div className="space-y-0.5">
-              <Label htmlFor="isActive">Usuario Activo</Label>
-              <p className="text-sm text-muted-foreground">El usuario puede acceder al sistema</p>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="name">Nombre Completo</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  defaultValue={editUser?.name}
+                  placeholder="Ej: Juan Pérez"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  defaultValue={editUser?.email}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+
+              {!editUser && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Contraseña</Label>
+                    <Input id="password" name="password" type="password" required disabled={isLoading} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
+                    <Input id="confirmPassword" name="confirmPassword" type="password" required disabled={isLoading} />
+                  </div>
+                </>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="role">Rol</Label>
+                <Select
+                  name="role"
+                  defaultValue={editUser?.role || "VENDEDOR"}
+                  disabled={isLoading || currentUser.role !== "ADMIN"}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona un rol" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="VENDEDOR">Agente Inmobiliario</SelectItem>
+                    <SelectItem value="SUPERVISOR">Supervisor</SelectItem>
+                    {currentUser.role === "ADMIN" && <SelectItem value="ADMIN">Administrador</SelectItem>}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <Switch id="isActive" name="isActive" defaultChecked={editUser?.is_active ?? true} disabled={isLoading} />
-          </div>
 
-          <div className="flex justify-end gap-4">
-            <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {editUser ? "Actualizar" : "Crear"} Usuario
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </form>
+            <div className="flex items-center justify-between rounded-lg border border-border p-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="isActive">Usuario Activo</Label>
+                <p className="text-sm text-muted-foreground">El usuario puede acceder al sistema</p>
+              </div>
+              <Switch id="isActive" name="isActive" defaultChecked={editUser?.is_active ?? true} disabled={isLoading} />
+            </div>
+
+            <div className="flex justify-end gap-4">
+              <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {editUser ? "Actualizar" : "Crear"} Usuario
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </form>
+
+      {editUser && (
+        <form onSubmit={handlePasswordChange}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Cambiar Contraseña</CardTitle>
+              <CardDescription>Actualiza la contraseña del usuario</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {passwordError && (
+                <Alert variant="destructive">
+                  <AlertDescription>{passwordError}</AlertDescription>
+                </Alert>
+              )}
+
+              {passwordSuccess && (
+                <Alert>
+                  <AlertDescription className="text-green-600">{passwordSuccess}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="currentPassword">Contraseña Actual</Label>
+                  <Input
+                    id="currentPassword"
+                    name="currentPassword"
+                    type="password"
+                    required
+                    disabled={isChangingPassword}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">Nueva Contraseña</Label>
+                  <Input id="newPassword" name="newPassword" type="password" required disabled={isChangingPassword} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmNewPassword">Confirmar Nueva Contraseña</Label>
+                  <Input
+                    id="confirmNewPassword"
+                    name="confirmNewPassword"
+                    type="password"
+                    required
+                    disabled={isChangingPassword}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Button type="submit" disabled={isChangingPassword}>
+                  {isChangingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Cambiar Contraseña
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </form>
+      )}
+    </div>
   )
 }

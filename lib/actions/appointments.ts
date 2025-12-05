@@ -7,21 +7,33 @@ import { sendAppointmentNotifications } from "@/lib/email-notifications"
 import { randomUUID } from "crypto"
 
 // Esquema de validación para citas
-const appointmentSchema = z.object({
-  propertyId: z.string().min(1, "La propiedad es requerida"),
-  clientId: z.string().min(1, "El cliente es requerido"),
-  agentId: z.string().min(1, "El agente es requerido"),
-  scheduledAt: z.string().datetime("Fecha y hora inválida"),
-  duration: z
-    .number()
-    .min(15, "La duración mínima es 15 minutos")
-    .max(480, "La duración máxima es 8 horas")
-    .default(60),
-  status: z.enum(["PENDIENTE", "CONFIRMADA", "COMPLETADA", "CANCELADA", "NO_ASISTIO"]).default("PENDIENTE"),
-  notes: z.string().optional(),
-})
+const appointmentSchema = z
+  .object({
+    propertyId: z.string().optional(),
+    otherLocation: z.string().optional(),
+    clientId: z.string().optional(),
+    contactName: z.string().optional(),
+    agentId: z.string().min(1, "El agente es requerido"),
+    scheduledAt: z.string().datetime("Fecha y hora inválida"),
+    duration: z
+      .number()
+      .min(15, "La duración mínima es 15 minutos")
+      .max(480, "La duración máxima es 8 horas")
+      .default(60),
+    status: z.enum(["PENDIENTE", "CONFIRMADA", "COMPLETADA", "CANCELADA", "NO_ASISTIO"]).default("PENDIENTE"),
+    notes: z.string().optional(),
+  })
+  .refine((data) => data.clientId || data.contactName, {
+    message: "Debe proporcionar un cliente o nombre de contacto",
+    path: ["clientId"],
+  })
+  .refine((data) => data.propertyId || data.otherLocation, {
+    message: "Debe proporcionar una propiedad o un lugar alternativo",
+    path: ["propertyId"],
+  })
 
 type AppointmentInput = z.infer<typeof appointmentSchema>
+type AppointmentStatus = "PENDIENTE" | "CONFIRMADA" | "COMPLETADA" | "CANCELADA" | "NO_ASISTIO"
 
 // Horarios de trabajo
 const WORK_HOURS = {
@@ -168,28 +180,31 @@ export async function createAppointment(data: AppointmentInput) {
     console.log("[v0] ========== CREATING APPOINTMENT ==========")
     console.log("[v0] Raw data received:", JSON.stringify(data, null, 2))
 
-    const validated = appointmentSchema.parse(data)
+    const validatedData = appointmentSchema.parse(data)
     console.log("[v0] ✓ Validation passed")
 
-    const scheduledAt = new Date(validated.scheduledAt)
-    console.log("[v0] Scheduled at (ISO):", scheduledAt.toISOString())
-    console.log("[v0] Scheduled at (Argentina):", scheduledAt.toLocaleString("es-AR", { timeZone: ARGENTINA_TIMEZONE }))
+    const scheduledDate = new Date(validatedData.scheduledAt)
+    console.log("[v0] Scheduled at (ISO):", scheduledDate.toISOString())
+    console.log(
+      "[v0] Scheduled at (Argentina):",
+      scheduledDate.toLocaleString("es-AR", { timeZone: ARGENTINA_TIMEZONE }),
+    )
 
     const now = new Date()
-    if (scheduledAt < now) {
+    if (scheduledDate < now) {
       console.log("[v0] ✗ Date is in the past")
       return { success: false, error: "No se pueden agendar citas en el pasado" }
     }
     console.log("[v0] ✓ Date is in the future")
 
-    const workHoursCheck = isWithinWorkHours(scheduledAt)
+    const workHoursCheck = isWithinWorkHours(scheduledDate)
     if (!workHoursCheck.valid) {
       console.log("[v0] ✗ Work hours check failed:", workHoursCheck.message)
       return { success: false, error: workHoursCheck.message || "Horario no válido" }
     }
     console.log("[v0] ✓ Work hours check passed")
 
-    const endTime = new Date(scheduledAt.getTime() + validated.duration * 60000)
+    const endTime = new Date(scheduledDate.getTime() + validatedData.duration * 60000)
     const endTimeCheck = isWithinWorkHours(endTime)
     if (!endTimeCheck.valid) {
       console.log("[v0] ✗ End time check failed")
@@ -200,7 +215,7 @@ export async function createAppointment(data: AppointmentInput) {
     }
     console.log("[v0] ✓ End time check passed")
 
-    const conflictCheck = await checkScheduleConflict(validated.agentId, scheduledAt, validated.duration)
+    const conflictCheck = await checkScheduleConflict(validatedData.agentId, scheduledDate, validatedData.duration)
     if (conflictCheck.hasConflict) {
       console.log("[v0] ✗ Conflict found:", conflictCheck.message)
       return { success: false, error: conflictCheck.message || "Conflicto de horario" }
@@ -210,84 +225,107 @@ export async function createAppointment(data: AppointmentInput) {
     const supabase = await createServerClient()
 
     const [propertyResult, clientResult, agentResult] = await Promise.all([
-      supabase.from("properties").select("*").eq("id", validated.propertyId).single(),
-      supabase.from("clients").select("*").eq("id", validated.clientId).single(),
-      supabase.from("users").select("*").eq("id", validated.agentId).single(),
+      validatedData.propertyId
+        ? supabase.from("properties").select("*").eq("id", validatedData.propertyId).single()
+        : { data: null },
+      validatedData.clientId
+        ? supabase.from("clients").select("*").eq("id", validatedData.clientId).single()
+        : { data: null },
+      supabase.from("users").select("*").eq("id", validatedData.agentId).single(),
     ])
 
     const property = propertyResult.data
     const client = clientResult.data
     const agent = agentResult.data
 
-    if (!property) {
+    if (validatedData.propertyId && !property) {
       console.log("[v0] ✗ Property not found")
       return { success: false, error: "La propiedad no existe" }
     }
-    if (!client) {
-      console.log("[v0] ✗ Client not found")
-      return { success: false, error: "El cliente no existe" }
-    }
+
     if (!agent) {
       console.log("[v0] ✗ Agent not found")
       return { success: false, error: "El agente no existe" }
     }
-    console.log("[v0] ✓ All entities exist")
-
-    console.log("[v0] Creating appointment in database...")
+    console.log("[v0] ✓ All entities verified")
 
     const appointmentId = randomUUID()
 
-    const { data: appointment, error } = await supabase
+    const { data: appointment, error: insertError } = await supabase
       .from("appointments")
       .insert({
         id: appointmentId,
-        property_id: validated.propertyId,
-        client_id: validated.clientId,
-        agent_id: validated.agentId,
-        scheduled_date: scheduledAt.toISOString(),
-        duration: validated.duration,
-        status: validated.status,
-        notes: validated.notes,
+        property_id: validatedData.propertyId || null,
+        other_location: validatedData.otherLocation || null,
+        client_id: validatedData.clientId || null,
+        contact_name: validatedData.contactName || null,
+        agent_id: validatedData.agentId,
+        scheduled_date: scheduledDate.toISOString(),
+        duration: validatedData.duration,
+        status: validatedData.status,
+        notes: validatedData.notes || null,
       })
-      .select(`
-        *,
-        property:properties(*),
-        client:clients(*),
-        agent:users!fk_appointments_agent(id, name, email)
-      `)
+      .select()
       .single()
 
-    if (error || !appointment) {
-      console.error("[v0] Error creating appointment:", error)
-      return { success: false, error: "Error al crear la cita" }
+    if (insertError) throw insertError
+
+    let clientName = validatedData.contactName || "Cliente no especificado"
+    let clientEmail = ""
+    if (validatedData.clientId) {
+      const { data: client } = await supabase
+        .from("clients")
+        .select("name, email")
+        .eq("id", validatedData.clientId)
+        .single()
+
+      if (client) {
+        clientName = client.name
+        clientEmail = client.email || ""
+      }
     }
 
-    console.log("[v0] ✓✓✓ APPOINTMENT CREATED SUCCESSFULLY ✓✓✓")
+    const { data: propertyData } = await supabase
+      .from("properties")
+      .select("title, address")
+      .eq("id", validatedData.propertyId)
+      .single()
 
-    if (client.email && agent.email) {
+    const { data: agentData } = await supabase
+      .from("users")
+      .select("name, email")
+      .eq("id", validatedData.agentId)
+      .single()
+
+    if (propertyData && agentData) {
       await sendAppointmentNotifications({
         appointmentId: appointment.id,
-        propertyTitle: property.title,
-        propertyAddress: `${property.address}, ${property.city}`,
-        clientName: client.name,
-        clientEmail: client.email,
-        agentName: agent.name,
-        agentEmail: agent.email,
-        scheduledAt,
-        duration: validated.duration,
-        notes: validated.notes,
+        propertyTitle: property?.title || "Otro lugar",
+        propertyAddress: property?.address || validatedData.otherLocation || "Ubicación por confirmar",
+        clientName: client?.name || validatedData.contactName || "Cliente",
+        clientEmail: client?.email || null,
+        agentName: agentData.name,
+        agentEmail: agentData.email,
+        scheduledAt: scheduledDate,
+        duration: validatedData.duration,
+        status: validatedData.status,
       })
     }
 
     revalidatePath("/appointments")
     return { success: true, data: appointment }
   } catch (error) {
-    console.error("[v0] ✗✗✗ ERROR CREATING APPOINTMENT ✗✗✗")
-    console.error("[v0] Error details:", error)
+    console.error("[v0] Error creating appointment:", error)
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.errors[0].message }
+      return {
+        success: false,
+        error: error.errors[0]?.message || "Datos inválidos",
+      }
     }
-    return { success: false, error: "Error al crear la cita" }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Error al crear la cita",
+    }
   }
 }
 
@@ -295,8 +333,9 @@ export async function createAppointment(data: AppointmentInput) {
 export async function getAppointments(filters?: {
   agentId?: string
   clientId?: string
+  contactName?: string
   propertyId?: string
-  status?: "PENDIENTE" | "CONFIRMADA" | "COMPLETADA" | "CANCELADA" | "NO_ASISTIO"
+  status?: AppointmentStatus
   startDate?: string
   endDate?: string
 }) {
@@ -306,12 +345,21 @@ export async function getAppointments(filters?: {
     let query = supabase
       .from("appointments")
       .select(`
-        *,
+        id,
+        property_id,
+        client_id,
+        contact_name,
+        agent_id,
+        scheduled_date,
+        duration,
+        status,
+        notes,
+        created_at,
         property:properties(
-          id, 
-          title, 
-          address, 
-          city_id, 
+          id,
+          title,
+          address,
+          price,
           images,
           city:cities(id, name)
         ),
@@ -322,6 +370,7 @@ export async function getAppointments(filters?: {
 
     if (filters?.agentId) query = query.eq("agent_id", filters.agentId)
     if (filters?.clientId) query = query.eq("client_id", filters.clientId)
+    if (filters?.contactName) query = query.ilike("contact_name", `%${filters.contactName}%`)
     if (filters?.propertyId) query = query.eq("property_id", filters.propertyId)
     if (filters?.status) query = query.eq("status", filters.status)
     if (filters?.startDate) query = query.gte("scheduled_date", filters.startDate)
@@ -334,33 +383,53 @@ export async function getAppointments(filters?: {
       return { success: false, error: "Error al obtener las citas" }
     }
 
-    const transformedAppointments = appointments?.map((apt) => ({
-      id: apt.id,
-      scheduledAt: apt.scheduled_date, // Map scheduled_date to scheduledAt
-      duration: apt.duration,
-      status: apt.status,
-      notes: apt.notes,
-      property: {
-        id: apt.property.id,
-        title: apt.property.title,
-        address: apt.property.address,
-        city: apt.property.city?.[0]?.name || "",
-        images: apt.property.images,
-      },
-      client: {
-        id: apt.client.id,
-        name: apt.client.name,
-        email: apt.client.email,
-        phone: apt.client.phone,
-      },
-      agent: {
-        id: apt.agent.id,
-        name: apt.agent.name,
-        email: apt.agent.email,
-      },
-    }))
+    const transformedAppointments =
+      appointments?.map((apt) => {
+        const property = Array.isArray(apt.property) ? apt.property[0] : apt.property
+        const client = Array.isArray(apt.client) ? apt.client[0] : apt.client
+        const agent = Array.isArray(apt.agent) ? apt.agent[0] : apt.agent
 
-    return { success: true, data: transformedAppointments || [] }
+        return {
+          id: apt.id,
+          scheduledAt: apt.scheduled_date,
+          duration: apt.duration,
+          status: apt.status,
+          notes: apt.notes,
+          contactName: apt.contact_name,
+          property: property
+            ? {
+                id: property.id,
+                title: property.title,
+                address: property.address,
+                price: property.price,
+                city: (() => {
+                  const cityData = property.city as any
+                  if (!cityData) return "Sin ciudad"
+                  if (Array.isArray(cityData)) return cityData[0]?.name || "Sin ciudad"
+                  return cityData.name || "Sin ciudad"
+                })(),
+                images: property.images,
+              }
+            : null,
+          client: client
+            ? {
+                id: client.id,
+                name: client.name,
+                email: client.email,
+                phone: client.phone,
+              }
+            : null,
+          agent: agent
+            ? {
+                id: agent.id,
+                name: agent.name,
+                email: agent.email,
+              }
+            : null,
+        }
+      }) || []
+
+    return { success: true, data: transformedAppointments }
   } catch (error) {
     console.error("[v0] Error fetching appointments:", error)
     return { success: false, error: "Error al obtener las citas" }
@@ -386,7 +455,33 @@ export async function getAppointmentById(id: string) {
       return { success: false, error: "Cita no encontrada" }
     }
 
-    return { success: true, data: appointment }
+    const transformedAppointment = {
+      ...appointment,
+      property: appointment.property
+        ? {
+            id: appointment.property.id,
+            title: appointment.property.title,
+            address: appointment.property.address,
+          }
+        : null,
+      client: appointment.client
+        ? {
+            id: appointment.client.id,
+            name: appointment.client.name,
+            email: appointment.client.email,
+            phone: appointment.client.phone,
+          }
+        : null,
+      agent: appointment.agent
+        ? {
+            id: appointment.agent.id,
+            name: appointment.agent.name,
+            email: appointment.agent.email,
+          }
+        : null,
+    }
+
+    return { success: true, data: transformedAppointment }
   } catch (error) {
     console.error("[v0] Error fetching appointment:", error)
     return { success: false, error: "Error al obtener la cita" }
@@ -440,8 +535,10 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
     }
 
     const updateData: any = {}
-    if (data.propertyId) updateData.property_id = data.propertyId
+    if (data.propertyId !== undefined) updateData.property_id = data.propertyId || null
+    if (data.otherLocation !== undefined) updateData.other_location = data.otherLocation || null
     if (data.clientId) updateData.client_id = data.clientId
+    if (data.contactName) updateData.contact_name = data.contactName
     if (data.agentId) updateData.agent_id = data.agentId
     if (data.scheduledAt) updateData.scheduled_date = new Date(data.scheduledAt).toISOString()
     if (data.duration) updateData.duration = data.duration
@@ -454,8 +551,8 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
       .eq("id", id)
       .select(`
         *,
-        property:properties(id, title, address, city_id, images),
-        client:clients(id, name, email, phone),
+        property:properties(*),
+        client:clients(*),
         agent:users!fk_appointments_agent(id, name, email)
       `)
       .single()
@@ -467,7 +564,7 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
 
     console.log("[v0] Appointment updated successfully:", updatedAppointment.id)
 
-    if (data.scheduledAt && updatedAppointment.client.email && updatedAppointment.agent.email) {
+    if (updatedAppointment.client && updatedAppointment.agent) {
       await sendAppointmentNotifications({
         appointmentId: updatedAppointment.id,
         propertyTitle: updatedAppointment.property.title,
@@ -510,10 +607,7 @@ export async function deleteAppointment(id: string) {
 }
 
 // Cambiar el estado de una cita
-export async function updateAppointmentStatus(
-  id: string,
-  status: "PENDIENTE" | "CONFIRMADA" | "COMPLETADA" | "CANCELADA" | "NO_ASISTIO",
-) {
+export async function updateAppointmentStatus(id: string, status: AppointmentStatus) {
   try {
     const supabase = await createServerClient()
     const { data: appointment, error } = await supabase

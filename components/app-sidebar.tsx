@@ -22,6 +22,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/lib/actions/auth"
 import type { SessionUser } from "@/lib/auth"
+import Image from "next/image"
+import { useTheme } from "next-themes"
+import { useEffect, useState } from "react"
 
 interface AppSidebarProps {
   user: SessionUser | null
@@ -29,10 +32,12 @@ interface AppSidebarProps {
 
 export function AppSidebar({ user }: AppSidebarProps) {
   const pathname = usePathname()
+  const { theme, resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
 
-  if (!user) {
-    return null
-  }
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const navigation = [
     {
@@ -115,13 +120,13 @@ export function AppSidebar({ user }: AppSidebarProps) {
     },
   ]
 
-  const filteredNavigation = navigation.filter((item) => item.roles.includes(user.role))
+  const filteredNavigation = navigation.filter((item) => user && item.roles.includes(user.role))
 
   const handleSignOut = async () => {
     await signOut()
   }
 
-  const initials = user.name
+  const initials = user?.name
     ? user.name
         .split(" ")
         .map((n) => n[0])
@@ -129,12 +134,24 @@ export function AppSidebar({ user }: AppSidebarProps) {
         .toUpperCase()
     : "U"
 
+  const currentTheme = mounted ? resolvedTheme : "light"
+  const logoSrc = currentTheme === "dark" ? "/images/logo-dark.png" : "/images/logo-light.png"
+
   return (
     <div className="flex h-full w-64 flex-col border-r bg-sidebar">
       {/* Logo */}
-      <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
-        <Home className="h-6 w-6 text-sidebar-primary" />
-        <span className="text-lg font-semibold text-sidebar-foreground">Real Estate</span>
+      <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-4">
+        {mounted && (
+          <Image
+            src={logoSrc || "/placeholder.svg"}
+            alt="Gestión Inmobiliaria RE"
+            width={200}
+            height={40}
+            className="h-10 w-auto object-contain"
+            priority
+          />
+        )}
+        {!mounted && <div className="h-10 w-[200px]" />}
       </div>
 
       {/* Navigation */}
@@ -161,25 +178,27 @@ export function AppSidebar({ user }: AppSidebarProps) {
 
       {/* User Section */}
       <div className="border-t border-sidebar-border p-4">
-        <div className="flex items-center gap-3 rounded-lg bg-sidebar-accent p-3">
-          <Avatar className="h-9 w-9 shrink-0">
-            <AvatarImage src={user.avatar || undefined} alt={user.name} />
-            <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground">{initials}</AvatarFallback>
-          </Avatar>
-          <div className="flex-1 overflow-hidden">
-            <p className="truncate text-sm font-medium text-sidebar-accent-foreground">{user.name}</p>
-            <p className="truncate text-xs text-muted-foreground">{user.role}</p>
+        {user && (
+          <div className="flex items-center gap-3 rounded-lg bg-sidebar-accent p-3">
+            <Avatar className="h-9 w-9 shrink-0">
+              <AvatarImage src={user.avatar || undefined} alt={user.name} />
+              <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground">{initials}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 overflow-hidden">
+              <p className="truncate text-sm font-medium text-sidebar-accent-foreground">{user.name}</p>
+              <p className="truncate text-xs text-muted-foreground">{user.role}</p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSignOut}
+              className="h-8 w-8 shrink-0 hover:bg-sidebar-primary/10"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="sr-only">Cerrar sesión</span>
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleSignOut}
-            className="h-8 w-8 shrink-0 hover:bg-sidebar-primary/10"
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="sr-only">Cerrar sesión</span>
-          </Button>
-        </div>
+        )}
       </div>
     </div>
   )

@@ -67,8 +67,12 @@ const getImageUrl = (image: any): string => {
 export function PropertyImageUpload({ images, onChange, maxImages = 12 }: PropertyImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState<{ [key: string]: number }>({})
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
+
+  const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB per file
+  const MAX_TOTAL_SIZE = 50 * 1024 * 1024 // 50MB total
 
   const isImageVertical = async (file: File): Promise<boolean> => {
     return new Promise((resolve) => {
@@ -92,6 +96,18 @@ export function PropertyImageUpload({ images, onChange, maxImages = 12 }: Proper
       return
     }
 
+    const totalSize = Array.from(files).reduce((sum, file) => sum + file.size, 0)
+    const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(2)
+
+    if (totalSize > MAX_TOTAL_SIZE) {
+      toast({
+        title: "Tamaño total excedido",
+        description: `El tamaño total de las imágenes (${totalSizeMB}MB) supera el límite de 50MB`,
+        variant: "destructive",
+      })
+      return
+    }
+
     setUploading(true)
     const uploadedImages: PropertyImage[] = []
 
@@ -99,7 +115,7 @@ export function PropertyImageUpload({ images, onChange, maxImages = 12 }: Proper
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
 
-        if (file.size > 10 * 1024 * 1024) {
+        if (file.size > MAX_FILE_SIZE) {
           toast({
             title: "Archivo muy grande",
             description: `${file.name} supera el límite de 10MB`,

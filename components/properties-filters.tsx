@@ -6,23 +6,69 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 import { X } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { createBrowserClient } from "@/lib/supabase/client"
 
-export function CatalogFilters() {
+interface City {
+  id: string
+  name: string
+}
+
+interface Neighborhood {
+  id: string
+  name: string
+  city_id: string
+}
+
+export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { activeOnly?: boolean }) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
   const [search, setSearch] = useState(searchParams.get("search") || "")
   const [propertyType, setPropertyType] = useState(searchParams.get("propertyType") || "Todos")
-  const [transactionType, setTransactionType] = useState(searchParams.get("transactionType") || "Todas")
+  const [transactionType, setTransactionType] = useState(searchParams.get("transactionType") || "VENTA")
   const [status, setStatus] = useState(searchParams.get("status") || "Todos")
-  const [city, setCity] = useState(searchParams.get("city") || "")
-  const [neighborhood, setNeighborhood] = useState(searchParams.get("neighborhood") || "")
+  const [city, setCity] = useState(searchParams.get("city") || "all")
+  const [neighborhood, setNeighborhood] = useState(searchParams.get("neighborhood") || "all")
   const [minPrice, setMinPrice] = useState(searchParams.get("minPrice") || "")
   const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") || "")
   const [bedrooms, setBedrooms] = useState(searchParams.get("bedrooms") || "Cualquiera")
   const [bathrooms, setBathrooms] = useState(searchParams.get("bathrooms") || "Cualquiera")
+  const [activeOnly, setActiveOnly] = useState(initialActiveOnly)
+
+  const [cities, setCities] = useState<City[]>([])
+  const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([])
+  const [filteredNeighborhoods, setFilteredNeighborhoods] = useState<Neighborhood[]>([])
+
+  useEffect(() => {
+    const loadData = async () => {
+      const supabase = createBrowserClient()
+
+      const { data: citiesData } = await supabase.from("cities").select("id, name").order("name")
+
+      const { data: neighborhoodsData } = await supabase.from("neighborhoods").select("id, name, city_id").order("name")
+
+      if (citiesData) setCities(citiesData)
+      if (neighborhoodsData) setNeighborhoods(neighborhoodsData)
+    }
+
+    loadData()
+  }, [])
+
+  useEffect(() => {
+    if (city && city !== "all") {
+      const filtered = neighborhoods.filter((n) => n.city_id === city)
+      setFilteredNeighborhoods(filtered)
+
+      if (neighborhood && !filtered.find((n) => n.id === neighborhood)) {
+        setNeighborhood("all")
+      }
+    } else {
+      setFilteredNeighborhoods(neighborhoods)
+    }
+  }, [city, neighborhoods, neighborhood])
 
   const applyFilters = () => {
     const params = new URLSearchParams()
@@ -31,28 +77,30 @@ export function CatalogFilters() {
     if (propertyType !== "Todos") params.set("propertyType", propertyType)
     if (transactionType !== "Todas") params.set("transactionType", transactionType)
     if (status !== "Todos") params.set("status", status)
-    if (city) params.set("city", city)
-    if (neighborhood) params.set("neighborhood", neighborhood)
+    if (city && city !== "all") params.set("city", city)
+    if (neighborhood && neighborhood !== "all") params.set("neighborhood", neighborhood)
     if (minPrice) params.set("minPrice", minPrice)
     if (maxPrice) params.set("maxPrice", maxPrice)
     if (bedrooms !== "Cualquiera") params.set("bedrooms", bedrooms)
     if (bathrooms !== "Cualquiera") params.set("bathrooms", bathrooms)
+    if (!activeOnly) params.set("activeOnly", "false")
 
-    router.push(`/catalog?${params.toString()}`)
+    router.push(`/properties?${params.toString()}`)
   }
 
   const clearFilters = () => {
     setSearch("")
     setPropertyType("Todos")
-    setTransactionType("Todas")
+    setTransactionType("VENTA")
     setStatus("Todos")
-    setCity("")
-    setNeighborhood("")
+    setCity("all")
+    setNeighborhood("all")
     setMinPrice("")
     setMaxPrice("")
     setBedrooms("Cualquiera")
     setBathrooms("Cualquiera")
-    router.push("/catalog")
+    setActiveOnly(true)
+    router.push("/properties")
   }
 
   return (
@@ -67,6 +115,26 @@ export function CatalogFilters() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        <div className="flex items-center justify-between space-x-2">
+          <Label htmlFor="active-only" className="text-sm font-medium">
+            Solo propiedades activas
+          </Label>
+          <Switch
+            id="active-only"
+            checked={activeOnly}
+            onCheckedChange={(checked) => {
+              setActiveOnly(checked)
+              const params = new URLSearchParams(searchParams.toString())
+              if (!checked) {
+                params.set("activeOnly", "false")
+              } else {
+                params.delete("activeOnly")
+              }
+              router.push(`/properties?${params.toString()}`)
+            }}
+          />
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="search">Buscar</Label>
           <Input
@@ -100,7 +168,7 @@ export function CatalogFilters() {
           <Label htmlFor="transactionType">Transacción</Label>
           <Select value={transactionType} onValueChange={setTransactionType}>
             <SelectTrigger>
-              <SelectValue placeholder="Todas" />
+              <SelectValue placeholder="Venta" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Todas">Todas</SelectItem>
@@ -130,17 +198,36 @@ export function CatalogFilters() {
 
         <div className="space-y-2">
           <Label htmlFor="city">Ciudad</Label>
-          <Input id="city" placeholder="Ej: Santo Domingo" value={city} onChange={(e) => setCity(e.target.value)} />
+          <Select value={city || "all"} onValueChange={setCity}>
+            <SelectTrigger>
+              <SelectValue placeholder="Todas las ciudades" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las ciudades</SelectItem>
+              {cities.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="neighborhood">Barrio</Label>
-          <Input
-            id="neighborhood"
-            placeholder="Ej: Piantini, Naco..."
-            value={neighborhood}
-            onChange={(e) => setNeighborhood(e.target.value)}
-          />
+          <Select value={neighborhood || "all"} onValueChange={setNeighborhood}>
+            <SelectTrigger>
+              <SelectValue placeholder="Todos los barrios" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los barrios</SelectItem>
+              {filteredNeighborhoods.map((n) => (
+                <SelectItem key={n.id} value={n.id}>
+                  {n.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">

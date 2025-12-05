@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { WordPressBulkSync } from "@/components/wordpress-bulk-sync"
 import { WordPressTestConnection } from "@/components/wordpress-test-connection"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Info, MapPin } from "lucide-react"
+import { Info, MapPin, Shield, Activity } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
@@ -31,6 +31,60 @@ export default async function SettingsPage() {
         <h1 className="text-3xl font-bold tracking-tight text-balance">Configuración</h1>
         <p className="text-muted-foreground">Administra la configuración del sistema</p>
       </div>
+
+      {/* Audit card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5" />
+            Auditoría del Sistema
+          </CardTitle>
+          <CardDescription>Visualiza el historial completo de acciones realizadas en el sistema</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-3">
+            <p className="text-sm text-muted-foreground">
+              Revisa quién realizó qué acciones, cuándo y qué cambios se hicieron. Incluye filtros avanzados, búsqueda y
+              exportación de datos para análisis detallado.
+            </p>
+            <div>
+              <Button asChild>
+                <Link href="/settings/audit">
+                  <Activity className="mr-2 h-4 w-4" />
+                  Ver Registros de Auditoría
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Permissions Management card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Gestión de Permisos
+          </CardTitle>
+          <CardDescription>Administra los permisos de cada rol del sistema</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-3">
+            <p className="text-sm text-muted-foreground">
+              Configura qué acciones puede realizar cada rol (Administrador, Supervisor, Agente Inmobiliario) en el
+              sistema. Los cambios se aplican inmediatamente a todos los usuarios.
+            </p>
+            <div>
+              <Button asChild>
+                <Link href="/settings/permissions">
+                  <Shield className="mr-2 h-4 w-4" />
+                  Administrar Permisos
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
