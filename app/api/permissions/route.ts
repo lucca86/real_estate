@@ -18,6 +18,9 @@ export async function GET() {
       .order("role")
       .order("permission")
 
+    console.log("[v0] Raw permissions data from DB:", data)
+    console.log("[v0] Total records:", data?.length || 0)
+
     if (error) {
       console.error("Error fetching permissions:", error)
       return NextResponse.json({ error: "Error al cargar permisos" }, { status: 500 })
@@ -32,6 +35,11 @@ export async function GET() {
       }
       permissions[item.role][item.permission] = item.enabled
     }
+
+    console.log("[v0] Transformed permissions:", JSON.stringify(permissions, null, 2))
+    console.log("[v0] ADMIN permissions count:", Object.keys(permissions.ADMIN || {}).length)
+    console.log("[v0] SUPERVISOR permissions count:", Object.keys(permissions.SUPERVISOR || {}).length)
+    console.log("[v0] VENDEDOR permissions count:", Object.keys(permissions.VENDEDOR || {}).length)
 
     return NextResponse.json({ permissions })
   } catch (error) {

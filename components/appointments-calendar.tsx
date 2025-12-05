@@ -51,8 +51,8 @@ export function AppointmentsCalendar({ appointments }: AppointmentsCalendarProps
 
   const monthStart = startOfMonth(currentDate)
   const monthEnd = endOfMonth(currentDate)
-  const calendarStart = startOfWeek(monthStart, { locale: es })
-  const calendarEnd = endOfWeek(monthEnd, { locale: es })
+  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 })
+  const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 })
   const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd })
 
   const getAppointmentsForDay = (day: Date) => {
