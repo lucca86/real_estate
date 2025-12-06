@@ -22,6 +22,12 @@ interface Neighborhood {
   city_id: string
 }
 
+interface PropertyType {
+  id: string
+  name: string
+  is_active: boolean
+}
+
 export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { activeOnly?: boolean }) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -41,15 +47,23 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
   const [cities, setCities] = useState<City[]>([])
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([])
   const [filteredNeighborhoods, setFilteredNeighborhoods] = useState<Neighborhood[]>([])
+  const [propertyTypes, setPropertyTypes] = useState<PropertyType[]>([])
 
   useEffect(() => {
     const loadData = async () => {
       const supabase = createBrowserClient()
 
+      const { data: propertyTypesData } = await supabase
+        .from("property_types")
+        .select("id, name, is_active")
+        .eq("is_active", true)
+        .order("name")
+
       const { data: citiesData } = await supabase.from("cities").select("id, name").order("name")
 
       const { data: neighborhoodsData } = await supabase.from("neighborhoods").select("id, name, city_id").order("name")
 
+      if (propertyTypesData) setPropertyTypes(propertyTypesData)
       if (citiesData) setCities(citiesData)
       if (neighborhoodsData) setNeighborhoods(neighborhoodsData)
     }
@@ -154,12 +168,11 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Todos">Todos</SelectItem>
-              <SelectItem value="CASA">Casa</SelectItem>
-              <SelectItem value="APARTAMENTO">Apartamento</SelectItem>
-              <SelectItem value="TERRENO">Terreno</SelectItem>
-              <SelectItem value="LOCAL_COMERCIAL">Local Comercial</SelectItem>
-              <SelectItem value="OFICINA">Oficina</SelectItem>
-              <SelectItem value="BODEGA">Bodega</SelectItem>
+              {propertyTypes.map((type) => (
+                <SelectItem key={type.id} value={type.id}>
+                  {type.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

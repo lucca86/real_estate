@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache"
 import { createServerClient } from "@/lib/supabase/server"
 import { z } from "zod"
 
-
 const propertyTypeSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
   description: z.string().optional(),
@@ -14,11 +13,11 @@ const propertyTypeSchema = z.object({
 export async function getPropertyTypes() {
   try {
     const supabase = await createServerClient()
-    
+
     const { data: propertyTypes, error } = await supabase
-      .from('property_types')
-      .select('*')
-      .order('name', { ascending: true })
+      .from("property_types")
+      .select("*")
+      .order("name", { ascending: true })
 
     if (error) throw error
 
@@ -32,12 +31,12 @@ export async function getPropertyTypes() {
 export async function getActivePropertyTypes() {
   try {
     const supabase = await createServerClient()
-    
+
     const { data, error } = await supabase
-      .from('property_types')
-      .select('*')
-      .eq('is_active', true)
-      .order('name', { ascending: true })
+      .from("property_types")
+      .select("*")
+      .eq("is_active", true)
+      .order("name", { ascending: true })
 
     if (error) throw error
     return data || []
@@ -50,12 +49,8 @@ export async function getActivePropertyTypes() {
 export async function getPropertyTypeById(id: string) {
   try {
     const supabase = await createServerClient()
-    
-    const { data, error } = await supabase
-      .from('property_types')
-      .select('*')
-      .eq('id', id)
-      .single()
+
+    const { data, error } = await supabase.from("property_types").select("*").eq("id", id).single()
 
     if (error) throw error
 
@@ -71,19 +66,18 @@ export async function createPropertyType(formData: FormData) {
     const data = {
       name: formData.get("name") as string,
       description: formData.get("description") as string,
-      is_active: formData.get("isActive") === "on",
+      is_active: formData.get("is_active") === "true" || formData.get("is_active") === "on",
     }
 
     const validated = propertyTypeSchema.parse(data)
+
     const supabase = await createServerClient()
 
-    const { data: propertyType, error } = await supabase
-      .from('property_types')
-      .insert(validated)
-      .select()
-      .single()
+    const { data: propertyType, error } = await supabase.from("property_types").insert(validated).select().single()
 
-    if (error) throw error
+    if (error) {
+      throw error
+    }
 
     revalidatePath("/property-types")
     return propertyType
@@ -101,16 +95,16 @@ export async function updatePropertyType(id: string, formData: FormData) {
     const data = {
       name: formData.get("name") as string,
       description: formData.get("description") as string,
-      is_active: formData.get("isActive") === "on",
+      is_active: formData.get("is_active") === "true" || formData.get("is_active") === "on",
     }
 
     const validated = propertyTypeSchema.parse(data)
     const supabase = await createServerClient()
 
     const { data: propertyType, error } = await supabase
-      .from('property_types')
+      .from("property_types")
       .update(validated)
-      .eq('id', id)
+      .eq("id", id)
       .select()
       .single()
 
@@ -131,21 +125,14 @@ export async function updatePropertyType(id: string, formData: FormData) {
 export async function deletePropertyType(id: string) {
   try {
     const supabase = await createServerClient()
-    
-    const { data: propertyType } = await supabase
-      .from('property_types')
-      .select('*')
-      .eq('id', id)
-      .single()
+
+    const { data: propertyType } = await supabase.from("property_types").select("*").eq("id", id).single()
 
     if (!propertyType) {
       throw new Error("Tipo de propiedad no encontrado")
     }
 
-    const { error } = await supabase
-      .from('property_types')
-      .delete()
-      .eq('id', id)
+    const { error } = await supabase.from("property_types").delete().eq("id", id)
 
     if (error) throw error
 

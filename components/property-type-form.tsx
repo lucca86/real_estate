@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2 } from 'lucide-react'
+import { Loader2 } from "lucide-react"
 import { createPropertyType, updatePropertyType } from "@/lib/actions/property-types"
 
 interface PropertyType {
@@ -95,12 +95,12 @@ export function PropertyTypeForm({ propertyType }: PropertyTypeFormProps) {
 
           <div className="flex items-center justify-between rounded-lg border border-border p-4">
             <div className="space-y-0.5">
-              <Label htmlFor="isActive">Activo</Label>
+              <Label htmlFor="is_active">Activo</Label>
               <p className="text-sm text-muted-foreground">El tipo de propiedad está disponible para usar</p>
             </div>
             <Switch
-              id="isActive"
-              name="isActive"
+              id="is_active"
+              name="is_active"
               defaultChecked={propertyType?.isActive ?? true}
               disabled={isLoading}
             />
