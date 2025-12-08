@@ -113,6 +113,12 @@ export function AppSidebar({ user }: AppSidebarProps) {
       roles: ["ADMIN", "SUPERVISOR"],
     },
     {
+      name: "Documentación",
+      href: "/documentation",
+      icon: BookUser,
+      roles: ["ADMIN", "SUPERVISOR", "VENDEDOR"],
+    },
+    {
       name: "Configuración",
       href: "/settings",
       icon: Settings,
@@ -135,7 +141,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
     : "U"
 
   const currentTheme = mounted ? resolvedTheme : "light"
-  const logoSrc = currentTheme === "dark" ? "/images/logo-dark.png" : "/images/logo-light.png"
+  const logoSrc = currentTheme === "dark" ? "/images/logo-dark.png" : "/images/logo-light.webp"
 
   return (
     <div className="flex h-full w-64 flex-col border-r bg-sidebar">

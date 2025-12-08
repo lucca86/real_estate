@@ -379,34 +379,61 @@ export async function deleteProperty(propertyId: string) {
   const currentUser = await getCurrentUser()
 
   if (!currentUser) {
-    throw new Error("No estás autenticado")
-  }
-
-  const supabase = await createServerClient()
-
-  const { data: property, error: fetchError } = await supabase
-    .from("properties")
-    .select("*")
-    .eq("id", propertyId)
-    .single()
-
-  if (fetchError || !property) {
-    throw new Error("Propiedad no encontrada")
+    return { success: false, error: "No estás autenticado" }
   }
 
   if (currentUser.role !== "ADMIN") {
-    throw new Error("No tienes permisos para eliminar esta propiedad")
+    return { success: false, error: "No tienes permisos para eliminar esta propiedad" }
   }
 
-  const { error: deleteError } = await supabase.from("properties").delete().eq("id", propertyId)
+  try {
+    const supabase = await createServerClient()
 
-  if (deleteError) {
-    console.error("[v0] Error deleting property:", deleteError)
-    throw new Error(`Error deleting property: ${deleteError.message}`)
+    const { data: property, error: fetchError } = await supabase
+      .from("properties")
+      .select("*")
+      .eq("id", propertyId)
+      .single()
+
+    if (fetchError || !property) {
+      return { success: false, error: "Propiedad no encontrada" }
+    }
+
+    const { error: deleteError } = await supabase.from("properties").delete().eq("id", propertyId)
+
+    if (deleteError) {
+      if (deleteError.code === "23503") {
+        // Instead of deleting, mark as inactive
+        const { error: updateError } = await supabase
+          .from("properties")
+          .update({ is_active: false })
+          .eq("id", propertyId)
+
+        if (updateError) {
+          console.error("[v0] Error deactivating property:", updateError)
+          return { success: false, error: `Error al desactivar propiedad: ${updateError.message}` }
+        }
+
+        revalidatePath("/properties")
+        revalidatePath("/dashboard")
+        return {
+          success: true,
+          wasDeactivated: true,
+          message: `No se puede eliminar la propiedad porque tiene registros asociados. Se marcó como inactiva.`,
+        }
+      }
+
+      console.error("[v0] Error deleting property:", deleteError)
+      return { success: false, error: `Error deleting property: ${deleteError.message}` }
+    }
+
+    revalidatePath("/properties")
+    revalidatePath("/dashboard")
+    return { success: true, wasDeactivated: false }
+  } catch (error: any) {
+    console.error("[v0] Error in deleteProperty:", error)
+    return { success: false, error: error.message || "Error al eliminar propiedad" }
   }
-
-  revalidatePath("/properties")
-  revalidatePath("/dashboard")
 }
 
 export async function getPropertyById(id: string) {

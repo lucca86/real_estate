@@ -6,70 +6,84 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Mail, Phone, Pencil, MapPin } from "lucide-react"
+import { Search, Mail, Phone, MapPin, Calendar, Pencil, Briefcase } from "lucide-react"
 import Link from "next/link"
-import { DeleteOwnerButton } from "./delete-owner-button"
+import { DeleteClientButton } from "./delete-client-button"
 
-interface Owner {
+interface City {
   id: string
   name: string
-  email: string
-  phone: string
-  address: string | null
-  cityId: string | null
-  provinceId: string | null
-  countryId: string | null
-  city: { id: string; name: string } | null
-  province: { id: string; name: string } | null
-  country: { id: string; name: string } | null
+}
+
+interface Province {
+  id: string
+  name: string
+}
+
+interface Client {
+  id: string
+  name: string
+  email: string | null
+  phone: string | null
+  occupation: string | null
+  budget: number | null
   isActive: boolean
+  city: City | null
+  province: Province | null
   _count: {
-    properties: number
+    appointments: number
   }
 }
 
-interface OwnersTableProps {
-  owners: Owner[]
+interface ClientsTableProps {
+  clients: Client[]
 }
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
 
-export function OwnersTable({ owners }: OwnersTableProps) {
+export function ClientsTable({ clients }: ClientsTableProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null)
+  const [selectedStatus, setSelectedStatus] = useState<string>("all")
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(25)
 
-  // Filtrar propietarios
-  const filteredOwners = useMemo(() => {
-    return owners.filter((owner) => {
+  // Filtrar clientes
+  const filteredClients = useMemo(() => {
+    return clients.filter((client) => {
       // Filtro de búsqueda por texto
       const searchLower = searchQuery.toLowerCase()
       const matchesSearch =
-        owner.name.toLowerCase().includes(searchLower) ||
-        owner.email.toLowerCase().includes(searchLower) ||
-        owner.phone.includes(searchQuery)
+        client.name.toLowerCase().includes(searchLower) ||
+        client.email?.toLowerCase().includes(searchLower) ||
+        client.occupation?.toLowerCase().includes(searchLower)
 
-      // Filtro por letra
-      const matchesLetter = !selectedLetter || owner.name.toUpperCase().startsWith(selectedLetter)
+      // Filtro por letra (primera letra del nombre)
+      const matchesLetter = !selectedLetter || client.name.toUpperCase().startsWith(selectedLetter)
 
-      return matchesSearch && matchesLetter
+      // Filtro por estado
+      const matchesStatus =
+        selectedStatus === "all" ||
+        (selectedStatus === "active" && client.isActive) ||
+        (selectedStatus === "inactive" && !client.isActive)
+
+      return matchesSearch && matchesLetter && matchesStatus
     })
-  }, [owners, searchQuery, selectedLetter])
+  }, [clients, searchQuery, selectedLetter, selectedStatus])
 
   // Paginación
-  const totalPages = Math.ceil(filteredOwners.length / itemsPerPage)
+  const totalPages = Math.ceil(filteredClients.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
-  const paginatedOwners = filteredOwners.slice(startIndex, startIndex + itemsPerPage)
+  const paginatedClients = filteredClients.slice(startIndex, startIndex + itemsPerPage)
 
-  // Contar propietarios por letra
+  // Contar clientes por letra
   const letterCounts = useMemo(() => {
     const counts: Record<string, number> = {}
     ALPHABET.forEach((letter) => {
-      counts[letter] = owners.filter((o) => o.name.toUpperCase().startsWith(letter)).length
+      counts[letter] = clients.filter((c) => c.name.toUpperCase().startsWith(letter)).length
     })
     return counts
-  }, [owners])
+  }, [clients])
 
   return (
     <div className="space-y-6">
@@ -111,7 +125,7 @@ export function OwnersTable({ owners }: OwnersTableProps) {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por nombre, email o teléfono..."
+            placeholder="Buscar por nombre, email, ocupación..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value)
@@ -120,13 +134,30 @@ export function OwnersTable({ owners }: OwnersTableProps) {
             className="pl-10"
           />
         </div>
+
+        <Select
+          value={selectedStatus}
+          onValueChange={(value) => {
+            setSelectedStatus(value)
+            setCurrentPage(1)
+          }}
+        >
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Estado" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="active">Activos</SelectItem>
+            <SelectItem value="inactive">Inactivos</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Resultados y paginación */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <div>
-          Mostrando {startIndex + 1} - {Math.min(startIndex + itemsPerPage, filteredOwners.length)} de{" "}
-          {filteredOwners.length} propietarios
+          Mostrando {startIndex + 1} - {Math.min(startIndex + itemsPerPage, filteredClients.length)} de{" "}
+          {filteredClients.length} clientes
         </div>
         <Select
           value={itemsPerPage.toString()}
@@ -147,78 +178,102 @@ export function OwnersTable({ owners }: OwnersTableProps) {
         </Select>
       </div>
 
-      {/* Tabla de propietarios */}
+      {/* Tabla de clientes */}
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Nombre</TableHead>
+              <TableHead>Ocupación</TableHead>
               <TableHead>Contacto</TableHead>
               <TableHead>Ubicación</TableHead>
-              <TableHead>Propiedades</TableHead>
+              <TableHead>Presupuesto</TableHead>
+              <TableHead>Citas</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginatedOwners.length === 0 ? (
+            {paginatedClients.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  No se encontraron propietarios
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  No se encontraron clientes
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedOwners.map((owner) => (
-                <TableRow key={owner.id}>
+              paginatedClients.map((client) => (
+                <TableRow key={client.id}>
                   <TableCell>
-                    <Link href={`/owners/${owner.id}/edit`} className="font-medium hover:underline">
-                      {owner.name}
+                    <Link href={`/clients/${client.id}`} className="font-medium hover:underline">
+                      {client.name}
                     </Link>
                   </TableCell>
                   <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="h-3 w-3 text-muted-foreground" />
-                        <a href={`mailto:${owner.email}`} className="hover:underline">
-                          {owner.email}
-                        </a>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="h-3 w-3 text-muted-foreground" />
-                        <a href={`tel:${owner.phone}`} className="hover:underline">
-                          {owner.phone}
-                        </a>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {owner.city || owner.province ? (
+                    {client.occupation ? (
                       <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">
-                          {[owner.city?.name, owner.province?.name].filter(Boolean).join(", ")}
-                        </span>
+                        <Briefcase className="h-4 w-4 text-muted-foreground" />
+                        {client.occupation}
                       </div>
                     ) : (
                       <span className="text-muted-foreground">-</span>
                     )}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{owner._count.properties} propiedades</Badge>
+                    <div className="space-y-1">
+                      {client.email && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="h-3 w-3 text-muted-foreground" />
+                          <a href={`mailto:${client.email}`} className="hover:underline">
+                            {client.email}
+                          </a>
+                        </div>
+                      )}
+                      {client.phone && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Phone className="h-3 w-3 text-muted-foreground" />
+                          <a href={`tel:${client.phone}`} className="hover:underline">
+                            {client.phone}
+                          </a>
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={owner.isActive ? "default" : "secondary"}>
-                      {owner.isActive ? "Activo" : "Inactivo"}
+                    {client.city || client.province ? (
+                      <div className="flex items-center gap-2 text-sm">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        {[client.city?.name, client.province?.name].filter(Boolean).join(", ")}
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {client.budget ? (
+                      <span className="font-medium">${client.budget.toLocaleString("es-DO")}</span>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      {client._count.appointments}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={client.isActive ? "default" : "secondary"}>
+                      {client.isActive ? "Activo" : "Inactivo"}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <Link href={`/owners/${owner.id}/edit`}>
+                      <Link href={`/clients/${client.id}/edit`}>
                         <Button variant="ghost" size="icon">
                           <Pencil className="h-4 w-4" />
                         </Button>
                       </Link>
-                      <DeleteOwnerButton ownerId={owner.id} ownerName={owner.name} />
+                      <DeleteClientButton clientId={client.id} clientName={client.name} />
                     </div>
                   </TableCell>
                 </TableRow>
@@ -265,5 +320,3 @@ export function OwnersTable({ owners }: OwnersTableProps) {
     </div>
   )
 }
-
-export default OwnersTable

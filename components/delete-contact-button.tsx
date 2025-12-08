@@ -50,7 +50,7 @@ export function DeleteContactButton({ contactId }: DeleteContactButtonProps) {
 
   return (
     <>
-      <Button variant="ghost" size="icon" onClick={() => setOpen(true)}>
+      <Button variant="destructive" size="icon" onClick={() => setOpen(true)}>
         <Trash2 className="h-4 w-4" />
       </Button>
 

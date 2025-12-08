@@ -44,7 +44,7 @@ export function ServicesTable({ services }: ServicesTableProps) {
               <TableCell className="font-medium">{service.name}</TableCell>
               <TableCell>{service.description || "-"}</TableCell>
               <TableCell>
-                <Badge variant={service.isActive ? "default" : "secondary"}>
+                <Badge variant={service.isActive ? "default" : "secondary"} color={service.isActive ? "blue" : "gray"}>
                   {service.isActive ? "Activo" : "Inactivo"}
                 </Badge>
               </TableCell>

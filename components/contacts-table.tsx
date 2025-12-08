@@ -271,7 +271,7 @@ export function ContactsTable({ contacts, services }: ContactsTableProps) {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={contact.isActive ? "default" : "secondary"}>
+                    <Badge variant={contact.isActive ? "default" : "secondary"} className="bg-blue-100 text-blue-800">
                       {contact.isActive ? "Activo" : "Inactivo"}
                     </Badge>
                   </TableCell>

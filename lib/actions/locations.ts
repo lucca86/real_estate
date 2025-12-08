@@ -286,12 +286,32 @@ export async function deleteLocation(type: "country" | "province" | "city" | "ne
 
     const { error } = await supabase.from(tableMap[type]).delete().eq("id", id)
 
-    if (error) throw error
+    if (error) {
+      // Check if it's a foreign key constraint violation
+      if (error.code === "23503") {
+        // Instead of deleting, mark as inactive
+        const { error: updateError } = await supabase.from(tableMap[type]).update({ is_active: false }).eq("id", id)
+
+        if (updateError) throw updateError
+
+        revalidatePath("/locations")
+        return {
+          success: true,
+          wasDeactivated: true,
+          message: `No se puede eliminar porque tiene registros asociados. Se marcó como inactivo.`,
+        }
+      }
+      throw error
+    }
 
     revalidatePath("/locations")
+    return { success: true, wasDeactivated: false }
   } catch (error: any) {
     console.error(`[deleteLocation] Error deleting ${type}:`, error)
-    throw new Error(error.message || `Error al eliminar el ${type}`)
+    return {
+      success: false,
+      error: error.message || `Error al eliminar el ${type}`,
+    }
   }
 }
 

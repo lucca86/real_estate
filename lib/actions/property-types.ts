@@ -134,14 +134,30 @@ export async function deletePropertyType(id: string) {
 
     const { error } = await supabase.from("property_types").delete().eq("id", id)
 
-    if (error) throw error
+    if (error) {
+      if (error.code === "23503") {
+        // Instead of deleting, mark as inactive
+        const { error: updateError } = await supabase.from("property_types").update({ is_active: false }).eq("id", id)
+
+        if (updateError) throw updateError
+
+        revalidatePath("/property-types")
+        return {
+          success: true,
+          wasDeactivated: true,
+          message: `No se puede eliminar el tipo de propiedad porque tiene propiedades asociadas. Se marcó como inactivo.`,
+        }
+      }
+      throw error
+    }
 
     revalidatePath("/property-types")
+    return { success: true, wasDeactivated: false }
   } catch (error) {
     console.error("[deletePropertyType] Error:", error)
     if (error instanceof Error) {
-      throw error
+      return { success: false, error: error.message }
     }
-    throw new Error("Error al eliminar el tipo de propiedad")
+    return { success: false, error: "Error al eliminar el tipo de propiedad" }
   }
 }

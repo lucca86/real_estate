@@ -34,24 +34,36 @@ export async function getOwners() {
       .from("owners")
       .select(`
         *,
-        city:cities(name),
-        province:provinces(name),
-        country:countries(name),
-        properties:properties(count)
+        city:cities(id, name),
+        province:provinces(id, name),
+        country:countries(id, name)
       `)
       .order("created_at", { ascending: false })
 
     if (error) throw error
 
-    const transformedOwners =
-      owners?.map((owner) => ({
-        ...owner,
-        _count: {
-          properties: owner.properties?.length || 0,
-        },
-      })) || []
+    // Get properties count for each owner
+    const ownersWithCounts = await Promise.all(
+      (owners || []).map(async (owner) => {
+        const { count } = await supabase
+          .from("properties")
+          .select("*", { count: "exact", head: true })
+          .eq("owner_id", owner.id)
 
-    return { success: true, data: transformedOwners }
+        return {
+          ...owner,
+          isActive: owner.is_active,
+          city: Array.isArray(owner.city) ? owner.city[0] : owner.city,
+          province: Array.isArray(owner.province) ? owner.province[0] : owner.province,
+          country: Array.isArray(owner.country) ? owner.country[0] : owner.country,
+          _count: {
+            properties: count || 0,
+          },
+        }
+      }),
+    )
+
+    return { success: true, data: ownersWithCounts }
   } catch (error) {
     console.error("[getOwners] Error:", error)
     return { success: false, error: "Error al obtener propietarios" }
@@ -172,12 +184,29 @@ export async function updateOwner(
 export async function deleteOwner(id: string) {
   try {
     const supabase = await createServerClient()
+
+    const { count } = await supabase.from("properties").select("*", { count: "exact", head: true }).eq("owner_id", id)
+
+    if (count && count > 0) {
+      // Owner has properties, mark as inactive instead
+      const { error: updateError } = await supabase.from("owners").update({ is_active: false }).eq("id", id)
+
+      if (updateError) throw updateError
+
+      revalidatePath("/owners")
+      return {
+        success: true,
+        message: "El propietario tiene propiedades asignadas, se marcó como inactivo en lugar de eliminarlo",
+      }
+    }
+
+    // Owner has no properties, safe to delete
     const { error } = await supabase.from("owners").delete().eq("id", id)
 
     if (error) throw error
 
     revalidatePath("/owners")
-    return { success: true }
+    return { success: true, message: "Propietario eliminado correctamente" }
   } catch (error) {
     console.error("[deleteOwner] Error:", error)
     return { success: false, error: "Error al eliminar propietario" }

@@ -170,11 +170,33 @@ export async function deleteContact(id: string) {
 
   if (error) {
     console.error("Error deleting contact:", error)
+
+    // Check if it's a foreign key constraint violation
+    if (error.code === "23503") {
+      // Instead of deleting, mark as inactive
+      const { error: updateError } = await supabase
+        .from("Contact")
+        .update({ isActive: false, updatedAt: new Date().toISOString() })
+        .eq("id", id)
+
+      if (updateError) {
+        console.error("Error deactivating contact:", updateError)
+        return { success: false, error: updateError.message }
+      }
+
+      revalidatePath("/contacts")
+      return {
+        success: true,
+        wasDeactivated: true,
+        message: `No se puede eliminar el contacto porque tiene registros asociados. Se marcó como inactivo.`,
+      }
+    }
+
     return { success: false, error: error.message }
   }
 
   revalidatePath("/contacts")
-  return { success: true }
+  return { success: true, wasDeactivated: false }
 }
 
 export async function getAllServices() {

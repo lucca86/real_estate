@@ -11,7 +11,7 @@ export default function LoginPage() {
         <div className="flex flex-col items-center space-y-2 text-center">
           <Link href="/" className="flex items-center justify-center">
             <Image
-              src="/images/logo-dark.png"
+              src="/images/logo-light.webp"
               alt="Gestión Inmobiliaria RE"
               width={300}
               height={80}

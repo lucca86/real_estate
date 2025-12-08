@@ -20,6 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { useToast } from "@/hooks/use-toast"
 
 interface LocationTableProps {
   data: any[]
@@ -34,6 +35,7 @@ interface LocationTableProps {
 
 export function LocationTable({ data, type, columns, filterOptions }: LocationTableProps) {
   const router = useRouter()
+  const { toast } = useToast()
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -46,11 +48,37 @@ export function LocationTable({ data, type, columns, filterOptions }: LocationTa
 
     setIsDeleting(true)
     try {
-      await deleteLocation(type, deleteId)
-      router.refresh()
-      setDeleteId(null)
+      const result = await deleteLocation(type, deleteId)
+
+      if (result.success) {
+        if (result.wasDeactivated) {
+          toast({
+            title: "Registro desactivado",
+            description: result.message,
+            variant: "default",
+          })
+        } else {
+          toast({
+            title: "Eliminado exitosamente",
+            description: "El registro ha sido eliminado correctamente.",
+          })
+        }
+        router.refresh()
+        setDeleteId(null)
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "No se pudo completar la operación.",
+          variant: "destructive",
+        })
+      }
     } catch (error) {
       console.error("Error deleting location:", error)
+      toast({
+        title: "Error",
+        description: "Ocurrió un error al intentar eliminar el registro.",
+        variant: "destructive",
+      })
     } finally {
       setIsDeleting(false)
     }
@@ -77,6 +105,8 @@ export function LocationTable({ data, type, columns, filterOptions }: LocationTa
 
   const filteredData = useMemo(() => {
     return data.filter((item) => {
+      const isActive = Boolean(item.is_active ?? item.isActive)
+
       // Search filter
       const searchLower = searchQuery.toLowerCase()
       const matchesSearch =
@@ -89,9 +119,7 @@ export function LocationTable({ data, type, columns, filterOptions }: LocationTa
 
       // Status filter
       const matchesStatus =
-        statusFilter === "all" ||
-        (statusFilter === "active" && item.isActive) ||
-        (statusFilter === "inactive" && !item.isActive)
+        statusFilter === "all" || (statusFilter === "active" && isActive) || (statusFilter === "inactive" && !isActive)
 
       // Parent filter (for provinces, cities, neighborhoods)
       let matchesParent = true
@@ -189,35 +217,37 @@ export function LocationTable({ data, type, columns, filterOptions }: LocationTa
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredData.map((item) => (
-              <TableRow key={item.id}>
-                {columns.map((column) => (
-                  <TableCell key={column.key}>{getValue(item, column.key)}</TableCell>
-                ))}
-                <TableCell>
-                  <Badge variant={item.isActive ? "default" : "secondary"}>
-                    {item.isActive ? "Activo" : "Inactivo"}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <Button variant="ghost" size="icon" asChild>
-                      <Link href={getEditUrl(item.id)}>
-                        <Edit className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setDeleteId(item.id)}
-                      disabled={getValue(item, "_count.properties") > 0}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
+            {filteredData.map((item) => {
+              const isActive = Boolean(item.is_active ?? item.isActive)
+
+              return (
+                <TableRow key={item.id}>
+                  {columns.map((column) => (
+                    <TableCell key={column.key}>{getValue(item, column.key)}</TableCell>
+                  ))}
+                  <TableCell>
+                    <Badge variant={isActive ? "default" : "secondary"}>{isActive ? "Activo" : "Inactivo"}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="icon" asChild>
+                        <Link href={getEditUrl(item.id)}>
+                          <Edit className="h-4 w-4" />
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => setDeleteId(item.id)}
+                        disabled={getValue(item, "_count.properties") > 0}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
           </TableBody>
         </Table>
       )}

@@ -51,7 +51,7 @@ export function DeleteServiceButton({ id }: DeleteServiceButtonProps) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="ghost" size="sm" disabled={isDeleting}>
+        <Button variant="destructive" size="icon" disabled={isDeleting}>
           <Trash2 className="h-4 w-4" />
         </Button>
       </AlertDialogTrigger>

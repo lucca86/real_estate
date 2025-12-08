@@ -149,22 +149,41 @@ export async function deleteUser(userId: string) {
   try {
     const currentUser = await getCurrentUser()
     if (!currentUser || currentUser.role !== "ADMIN") {
-      throw new Error("Solo los administradores pueden eliminar usuarios")
+      return { success: false, error: "Solo los administradores pueden eliminar usuarios" }
     }
 
     if (currentUser.id === userId) {
-      throw new Error("No puedes eliminar tu propio usuario")
+      return { success: false, error: "No puedes eliminar tu propio usuario" }
     }
 
     const supabase = await createServerClient()
     const { error } = await supabase.from("users").delete().eq("id", userId)
-    if (error) throw error
+
+    if (error) {
+      if (error.code === "23503") {
+        // Instead of deleting, mark as inactive
+        const { error: updateError } = await supabase
+          .from("users")
+          .update({ is_active: false, updated_at: new Date().toISOString() })
+          .eq("id", userId)
+
+        if (updateError) throw updateError
+
+        revalidatePath("/users")
+        return {
+          success: true,
+          wasDeactivated: true,
+          message: `No se puede eliminar el usuario porque tiene registros asociados. Se marcó como inactivo.`,
+        }
+      }
+      throw error
+    }
 
     revalidatePath("/users")
-    return { success: true }
-  } catch (error) {
+    return { success: true, wasDeactivated: false }
+  } catch (error: any) {
     console.error("[v0] Error deleting user:", error)
-    throw error
+    return { success: false, error: error.message || "Error al eliminar usuario" }
   }
 }
 
