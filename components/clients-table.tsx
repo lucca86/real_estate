@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Mail, Phone, MapPin, Calendar, Pencil, Briefcase } from "lucide-react"
+import { Search, Mail, Phone, MapPin, Calendar, Pencil, Briefcase, User } from "lucide-react"
 import Link from "next/link"
 import { DeleteClientButton } from "./delete-client-button"
+import { ReassignAgentDialog } from "./reassign-agent-dialog"
 
 interface City {
   id: string
@@ -18,6 +19,12 @@ interface City {
 interface Province {
   id: string
   name: string
+}
+
+interface Agent {
+  id: string
+  name: string
+  email: string
 }
 
 interface Client {
@@ -30,6 +37,7 @@ interface Client {
   isActive: boolean
   city: City | null
   province: Province | null
+  agent: Agent | null
   _count: {
     appointments: number
   }
@@ -37,46 +45,45 @@ interface Client {
 
 interface ClientsTableProps {
   clients: Client[]
+  userRole: "ADMIN" | "VENDEDOR" | "SUPERVISOR"
+  agents?: Agent[]
 }
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("")
 
-export function ClientsTable({ clients }: ClientsTableProps) {
+export function ClientsTable({ clients, userRole, agents = [] }: ClientsTableProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedLetter, setSelectedLetter] = useState<string | null>(null)
   const [selectedStatus, setSelectedStatus] = useState<string>("all")
+  const [selectedAgent, setSelectedAgent] = useState<string>("all")
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(25)
 
-  // Filtrar clientes
   const filteredClients = useMemo(() => {
     return clients.filter((client) => {
-      // Filtro de búsqueda por texto
       const searchLower = searchQuery.toLowerCase()
       const matchesSearch =
         client.name.toLowerCase().includes(searchLower) ||
         client.email?.toLowerCase().includes(searchLower) ||
         client.occupation?.toLowerCase().includes(searchLower)
 
-      // Filtro por letra (primera letra del nombre)
       const matchesLetter = !selectedLetter || client.name.toUpperCase().startsWith(selectedLetter)
 
-      // Filtro por estado
       const matchesStatus =
         selectedStatus === "all" ||
         (selectedStatus === "active" && client.isActive) ||
         (selectedStatus === "inactive" && !client.isActive)
 
-      return matchesSearch && matchesLetter && matchesStatus
-    })
-  }, [clients, searchQuery, selectedLetter, selectedStatus])
+      const matchesAgent = selectedAgent === "all" || client.agent?.id === selectedAgent
 
-  // Paginación
+      return matchesSearch && matchesLetter && matchesStatus && matchesAgent
+    })
+  }, [clients, searchQuery, selectedLetter, selectedStatus, selectedAgent])
+
   const totalPages = Math.ceil(filteredClients.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage
   const paginatedClients = filteredClients.slice(startIndex, startIndex + itemsPerPage)
 
-  // Contar clientes por letra
   const letterCounts = useMemo(() => {
     const counts: Record<string, number> = {}
     ALPHABET.forEach((letter) => {
@@ -87,7 +94,6 @@ export function ClientsTable({ clients }: ClientsTableProps) {
 
   return (
     <div className="space-y-6">
-      {/* Barra alfabética */}
       <div className="flex flex-wrap gap-1 p-4 bg-muted/30 rounded-lg border">
         <Button
           variant={selectedLetter === null ? "default" : "ghost"}
@@ -120,7 +126,6 @@ export function ClientsTable({ clients }: ClientsTableProps) {
         ))}
       </div>
 
-      {/* Filtros y búsqueda */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -151,9 +156,30 @@ export function ClientsTable({ clients }: ClientsTableProps) {
             <SelectItem value="inactive">Inactivos</SelectItem>
           </SelectContent>
         </Select>
+
+        {userRole === "ADMIN" && agents.length > 0 && (
+          <Select
+            value={selectedAgent}
+            onValueChange={(value) => {
+              setSelectedAgent(value)
+              setCurrentPage(1)
+            }}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Agente" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los agentes</SelectItem>
+              {agents.map((agent) => (
+                <SelectItem key={agent.id} value={agent.id}>
+                  {agent.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
-      {/* Resultados y paginación */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <div>
           Mostrando {startIndex + 1} - {Math.min(startIndex + itemsPerPage, filteredClients.length)} de{" "}
@@ -178,7 +204,6 @@ export function ClientsTable({ clients }: ClientsTableProps) {
         </Select>
       </div>
 
-      {/* Tabla de clientes */}
       <div className="border rounded-lg">
         <Table>
           <TableHeader>
@@ -189,6 +214,7 @@ export function ClientsTable({ clients }: ClientsTableProps) {
               <TableHead>Ubicación</TableHead>
               <TableHead>Presupuesto</TableHead>
               <TableHead>Citas</TableHead>
+              {userRole === "ADMIN" && <TableHead>Agente</TableHead>}
               <TableHead>Estado</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
@@ -196,7 +222,7 @@ export function ClientsTable({ clients }: ClientsTableProps) {
           <TableBody>
             {paginatedClients.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={userRole === "ADMIN" ? 9 : 8} className="text-center py-8 text-muted-foreground">
                   No se encontraron clientes
                 </TableCell>
               </TableRow>
@@ -261,6 +287,34 @@ export function ClientsTable({ clients }: ClientsTableProps) {
                       {client._count.appointments}
                     </div>
                   </TableCell>
+                  {userRole === "ADMIN" && (
+                    <TableCell>
+                      {client.agent ? (
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 text-sm">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            {client.agent.name}
+                          </div>
+                          <ReassignAgentDialog
+                            clientId={client.id}
+                            clientName={client.name}
+                            currentAgentId={client.agent.id}
+                            agents={agents}
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground text-sm">Sin asignar</span>
+                          <ReassignAgentDialog
+                            clientId={client.id}
+                            clientName={client.name}
+                            currentAgentId={null}
+                            agents={agents}
+                          />
+                        </div>
+                      )}
+                    </TableCell>
+                  )}
                   <TableCell>
                     <Badge variant={client.isActive ? "default" : "secondary"}>
                       {client.isActive ? "Activo" : "Inactivo"}
@@ -283,7 +337,6 @@ export function ClientsTable({ clients }: ClientsTableProps) {
         </Table>
       </div>
 
-      {/* Controles de paginación */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2">
           <Button

@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/auth"
-import { redirect } from 'next/navigation'
+import { redirect } from "next/navigation"
 import { ClientForm } from "@/components/client-form"
+import { getAgents } from "@/lib/actions/clients"
 
 export default async function NewClientPage() {
   const user = await getCurrentUser()
@@ -9,6 +10,9 @@ export default async function NewClientPage() {
     redirect("/login")
   }
 
+  const agentsResult = user.role === "ADMIN" ? await getAgents() : { success: true, data: [] }
+  const agents = agentsResult.success ? agentsResult.data : []
+
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
@@ -16,7 +20,7 @@ export default async function NewClientPage() {
         <p className="text-muted-foreground">Registra un nuevo cliente potencial</p>
       </div>
 
-      <ClientForm />
+      <ClientForm userRole={user.role} agents={agents} />
     </div>
   )
 }

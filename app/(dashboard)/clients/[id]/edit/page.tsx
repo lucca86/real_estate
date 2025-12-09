@@ -1,13 +1,9 @@
 import { getCurrentUser } from "@/lib/auth"
 import { redirect, notFound } from "next/navigation"
 import { ClientForm } from "@/components/client-form"
-import { getClientById } from "@/lib/actions/clients"
+import { getClientById, getAgents } from "@/lib/actions/clients"
 
-export default async function EditClientPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default async function EditClientPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser()
 
   if (!user) {
@@ -15,20 +11,24 @@ export default async function EditClientPage({
   }
 
   const { id } = await params
-  const result = await getClientById(id)
 
-  if (!result.success || !result.data) {
+  const [clientResult, agentsResult] = await Promise.all([
+    getClientById(id),
+    user.role === "ADMIN" ? getAgents() : Promise.resolve({ success: true, data: [] }),
+  ])
+
+  if (!clientResult.success || !clientResult.data) {
     notFound()
   }
 
-  const client = result.data
+  const client = clientResult.data
+  const agents = agentsResult.success ? agentsResult.data : []
 
   const transformedClient = {
     ...client,
     city: client.city?.name || null,
     state: client.province?.name || null,
     country: client.country?.name || "",
-    // Keep as enum value, not object - the form expects PropertyType enum
     preferredPropertyType: client.preferredPropertyTypeId ? (client.preferredPropertyType?.name as any) : null,
   }
 
@@ -39,7 +39,7 @@ export default async function EditClientPage({
         <p className="text-muted-foreground">Actualiza la información del cliente</p>
       </div>
 
-      <ClientForm client={transformedClient} />
+      <ClientForm client={transformedClient} userRole={user.role} agents={agents} />
     </div>
   )
 }

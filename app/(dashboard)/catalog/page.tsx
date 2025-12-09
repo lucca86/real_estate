@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { CatalogFilters } from "@/components/catalog-filters"
 import { CatalogGrid } from "@/components/catalog-grid"
+import { checkPermission } from "@/lib/permissions"
 
 export default async function CatalogPage({
   searchParams,
@@ -12,6 +13,12 @@ export default async function CatalogPage({
 
   if (!user) {
     redirect("/login")
+  }
+
+  const hasPermission = await checkPermission("catalog.view")
+
+  if (!hasPermission) {
+    redirect("/dashboard")
   }
 
   const params = await searchParams

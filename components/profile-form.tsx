@@ -15,6 +15,7 @@ import { toast } from "@/hooks/use-toast"
 import { Upload, Loader2, KeyRound } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import type { SessionUser } from "@/lib/auth"
+import { getRoleLabel } from "@/lib/role-labels"
 
 interface ProfileFormProps {
   user: SessionUser
@@ -203,7 +204,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
 
           <div className="space-y-2">
             <Label>Rol</Label>
-            <Input value={user.role} disabled className="bg-muted" />
+            <Input value={getRoleLabel(user.role)} disabled className="bg-muted" />
           </div>
         </div>
 

@@ -25,12 +25,14 @@ import type { SessionUser } from "@/lib/auth"
 import Image from "next/image"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
+import { getRoleLabel } from "@/lib/role-labels"
 
 interface AppSidebarProps {
   user: SessionUser | null
+  permissions?: Record<string, boolean>
 }
 
-export function AppSidebar({ user }: AppSidebarProps) {
+export function AppSidebar({ user, permissions = {} }: AppSidebarProps) {
   const pathname = usePathname()
   const { theme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -62,7 +64,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
       name: "Catálogo",
       href: "/catalog",
       icon: Search,
-      roles: ["ADMIN", "SUPERVISOR", "VENDEDOR"],
+      permission: "catalog.view",
     },
     {
       name: "Mapa",
@@ -126,7 +128,19 @@ export function AppSidebar({ user }: AppSidebarProps) {
     },
   ]
 
-  const filteredNavigation = navigation.filter((item) => user && item.roles.includes(user.role))
+  const filteredNavigation = navigation.filter((item) => {
+    if (!user) return false
+
+    if ("permission" in item && item.permission) {
+      return permissions[item.permission] === true
+    }
+
+    if ("roles" in item && item.roles) {
+      return item.roles.includes(user.role)
+    }
+
+    return false
+  })
 
   const handleSignOut = async () => {
     await signOut()
@@ -192,7 +206,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
             </Avatar>
             <div className="flex-1 overflow-hidden">
               <p className="truncate text-sm font-medium text-sidebar-accent-foreground">{user.name}</p>
-              <p className="truncate text-xs text-muted-foreground">{user.role}</p>
+              <p className="truncate text-xs text-muted-foreground">{getRoleLabel(user.role)}</p>
             </div>
             <Button
               variant="ghost"

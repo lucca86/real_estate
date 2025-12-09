@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { getClients } from "@/lib/actions/clients"
+import { getClients, getAgents } from "@/lib/actions/clients"
 import { getCurrentUser } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { ClientsTable } from "@/components/clients-table"
@@ -14,9 +14,12 @@ export default async function ClientsPage() {
     redirect("/login")
   }
 
-  const result = await getClients()
+  const [clientsResult, agentsResult] = await Promise.all([
+    getClients(),
+    user.role === "ADMIN" ? getAgents() : Promise.resolve({ success: true, data: [] }),
+  ])
 
-  if (!result.success || !result.data) {
+  if (!clientsResult.success || !clientsResult.data) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
         <p className="text-muted-foreground">Error al cargar clientes</p>
@@ -24,7 +27,8 @@ export default async function ClientsPage() {
     )
   }
 
-  const clients = result.data
+  const clients = clientsResult.data
+  const agents = agentsResult.success ? agentsResult.data : []
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -42,7 +46,7 @@ export default async function ClientsPage() {
       </div>
 
       <Suspense fallback={<div>Cargando clientes...</div>}>
-        <ClientsTable clients={clients} />
+        <ClientsTable clients={clients} userRole={user.role} agents={agents} />
       </Suspense>
     </div>
   )

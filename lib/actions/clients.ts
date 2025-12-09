@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { createServerClient } from "@/lib/supabase/server"
 import { z } from "zod"
 import crypto from "crypto"
+import { getCurrentUser } from "@/lib/auth"
 
 const clientSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
@@ -23,13 +24,39 @@ const clientSchema = z.object({
   notes: z.string().optional(),
   source: z.string().optional(),
   isActive: z.boolean().default(true),
+  agentId: z.string().optional(),
 })
 
-export async function getClients() {
+export async function getAgents() {
   try {
     const supabase = await createServerClient()
 
-    const { data: clients, error } = await supabase
+    const { data: agents, error } = await supabase
+      .from("users")
+      .select("id, name, email, role")
+      .in("role", ["VENDEDOR", "ADMIN"])
+      .eq("is_active", true)
+      .order("name")
+
+    if (error) throw error
+
+    return { success: true, data: agents || [] }
+  } catch (error) {
+    console.error("[getAgents] Error:", error)
+    return { success: false, error: "Error al obtener agentes" }
+  }
+}
+
+export async function getClients() {
+  try {
+    const currentUser = await getCurrentUser()
+    if (!currentUser) {
+      return { success: false, error: "No autenticado" }
+    }
+
+    const supabase = await createServerClient()
+
+    let query = supabase
       .from("clients")
       .select(`
         id,
@@ -50,13 +77,21 @@ export async function getClients() {
         notes,
         source,
         is_active,
+        agent_id,
         created_at,
         updated_at,
         city:cities(id, name),
         province:provinces(id, name),
-        country:countries(id, name)
+        country:countries(id, name),
+        agent:users!clients_agent_id_fkey(id, name, email)
       `)
       .order("created_at", { ascending: false })
+
+    if (currentUser.role === "VENDEDOR") {
+      query = query.eq("agent_id", currentUser.id)
+    }
+
+    const { data: clients, error } = await query
 
     if (error) throw error
 
@@ -67,18 +102,20 @@ export async function getClients() {
           .select("*", { count: "exact", head: true })
           .eq("client_id", client.id)
 
-        // Extract single objects from arrays for relations
         const city = Array.isArray(client.city) && client.city.length > 0 ? client.city[0] : null
         const province = Array.isArray(client.province) && client.province.length > 0 ? client.province[0] : null
         const country = Array.isArray(client.country) && client.country.length > 0 ? client.country[0] : null
+        const agent = Array.isArray(client.agent) && client.agent.length > 0 ? client.agent[0] : null
 
         return {
           ...client,
           isActive: client.is_active,
+          agentId: client.agent_id,
           budget: client.budget_max || client.budget_min,
           city,
           province,
           country,
+          agent,
           _count: {
             appointments: count || 0,
           },
@@ -95,6 +132,11 @@ export async function getClients() {
 
 export async function getClientById(id: string) {
   try {
+    const currentUser = await getCurrentUser()
+    if (!currentUser) {
+      return { success: false, error: "No autenticado" }
+    }
+
     const supabase = await createServerClient()
 
     const { data: client, error } = await supabase
@@ -103,13 +145,18 @@ export async function getClientById(id: string) {
         *,
         city:cities(name),
         province:provinces(name),
-        country:countries(name)
+        country:countries(name),
+        agent:users!clients_agent_id_fkey(id, name, email)
       `)
       .eq("id", id)
       .single()
 
     if (error) throw error
     if (!client) return { success: false, error: "Cliente no encontrado" }
+
+    if (currentUser.role === "VENDEDOR" && client.agent_id !== currentUser.id) {
+      return { success: false, error: "No tienes permiso para ver este cliente" }
+    }
 
     return { success: true, data: client }
   } catch (error) {
@@ -121,6 +168,12 @@ export async function getClientById(id: string) {
 export async function createClient(data: z.infer<typeof clientSchema>) {
   try {
     const validated = clientSchema.parse(data)
+
+    const currentUser = await getCurrentUser()
+    if (!currentUser) {
+      return { success: false, error: "No autenticado" }
+    }
+
     const supabase = await createServerClient()
 
     const clientData = {
@@ -142,6 +195,7 @@ export async function createClient(data: z.infer<typeof clientSchema>) {
       notes: validated.notes || null,
       source: validated.source || null,
       is_active: validated.isActive,
+      agent_id: currentUser.role === "ADMIN" && validated.agentId ? validated.agentId : currentUser.id,
     }
 
     const { data: client, error } = await supabase.from("clients").insert(clientData).select().single()
@@ -162,9 +216,23 @@ export async function createClient(data: z.infer<typeof clientSchema>) {
 export async function updateClient(id: string, data: z.infer<typeof clientSchema>) {
   try {
     const validated = clientSchema.parse(data)
+
+    const currentUser = await getCurrentUser()
+    if (!currentUser) {
+      return { success: false, error: "No autenticado" }
+    }
+
     const supabase = await createServerClient()
 
-    const clientData = {
+    if (currentUser.role === "VENDEDOR") {
+      const { data: existingClient } = await supabase.from("clients").select("agent_id").eq("id", id).single()
+
+      if (existingClient?.agent_id !== currentUser.id) {
+        return { success: false, error: "No tienes permiso para editar este cliente" }
+      }
+    }
+
+    const clientData: any = {
       name: validated.name,
       email: validated.email,
       phone: validated.phone,
@@ -185,6 +253,10 @@ export async function updateClient(id: string, data: z.infer<typeof clientSchema
       updated_at: new Date().toISOString(),
     }
 
+    if (currentUser.role === "ADMIN" && validated.agentId) {
+      clientData.agent_id = validated.agentId
+    }
+
     const { data: client, error } = await supabase.from("clients").update(clientData).eq("id", id).select().single()
 
     if (error) throw error
@@ -203,13 +275,25 @@ export async function updateClient(id: string, data: z.infer<typeof clientSchema
 
 export async function deleteClient(id: string) {
   try {
+    const currentUser = await getCurrentUser()
+    if (!currentUser) {
+      return { success: false, error: "No autenticado" }
+    }
+
     const supabase = await createServerClient()
+
+    if (currentUser.role === "VENDEDOR") {
+      const { data: existingClient } = await supabase.from("clients").select("agent_id").eq("id", id).single()
+
+      if (existingClient?.agent_id !== currentUser.id) {
+        return { success: false, error: "No tienes permiso para eliminar este cliente" }
+      }
+    }
+
     const { error } = await supabase.from("clients").delete().eq("id", id)
 
     if (error) {
-      // Check if it's a foreign key constraint violation
       if (error.code === "23503") {
-        // Instead of deleting, mark as inactive
         const { error: updateError } = await supabase
           .from("clients")
           .update({ is_active: false, updated_at: new Date().toISOString() })
@@ -235,5 +319,29 @@ export async function deleteClient(id: string) {
       success: false,
       error: error.message || "Error al eliminar cliente",
     }
+  }
+}
+
+export async function reassignClientAgent(clientId: string, newAgentId: string) {
+  try {
+    const currentUser = await getCurrentUser()
+    if (!currentUser || currentUser.role !== "ADMIN") {
+      return { success: false, error: "No tienes permiso para realizar esta acción" }
+    }
+
+    const supabase = await createServerClient()
+
+    const { error } = await supabase
+      .from("clients")
+      .update({ agent_id: newAgentId, updated_at: new Date().toISOString() })
+      .eq("id", clientId)
+
+    if (error) throw error
+
+    revalidatePath("/clients")
+    return { success: true, message: "Agente reasignado exitosamente" }
+  } catch (error) {
+    console.error("[reassignClientAgent] Error:", error)
+    return { success: false, error: "Error al reasignar agente" }
   }
 }

@@ -7,6 +7,7 @@ import { Edit } from "lucide-react"
 import Link from "next/link"
 import { DeleteUserButton } from "@/components/delete-user-button"
 import type { SessionUser } from "@/lib/auth"
+import { roleLabels, roleColors } from "@/lib/role-labels"
 
 interface UsersTableProps {
   currentUser: SessionUser
@@ -27,18 +28,6 @@ export async function UsersTable({ currentUser }: UsersTableProps) {
         <CardContent className="p-0">Error al cargar usuarios</CardContent>
       </Card>
     )
-  }
-
-  const roleColors: Record<string, string> = {
-    ADMIN: "bg-red-500/10 text-red-500 hover:bg-red-500/20",
-    SUPERVISOR: "bg-blue-500/10 text-blue-500 hover:bg-blue-500/20",
-    VENDEDOR: "bg-green-500/10 text-green-500 hover:bg-green-500/20",
-  }
-
-  const roleLabels: Record<string, string> = {
-    ADMIN: "Administrador",
-    SUPERVISOR: "Supervisor",
-    VENDEDOR: "Agente Inmobiliario",
   }
 
   return (

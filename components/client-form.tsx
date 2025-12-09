@@ -35,6 +35,7 @@ const clientFormSchema = z.object({
   notes: z.string().optional(),
   source: z.string().optional(),
   isActive: z.boolean(),
+  agentId: z.string().optional(),
 })
 
 type ClientFormData = z.infer<typeof clientFormSchema>
@@ -59,10 +60,13 @@ interface ClientFormProps {
     notes: string | null
     source: string | null
     is_active: boolean
+    agent_id?: string | null
   }
+  userRole: "ADMIN" | "VENDEDOR" | "SUPERVISOR"
+  agents?: Array<{ id: string; name: string; email: string }>
 }
 
-export function ClientForm({ client }: ClientFormProps) {
+export function ClientForm({ client, userRole, agents = [] }: ClientFormProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -115,6 +119,7 @@ export function ClientForm({ client }: ClientFormProps) {
       notes: client?.notes || "",
       source: client?.source || "",
       isActive: client?.is_active ?? true,
+      agentId: client?.agent_id || "",
     },
   })
 
@@ -163,6 +168,34 @@ export function ClientForm({ client }: ClientFormProps) {
             <CardDescription>Datos básicos del cliente</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {userRole === "ADMIN" && agents.length > 0 && (
+              <FormField
+                control={form.control}
+                name="agentId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Agente Responsable</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecciona el agente responsable" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {agents.map((agent) => (
+                          <SelectItem key={agent.id} value={agent.id}>
+                            {agent.name} ({agent.email})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>El agente que será responsable de este cliente</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             <FormField
               control={form.control}
               name="name"

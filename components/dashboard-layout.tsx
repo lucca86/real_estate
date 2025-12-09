@@ -9,16 +9,17 @@ import type { SessionUser } from "@/lib/auth"
 interface DashboardLayoutProps {
   children: React.ReactNode
   user: SessionUser
+  permissions?: Record<string, boolean>
 }
 
-export function DashboardLayout({ children, user }: DashboardLayoutProps) {
+export function DashboardLayout({ children, user, permissions }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
 
   return (
     <div className="relative flex h-screen w-full overflow-hidden bg-background">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex md:w-64 md:shrink-0 md:flex-col md:border-r">
-        <AppSidebar user={user} />
+        <AppSidebar user={user} permissions={permissions} />
       </aside>
 
       {/* Mobile Sidebar Overlay */}
@@ -30,7 +31,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
             aria-hidden="true"
           />
           <aside className="fixed inset-y-0 left-0 z-50 w-64 md:hidden">
-            <AppSidebar user={user} />
+            <AppSidebar user={user} permissions={permissions} />
           </aside>
         </>
       )}
