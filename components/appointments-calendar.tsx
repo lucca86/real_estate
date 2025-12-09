@@ -180,7 +180,7 @@ export function AppointmentsCalendar({ appointments }: AppointmentsCalendarProps
                           {apt.property?.city || "Ciudad no especificada"}
                         </div>
                       </div>
-                      <div className="text-sm text-muted-foreground">Agente: {apt.agent.name}</div>
+                      <div className="text-sm text-muted-foreground">Agente: {apt.agent?.name || "Sin asignar"}</div>
                     </div>
                   </div>
                 </Link>

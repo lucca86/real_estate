@@ -124,12 +124,15 @@ export function LocationTable({ data, type, columns, filterOptions }: LocationTa
       // Parent filter (for provinces, cities, neighborhoods)
       let matchesParent = true
       if (parentFilter !== "all") {
-        if (type === "province" && item.countryId) {
-          matchesParent = item.countryId === parentFilter
-        } else if (type === "city" && item.provinceId) {
-          matchesParent = item.provinceId === parentFilter
-        } else if (type === "neighborhood" && item.cityId) {
-          matchesParent = item.cityId === parentFilter
+        if (type === "province") {
+          const countryId = item.countryId || item.country_id
+          matchesParent = countryId === parentFilter
+        } else if (type === "city") {
+          const provinceId = item.provinceId || item.province_id
+          matchesParent = provinceId === parentFilter
+        } else if (type === "neighborhood") {
+          const cityId = item.cityId || item.city_id
+          matchesParent = cityId === parentFilter
         }
       }
 

@@ -1,6 +1,5 @@
 import { getCurrentUser } from "@/lib/auth"
 import { redirect, notFound } from "next/navigation"
-import { DashboardLayout } from "@/components/dashboard-layout"
 import { NeighborhoodForm } from "@/components/neighborhood-form"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft } from "lucide-react"
@@ -37,30 +36,28 @@ export default async function EditNeighborhoodPage({ params }: { params: Promise
       : []
 
   return (
-    <DashboardLayout user={user}>
-      <div className="space-y-6">
-        <Button variant="ghost" asChild>
-          <Link href="/locations">
-            <ChevronLeft className="mr-2 h-4 w-4" />
-            Volver a Ubicaciones
-          </Link>
-        </Button>
+    <div className="space-y-6">
+      <Button variant="ghost" asChild>
+        <Link href="/locations">
+          <ChevronLeft className="mr-2 h-4 w-4" />
+          Volver a Ubicaciones
+        </Link>
+      </Button>
 
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Editar Barrio</h1>
-          <p className="text-muted-foreground">Modifica la información del barrio</p>
-        </div>
-
-        <NeighborhoodForm
-          neighborhood={{
-            id: neighborhood.id,
-            name: neighborhood.name,
-            cityId: neighborhood.city_id,
-            isActive: neighborhood.is_active,
-          }}
-          cities={cities}
-        />
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Editar Barrio</h1>
+        <p className="text-muted-foreground">Modifica la información del barrio</p>
       </div>
-    </DashboardLayout>
+
+      <NeighborhoodForm
+        neighborhood={{
+          id: neighborhood.id,
+          name: neighborhood.name,
+          cityId: neighborhood.city_id,
+          isActive: neighborhood.is_active,
+        }}
+        cities={cities}
+      />
+    </div>
   )
 }
