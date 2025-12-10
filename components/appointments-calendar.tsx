@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin, User } from "lucide-react"
 import Link from "next/link"
 import {
@@ -102,44 +103,84 @@ export function AppointmentsCalendar({ appointments }: AppointmentsCalendarProps
         </CardHeader>
         <CardContent>
           {/* Calendario mensual */}
-          <div className="grid grid-cols-7 gap-2">
-            {/* Días de la semana */}
-            {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((day) => (
-              <div key={day} className="text-center text-sm font-medium text-muted-foreground p-2">
-                {day}
-              </div>
-            ))}
-
-            {/* Días del mes */}
-            {calendarDays.map((day) => {
-              const dayAppointments = getAppointmentsForDay(day)
-              const isCurrentMonth = isSameMonth(day, currentDate)
-              const isToday = isSameDay(day, new Date())
-
-              return (
-                <div
-                  key={day.toISOString()}
-                  className={`min-h-24 p-2 border rounded-lg ${
-                    isCurrentMonth ? "bg-card" : "bg-muted/50"
-                  } ${isToday ? "border-primary" : "border-border"}`}
-                >
-                  <div className="text-sm font-medium mb-1">{format(day, "d")}</div>
-                  <div className="space-y-1">
-                    {dayAppointments.slice(0, 2).map((apt) => (
-                      <Link key={apt.id} href={`/appointments/${apt.id}/edit`}>
-                        <div className={`text-xs p-1 rounded truncate ${getStatusColor(apt.status)}`}>
-                          {getArgentinaTime(apt.scheduledAt)} - {apt.contactName || apt.client?.name || "Sin nombre"}
-                        </div>
-                      </Link>
-                    ))}
-                    {dayAppointments.length > 2 && (
-                      <div className="text-xs text-muted-foreground">+{dayAppointments.length - 2} más</div>
-                    )}
-                  </div>
+          <TooltipProvider>
+            <div className="grid grid-cols-7 gap-2">
+              {/* Días de la semana */}
+              {["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"].map((day) => (
+                <div key={day} className="text-center text-sm font-medium text-muted-foreground p-2">
+                  {day}
                 </div>
-              )
-            })}
-          </div>
+              ))}
+
+              {/* Días del mes */}
+              {calendarDays.map((day) => {
+                const dayAppointments = getAppointmentsForDay(day)
+                const isCurrentMonth = isSameMonth(day, currentDate)
+                const isToday = isSameDay(day, new Date())
+
+                return (
+                  <Tooltip key={day.toISOString()}>
+                    <TooltipTrigger asChild>
+                      <div
+                        className={`min-h-24 p-2 border rounded-lg cursor-pointer ${
+                          isCurrentMonth ? "bg-card" : "bg-muted/50"
+                        } ${isToday ? "border-primary" : "border-border"} ${
+                          dayAppointments.length > 0 ? "hover:bg-accent/50 transition-colors" : ""
+                        }`}
+                      >
+                        <div className="text-sm font-medium mb-1">{format(day, "d")}</div>
+                        <div className="space-y-1">
+                          {dayAppointments.slice(0, 2).map((apt) => (
+                            <Link key={apt.id} href={`/appointments/${apt.id}/edit`}>
+                              <div className={`text-xs p-1 rounded truncate ${getStatusColor(apt.status)}`}>
+                                {getArgentinaTime(apt.scheduledAt)} -{" "}
+                                {apt.contactName || apt.client?.name || "Sin nombre"}
+                              </div>
+                            </Link>
+                          ))}
+                          {dayAppointments.length > 2 && (
+                            <div className="text-xs text-muted-foreground">+{dayAppointments.length - 2} más</div>
+                          )}
+                        </div>
+                      </div>
+                    </TooltipTrigger>
+                    {dayAppointments.length > 0 && (
+                      <TooltipContent side="right" className="max-w-sm p-3">
+                        <div className="space-y-2">
+                          <p className="font-semibold text-sm mb-2">
+                            {format(day, "d 'de' MMMM", { locale: es })} - {dayAppointments.length}{" "}
+                            {dayAppointments.length === 1 ? "cita" : "citas"}
+                          </p>
+                          {dayAppointments.map((apt) => (
+                            <div key={apt.id} className="text-xs space-y-1 pb-2 border-b last:border-0 last:pb-0">
+                              <div className="flex items-center gap-2">
+                                <Clock className="h-3 w-3" />
+                                <span className="font-medium">{getArgentinaTime(apt.scheduledAt)}</span>
+                                <Badge className={getStatusColor(apt.status)} variant="outline">
+                                  {apt.status}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <User className="h-3 w-3" />
+                                <span>{apt.contactName || apt.client?.name || "Sin nombre"}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <MapPin className="h-3 w-3" />
+                                <span className="truncate">
+                                  {apt.property?.title || apt.otherLocation || "Ubicación no especificada"}
+                                </span>
+                              </div>
+                              <div className="text-muted-foreground">Agente: {apt.agent?.name || "Sin asignar"}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                )
+              })}
+            </div>
+          </TooltipProvider>
         </CardContent>
       </Card>
 
