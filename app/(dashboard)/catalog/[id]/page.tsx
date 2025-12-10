@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Building2, MapPin, Bed, Bath, Car, Maximize, Calendar, User, Mail, ChevronLeft } from "lucide-react"
+import { Building2, MapPin, Bed, Bath, Car, Maximize, Calendar, User, Mail, Phone, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { ImageGallery } from "@/components/image-gallery"
 import { PropertyMap } from "@/components/property-map"
 import { getPropertyById } from "@/lib/actions/properties"
+import { OwnerDetailsModal } from "@/components/owner-details-modal"
 
 export default async function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -39,6 +40,12 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
   }
 
   const propertyImages = property.images || []
+
+  const currencyLabels = {
+    USD: "Dólares",
+    ARS: "Pesos",
+    EUR: "Euros",
+  }
 
   return (
     <div className="space-y-6">
@@ -205,7 +212,9 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
               <div>
                 <div className="flex items-baseline gap-2">
                   <span className="text-3xl font-bold text-primary">${property.price.toLocaleString()}</span>
-                  <span className="text-muted-foreground">{property.currency}</span>
+                  <span className="text-muted-foreground">
+                    {currencyLabels[property.currency as keyof typeof currencyLabels] || property.currency}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -213,21 +222,29 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
 
           {/* Contact */}
           {property.owner && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Contacto</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">{property.owner.name}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">{property.owner.email}</span>
-                </div>
-              </CardContent>
-            </Card>
+            <OwnerDetailsModal owner={property.owner}>
+              <Card className="cursor-pointer transition-colors hover:bg-accent">
+                <CardHeader>
+                  <CardTitle>Contacto</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium">{property.owner.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium">{property.owner.email}</span>
+                  </div>
+                  {property.owner.phone && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-medium">{property.owner.phone}</span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </OwnerDetailsModal>
           )}
 
           {/* Stats */}

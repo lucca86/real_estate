@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/auth"
 import { redirect, notFound } from "next/navigation"
 import { getOwnerById } from "@/lib/actions/owners"
 import { OwnerForm } from "@/components/owner-form"
+import { createServerClient } from "@/lib/supabase/server"
 
 export default async function EditOwnerPage({
   params,
@@ -23,6 +24,14 @@ export default async function EditOwnerPage({
 
   const ownerRaw = result.data
 
+  const supabase = await createServerClient()
+
+  const [{ data: countries }, { data: provinces }, { data: cities }] = await Promise.all([
+    supabase.from("countries").select("id, name").eq("is_active", true).order("name"),
+    supabase.from("provinces").select("id, name, country_id").eq("is_active", true).order("name"),
+    supabase.from("cities").select("id, name, province_id").eq("is_active", true).order("name"),
+  ])
+
   const owner = {
     ...ownerRaw,
     city: ownerRaw.city?.name || null,
@@ -36,7 +45,7 @@ export default async function EditOwnerPage({
         <h1 className="text-3xl font-bold">Editar Propietario</h1>
         <p className="text-muted-foreground">Actualiza la información del propietario</p>
       </div>
-      <OwnerForm owner={owner} />
+      <OwnerForm owner={owner} countries={countries || []} provinces={provinces || []} cities={cities || []} />
     </div>
   )
 }

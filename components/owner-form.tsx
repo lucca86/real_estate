@@ -28,14 +28,17 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const ownerSchema = z.object({
-  name: z.string().min(1, "El nombre es requerido"),
+  firstName: z.string().min(1, "El nombre es requerido"),
+  lastName: z.string().min(1, "El apellido es requerido"),
+  ownerType: z.enum(["Propietario", "Apoderado", "Intermediario"]),
+  realEstateAgency: z.string().optional(),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   phone: z.string().min(1, "El teléfono es requerido"),
   secondaryPhone: z.string().optional(),
   address: z.string().optional(),
   cityId: z.string().optional(),
   provinceId: z.string().optional(),
-  countryId: z.string().min(1, "El país es requerido"),
+  countryId: z.string().optional(),
   idNumber: z.string().optional(),
   taxId: z.string().optional(),
   notes: z.string().optional(),
@@ -48,6 +51,10 @@ interface OwnerFormProps {
   owner?: {
     id: string
     name: string
+    first_name?: string | null
+    last_name?: string | null
+    owner_type?: string | null
+    real_estate_agency?: string | null
     email: string
     phone: string
     secondary_phone: string | null
@@ -65,15 +72,20 @@ interface OwnerFormProps {
   cities?: Array<{ id: string; name: string; province_id: string }>
 }
 
+const capitalizeFirst = (str: string) => {
+  if (!str) return str
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+}
+
 export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }: OwnerFormProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [selectedCountryId, setSelectedCountryId] = useState(owner?.country_id || "")
+  const [selectedCountryId, setSelectedCountryId] = useState(
+    owner?.country_id || "5627a007-5ebf-4044-a337-da2a33ba5d0c",
+  )
   const [selectedProvinceId, setSelectedProvinceId] = useState(owner?.province_id || "")
-  const [selectedProvinceName, setSelectedProvinceName] = useState("")
-  const [selectedCityName, setSelectedCityName] = useState("")
 
   const {
     register,
@@ -84,14 +96,17 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
   } = useForm<OwnerFormData>({
     resolver: zodResolver(ownerSchema),
     defaultValues: {
-      name: owner?.name || "",
+      firstName: owner?.first_name || owner?.name?.split(" ")[0] || "",
+      lastName: owner?.last_name || owner?.name?.split(" ").slice(1).join(" ") || "",
+      ownerType: (owner?.owner_type as "Propietario" | "Apoderado" | "Intermediario") || "Propietario",
+      realEstateAgency: owner?.real_estate_agency || "",
       email: owner?.email || "",
       phone: owner?.phone || "",
       secondaryPhone: owner?.secondary_phone || "",
       address: owner?.address || "",
       cityId: owner?.city_id || "",
       provinceId: owner?.province_id || "",
-      countryId: owner?.country_id || "",
+      countryId: owner?.country_id || "5627a007-5ebf-4044-a337-da2a33ba5d0c",
       idNumber: owner?.id_number || "",
       taxId: owner?.tax_id || "",
       notes: owner?.notes || "",
@@ -101,6 +116,7 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
 
   const isActive = watch("isActive")
   const cityId = watch("cityId")
+  const countryId = watch("countryId")
 
   const handleCountryChange = (value: string) => {
     setSelectedCountryId(value)
@@ -108,31 +124,32 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
     setSelectedProvinceId("")
     setValue("provinceId", "")
     setValue("cityId", "")
-    setSelectedProvinceName("")
-    setSelectedCityName("")
   }
 
   const handleProvinceChange = (value: string) => {
-    setSelectedProvinceName(value)
     setValue("provinceId", value)
     setSelectedProvinceId(value)
     setValue("cityId", "")
-    setSelectedCityName("")
   }
 
   const handleCityChange = (value: string) => {
-    setSelectedCityName(value)
     setValue("cityId", value)
   }
+
+  const filteredProvinces = provinces.filter((p) => p.country_id === selectedCountryId)
+  const filteredCities = cities.filter((c) => c.province_id === selectedProvinceId)
 
   const onSubmit = async (data: OwnerFormData) => {
     setIsSubmitting(true)
     try {
       const formData = new FormData()
-      formData.append("name", data.name)
+      formData.append("firstName", capitalizeFirst(data.firstName))
+      formData.append("lastName", capitalizeFirst(data.lastName))
+      formData.append("ownerType", data.ownerType)
+      if (data.realEstateAgency) formData.append("realEstateAgency", data.realEstateAgency)
       if (data.email) formData.append("email", data.email)
       formData.append("phone", data.phone)
-      formData.append("countryId", data.countryId)
+      if (data.countryId) formData.append("countryId", data.countryId)
       formData.append("isActive", String(data.isActive))
 
       if (data.secondaryPhone) formData.append("secondaryPhone", data.secondaryPhone)
@@ -207,12 +224,61 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
           <CardTitle>Información Personal</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="firstName">
+                Nombre <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="firstName"
+                {...register("firstName")}
+                placeholder="Juan"
+                onChange={(e) => {
+                  setValue("firstName", capitalizeFirst(e.target.value))
+                }}
+              />
+              {errors.firstName && <p className="text-sm text-destructive">{errors.firstName.message}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="lastName">
+                Apellido <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="lastName"
+                {...register("lastName")}
+                placeholder="Pérez"
+                onChange={(e) => {
+                  setValue("lastName", capitalizeFirst(e.target.value))
+                }}
+              />
+              {errors.lastName && <p className="text-sm text-destructive">{errors.lastName.message}</p>}
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="name">
-              Nombre Completo <span className="text-destructive">*</span>
+            <Label htmlFor="ownerType">
+              Tipo <span className="text-destructive">*</span>
             </Label>
-            <Input id="name" {...register("name")} placeholder="Juan Pérez" />
-            {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+            <Select
+              value={watch("ownerType")}
+              onValueChange={(value) => setValue("ownerType", value as "Propietario" | "Apoderado" | "Intermediario")}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccionar tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Propietario">Propietario</SelectItem>
+                <SelectItem value="Apoderado">Apoderado</SelectItem>
+                <SelectItem value="Intermediario">Intermediario</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.ownerType && <p className="text-sm text-destructive">{errors.ownerType.message}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="realEstateAgency">Inmobiliaria de referencia</Label>
+            <Input id="realEstateAgency" {...register("realEstateAgency")} placeholder="Nombre de la inmobiliaria" />
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -255,10 +321,8 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
 
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <Label htmlFor="countryId">
-                País <span className="text-destructive">*</span>
-              </Label>
-              <Select value={selectedCountryId} onValueChange={handleCountryChange}>
+              <Label htmlFor="countryId">País</Label>
+              <Select value={countryId} onValueChange={handleCountryChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar país" />
                 </SelectTrigger>
@@ -275,17 +339,12 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
 
             <div className="space-y-2">
               <Label htmlFor="provinceId">Provincia/Estado</Label>
-              <Select
-                name="provinceId"
-                value={selectedProvinceId}
-                onValueChange={handleProvinceChange}
-                disabled={!selectedCountryId || selectedCountryId !== "argentina-id"}
-              >
+              <Select value={selectedProvinceId} onValueChange={handleProvinceChange} disabled={!selectedCountryId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Escriba para buscar provincia..." />
+                  <SelectValue placeholder="Seleccionar provincia..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {provinces.map((province) => (
+                  {filteredProvinces.map((province) => (
                     <SelectItem key={province.id} value={province.id}>
                       {province.name}
                     </SelectItem>
@@ -296,12 +355,12 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
 
             <div className="space-y-2">
               <Label htmlFor="cityId">Ciudad</Label>
-              <Select name="cityId" value={cityId} onValueChange={handleCityChange} disabled={!selectedProvinceId}>
+              <Select value={cityId} onValueChange={handleCityChange} disabled={!selectedProvinceId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Escriba para buscar ciudad..." />
+                  <SelectValue placeholder="Seleccionar ciudad..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {cities.map((city) => (
+                  {filteredCities.map((city) => (
                     <SelectItem key={city.id} value={city.id}>
                       {city.name}
                     </SelectItem>

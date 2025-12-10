@@ -6,7 +6,10 @@ import { z } from "zod"
 import crypto from "crypto"
 
 const ownerSchema = z.object({
-  name: z.string().min(1, "El nombre es requerido"),
+  firstName: z.string().min(1, "El nombre es requerido"),
+  lastName: z.string().min(1, "El apellido es requerido"),
+  ownerType: z.enum(["Propietario", "Apoderado", "Intermediario"]),
+  realEstateAgency: z.string().optional(),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   phone: z.string().min(1, "El teléfono es requerido"),
   secondary_phone: z.string().optional(),
@@ -21,7 +24,8 @@ const ownerSchema = z.object({
 })
 
 const quickOwnerSchema = z.object({
-  name: z.string().min(1, "El nombre es requerido"),
+  firstName: z.string().min(1, "El nombre es requerido"),
+  lastName: z.string().min(1, "El apellido es requerido"),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   phone: z.string().min(1, "El teléfono es requerido"),
 })
@@ -97,27 +101,37 @@ export async function getOwnerById(id: string) {
 
 export async function createOwner(formData: FormData) {
   try {
-    const name = formData.get("name") as string
+    const firstName = formData.get("firstName") as string
+    const lastName = formData.get("lastName") as string
+    const ownerType = formData.get("ownerType") as string
+    const realEstateAgency = formData.get("realEstateAgency") as string
     const email = formData.get("email") as string
     const phone = formData.get("phone") as string
+    const countryId = formData.get("countryId") as string
+    const provinceId = formData.get("provinceId") as string
+    const cityId = formData.get("cityId") as string
 
-    if (!name || !phone) {
-      return { success: false, error: "Nombre y teléfono son requeridos" }
+    if (!firstName || !lastName || !phone) {
+      return { success: false, error: "Nombre, apellido y teléfono son requeridos" }
     }
 
     const ownerData = {
       id: crypto.randomUUID(),
-      name,
+      name: `${firstName} ${lastName}`,
+      first_name: firstName,
+      last_name: lastName,
+      owner_type: ownerType || "Propietario",
+      real_estate_agency: realEstateAgency || null,
       email: email || null,
       phone,
-      secondary_phone: null,
-      address: null,
-      city_id: null,
-      province_id: null,
-      country_id: null,
-      id_number: null,
-      tax_id: null,
-      notes: null,
+      secondary_phone: (formData.get("secondaryPhone") as string) || null,
+      address: (formData.get("address") as string) || null,
+      city_id: cityId || null,
+      province_id: provinceId || null,
+      country_id: countryId || null,
+      id_number: (formData.get("idNumber") as string) || null,
+      tax_id: (formData.get("taxId") as string) || null,
+      notes: (formData.get("notes") as string) || null,
       is_active: true,
     }
 
@@ -137,7 +151,10 @@ export async function createOwner(formData: FormData) {
 export async function updateOwner(
   id: string,
   data: {
-    name: string
+    firstName: string
+    lastName: string
+    ownerType: string
+    realEstateAgency?: string
     email?: string
     phone: string
     secondaryPhone?: string
@@ -153,7 +170,11 @@ export async function updateOwner(
 ) {
   try {
     const ownerData = {
-      name: data.name,
+      name: `${data.firstName} ${data.lastName}`,
+      first_name: data.firstName,
+      last_name: data.lastName,
+      owner_type: data.ownerType,
+      real_estate_agency: data.realEstateAgency || null,
       email: data.email || null,
       phone: data.phone,
       secondary_phone: data.secondaryPhone || null,

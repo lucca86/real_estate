@@ -443,7 +443,23 @@ export async function getPropertyById(id: string) {
     .from("properties")
     .select(`
       *,
-      owner:owners!owner_id(id, name, email),
+      owner:owners!owner_id(
+        id, 
+        name, 
+        email, 
+        phone, 
+        secondary_phone,
+        first_name,
+        last_name,
+        owner_type,
+        real_estate_agency,
+        address,
+        notes,
+        is_active,
+        city:cities!city_id(id, name),
+        province:provinces!province_id(id, name),
+        country:countries!country_id(id, name)
+      ),
       city:cities!city_id(id, name),
       province:provinces!province_id(id, name),
       country:countries!country_id(id, name),

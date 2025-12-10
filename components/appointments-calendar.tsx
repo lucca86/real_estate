@@ -145,33 +145,42 @@ export function AppointmentsCalendar({ appointments }: AppointmentsCalendarProps
                       </div>
                     </TooltipTrigger>
                     {dayAppointments.length > 0 && (
-                      <TooltipContent side="right" className="max-w-sm p-3">
-                        <div className="space-y-2">
-                          <p className="font-semibold text-sm mb-2">
+                      <TooltipContent
+                        side="right"
+                        className="max-w-sm p-4 bg-gray-50 dark:bg-gray-900 border-2 border-gray-300 dark:border-gray-700 text-gray-900 dark:text-gray-100 shadow-xl"
+                      >
+                        <div className="space-y-3">
+                          <p className="font-semibold text-sm mb-3 border-b border-gray-300 dark:border-gray-700 pb-2">
                             {format(day, "d 'de' MMMM", { locale: es })} - {dayAppointments.length}{" "}
                             {dayAppointments.length === 1 ? "cita" : "citas"}
                           </p>
                           {dayAppointments.map((apt) => (
-                            <div key={apt.id} className="text-xs space-y-1 pb-2 border-b last:border-0 last:pb-0">
-                              <div className="flex items-center gap-2">
-                                <Clock className="h-3 w-3" />
-                                <span className="font-medium">{getArgentinaTime(apt.scheduledAt)}</span>
-                                <Badge className={getStatusColor(apt.status)} variant="outline">
-                                  {apt.status}
-                                </Badge>
+                            <Link key={apt.id} href={`/appointments/${apt.id}/edit`} className="block">
+                              <div className="text-xs space-y-1.5 pb-3 border-b border-gray-300 dark:border-gray-700 last:border-0 last:pb-0 hover:bg-gray-100 dark:hover:bg-gray-800 -mx-2 px-2 py-2 rounded transition-colors cursor-pointer">
+                                <div className="flex items-center gap-2">
+                                  <Clock className="h-3 w-3 text-gray-700 dark:text-gray-300" />
+                                  <span className="font-medium text-gray-900 dark:text-gray-100">
+                                    {getArgentinaTime(apt.scheduledAt)}
+                                  </span>
+                                  <Badge className={getStatusColor(apt.status)} variant="outline">
+                                    {apt.status}
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                  <User className="h-3 w-3" />
+                                  <span>{apt.contactName || apt.client?.name || "Sin nombre"}</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                                  <MapPin className="h-3 w-3" />
+                                  <span className="truncate">
+                                    {apt.property?.title || apt.otherLocation || "Ubicación no especificada"}
+                                  </span>
+                                </div>
+                                <div className="text-gray-700 dark:text-gray-300">
+                                  Agente: {apt.agent?.name || "Sin asignar"}
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2 text-muted-foreground">
-                                <User className="h-3 w-3" />
-                                <span>{apt.contactName || apt.client?.name || "Sin nombre"}</span>
-                              </div>
-                              <div className="flex items-center gap-2 text-muted-foreground">
-                                <MapPin className="h-3 w-3" />
-                                <span className="truncate">
-                                  {apt.property?.title || apt.otherLocation || "Ubicación no especificada"}
-                                </span>
-                              </div>
-                              <div className="text-muted-foreground">Agente: {apt.agent?.name || "Sin asignar"}</div>
-                            </div>
+                            </Link>
                           ))}
                         </div>
                       </TooltipContent>

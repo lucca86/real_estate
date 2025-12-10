@@ -28,6 +28,11 @@ export function CreateOwnerDialog({ open, onOpenChange, onOwnerCreated }: Create
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
 
+  const capitalizeFirst = (str: string) => {
+    if (!str) return str
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setIsLoading(true)
@@ -67,9 +72,33 @@ export function CreateOwnerDialog({ open, onOpenChange, onOwnerCreated }: Create
             <DialogDescription>Ingresa los datos básicos del propietario para agregarlo rápidamente.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nombre Completo *</Label>
-              <Input id="name" name="name" required disabled={isLoading} placeholder="Juan Pérez" />
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">Nombre *</Label>
+                <Input
+                  id="firstName"
+                  name="firstName"
+                  required
+                  disabled={isLoading}
+                  placeholder="Juan"
+                  onChange={(e) => {
+                    e.target.value = capitalizeFirst(e.target.value)
+                  }}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Apellido *</Label>
+                <Input
+                  id="lastName"
+                  name="lastName"
+                  required
+                  disabled={isLoading}
+                  placeholder="Pérez"
+                  onChange={(e) => {
+                    e.target.value = capitalizeFirst(e.target.value)
+                  }}
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -77,7 +106,7 @@ export function CreateOwnerDialog({ open, onOpenChange, onOwnerCreated }: Create
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Teléfono *</Label>
-              <Input id="phone" name="phone" type="tel" required disabled={isLoading} placeholder="+1 (809) 555-1234" />
+              <Input id="phone" name="phone" type="tel" required disabled={isLoading} placeholder="+54 379 555-1234" />
             </div>
           </div>
           <DialogFooter>
