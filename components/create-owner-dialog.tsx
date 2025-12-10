@@ -72,15 +72,8 @@ export function CreateOwnerDialog({ open, onOpenChange, onOwnerCreated }: Create
               <Input id="name" name="name" required disabled={isLoading} placeholder="Juan Pérez" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                required
-                disabled={isLoading}
-                placeholder="juan@ejemplo.com"
-              />
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" name="email" type="email" disabled={isLoading} placeholder="juan@ejemplo.com" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Teléfono *</Label>

@@ -22,7 +22,7 @@ const ownerSchema = z.object({
 
 const quickOwnerSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
-  email: z.string().email("Email inválido"),
+  email: z.string().email("Email inválido").optional().or(z.literal("")),
   phone: z.string().min(1, "El teléfono es requerido"),
 })
 
@@ -101,14 +101,14 @@ export async function createOwner(formData: FormData) {
     const email = formData.get("email") as string
     const phone = formData.get("phone") as string
 
-    if (!name || !email || !phone) {
-      return { success: false, error: "Nombre, email y teléfono son requeridos" }
+    if (!name || !phone) {
+      return { success: false, error: "Nombre y teléfono son requeridos" }
     }
 
     const ownerData = {
       id: crypto.randomUUID(),
       name,
-      email,
+      email: email || null,
       phone,
       secondary_phone: null,
       address: null,

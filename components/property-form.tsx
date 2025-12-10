@@ -27,6 +27,7 @@ import {
 } from "@/lib/actions/locations"
 import { PropertyImageUpload } from "./property-image-upload"
 import { normalizeImages } from "@/lib/image-utils" // Fixed import to use normalizeImages from correct file
+import { PropertiesMap } from "@/components/property-map" // Import PropertiesMap
 
 // Define a type for image objects
 interface PropertyImage {
@@ -156,11 +157,15 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
   const [cities, setCities] = useState<Array<{ id: string; name: string }>>([])
   const [neighborhoods, setNeighborhoods] = useState<Array<{ id: string; name: string }>>([])
 
-  const [selectedCountryId, setSelectedCountryId] = useState<string | undefined>(editProperty?.countryId || undefined)
-  const [selectedProvinceId, setSelectedProvinceId] = useState<string | undefined>(
-    editProperty?.provinceId || undefined,
+  const [selectedCountryId, setSelectedCountryId] = useState<string | undefined>(
+    editProperty?.countryId || "clyqxm3uy0000svxl6d4vgxwz",
   )
-  const [selectedCityId, setSelectedCityId] = useState<string | undefined>(editProperty?.cityId || undefined)
+  const [selectedProvinceId, setSelectedProvinceId] = useState<string | undefined>(
+    editProperty?.provinceId || "73d2a02b-a005-4c08-8df8-a7e57ec3f63e",
+  )
+  const [selectedCityId, setSelectedCityId] = useState<string | undefined>(
+    editProperty?.cityId || "18377e89-ca6e-4e27-ab35-6892af66143b",
+  )
   const [selectedNeighborhoodId, setSelectedNeighborhoodId] = useState<string | undefined>(
     editProperty?.neighborhoodId || undefined,
   )
@@ -196,10 +201,10 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
     propertyTypeId: editProperty?.propertyTypeId,
     status: editProperty?.status || "ACTIVO",
     address: editProperty?.address,
-    cityId: editProperty?.cityId || undefined,
-    countryId: editProperty?.countryId || undefined,
+    cityId: editProperty?.cityId || "18377e89-ca6e-4e27-ab35-6892af66143b",
+    countryId: editProperty?.countryId || "clyqxm3uy0000svxl6d4vgxwz",
     state: editProperty?.state || undefined,
-    provinceId: editProperty?.provinceId || undefined,
+    provinceId: editProperty?.provinceId || "73d2a02b-a005-4c08-8df8-a7e57ec3f63e",
     neighborhoodId: editProperty?.neighborhoodId || undefined,
     latitude: editProperty?.latitude,
     longitude: editProperty?.longitude,
@@ -263,18 +268,17 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
 
         setCountries(countriesData)
 
-        if (editProperty?.countryId) {
-          const provincesData = await getProvinces(editProperty.countryId)
+        // Fetch provinces, cities, and neighborhoods based on default or existing IDs
+        if (selectedCountryId) {
+          const provincesData = await getProvinces(selectedCountryId)
           setProvinces(provincesData)
         }
-
-        if (editProperty?.provinceId) {
-          const citiesData = await getCities(editProperty.provinceId)
+        if (selectedProvinceId) {
+          const citiesData = await getCities(selectedProvinceId)
           setCities(citiesData)
         }
-
-        if (editProperty?.cityId) {
-          const neighborhoodsData = await getNeighborhoods(editProperty.cityId)
+        if (selectedCityId) {
+          const neighborhoodsData = await getNeighborhoods(selectedCityId)
           setNeighborhoods(neighborhoodsData)
         }
       } catch (error) {
@@ -282,7 +286,7 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
       }
     }
     fetchData()
-  }, [editProperty])
+  }, [selectedCountryId, selectedProvinceId, selectedCityId]) // Re-fetch if default IDs change
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -566,7 +570,9 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Título</Label>
+            <Label htmlFor="title">
+              Título <span className="text-destructive">*</span>
+            </Label>
             <div className="flex gap-2">
               <Input
                 id="title"
@@ -601,7 +607,9 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Descripción</Label>
+            <Label htmlFor="description">
+              Descripción <span className="text-destructive">*</span>
+            </Label>
             <Textarea
               id="description"
               name="description"
@@ -614,7 +622,9 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="ownerId">Propietario *</Label>
+            <Label htmlFor="ownerId">
+              Propietario <span className="text-destructive">*</span>
+            </Label>
             <div className="flex gap-2">
               <Select
                 name="ownerId"
@@ -657,7 +667,9 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
 
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <Label htmlFor="propertyTypeId">Tipo de Propiedad *</Label>
+              <Label htmlFor="propertyTypeId">
+                Tipo de Propiedad <span className="text-destructive">*</span>
+              </Label>
               <Select
                 name="propertyTypeId"
                 value={formData.propertyTypeId}
@@ -707,12 +719,15 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="status">Estado</Label>
+              <Label htmlFor="status">
+                Estado <span className="text-destructive">*</span>
+              </Label>
               <Select
                 name="status"
                 value={formData.status}
                 onValueChange={(value) => setFormData((prev) => ({ ...prev, status: value }))}
                 disabled={isSubmitting}
+                required
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -771,7 +786,9 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="countryId">País *</Label>
+              <Label htmlFor="countryId">
+                País <span className="text-destructive">*</span>
+              </Label>
               <Select
                 name="countryId"
                 value={selectedCountryId}
@@ -954,31 +971,27 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
           {mapCoordinates && (
             <div className="space-y-2">
               <Label>Vista Previa del Mapa</Label>
-              {/* <PropertiesMap
+              <PropertiesMap
                 properties={[
                   {
-                    id: editProperty?.id || "preview",
-                    title: editProperty?.title || "Nueva Propiedad",
-                    address: editProperty?.address || "Ubicación de la propiedad",
+                    id: editProperty?.id || "new",
+                    title: formData.title || "Nueva Propiedad",
+                    address: formData.address || "Ubicación de la propiedad",
                     latitude: mapCoordinates.lat,
                     longitude: mapCoordinates.lng,
-                    price: editProperty?.price || 0,
-                    currency: editProperty?.currency || "USD",
-                    propertyType: propertyTypes.find((t) => t.id === editProperty?.propertyTypeId)?.name || "Sin tipo",
-                    city: cities.find((c) => c.id === editProperty?.cityId)?.name || "Sin ciudad",
-                    images: editProperty?.images
-                      ? Array.isArray(editProperty.images)
-                        ? editProperty.images.map((img) => (typeof img === "string" ? img : img.url))
-                        : []
-                      : [], // Handle string or object array for images
-                    status: editProperty?.status || "ACTIVO",
+                    price: formData.price || 0,
+                    currency: formData.currency || "USD",
+                    propertyType: propertyTypes.find((t) => t.id === formData.propertyTypeId)?.name || "Sin tipo",
+                    city: cities.find((c) => c.id === formData.cityId)?.name || "Sin ciudad",
+                    images: images, // Passing PropertyImage objects directly
+                    status: formData.status || "ACTIVO",
                   },
                 ]}
                 defaultCenter={[mapCoordinates.lat, mapCoordinates.lng]}
                 defaultZoom={15}
                 draggable={true}
                 onMarkerDrag={handleMarkerDrag}
-              /> */}
+              />
               <p className="text-xs text-muted-foreground">
                 Haga click en el marcador para ver la dirección. Puede arrastrar el marcador para ajustar la ubicación
                 manualmente.
@@ -1051,7 +1064,9 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="area">Área (m²)</Label>
+              <Label htmlFor="area">
+                Área (m²) <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="area"
                 name="area"
@@ -1090,7 +1105,9 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <Label htmlFor="price">Precio</Label>
+              <Label htmlFor="price">
+                Precio <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="price"
                 name="price"
@@ -1105,12 +1122,15 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="currency">Moneda</Label>
+              <Label htmlFor="currency">
+                Moneda <span className="text-destructive">*</span>
+              </Label>
               <Select
                 name="currency"
-                value={formData.currency || ""}
+                value={formData.currency || undefined} // Convert null to undefined for Select component
                 onValueChange={(value) => setFormData((prev) => ({ ...prev, currency: value }))}
                 disabled={isSubmitting}
+                required
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -1147,29 +1167,6 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="features">Características</Label>
-            {/* <Input
-              id="features"
-              name="features"
-              placeholder="Piscina, Jardín, Terraza, Cancha de tenis, etc."
-              value={formData.features?.join(", ") ?? ""}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  features: e.target.value,
-                }))
-              }
-              onBlur={(e) => {
-                const processed = e.target.value
-                  .split(",")
-                  .map((f) => f.trim())
-                  .filter(Boolean)
-                setFormData((prev) => ({
-                  ...prev,
-                  features: processed,
-                }))
-              }}
-              disabled={isSubmitting}
-            /> */}
             <Input
               placeholder="Ej: Jardín, Piscina, etc."
               value={featuresInput}
@@ -1191,29 +1188,6 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
 
           <div className="space-y-2">
             <Label htmlFor="amenities">Amenidades</Label>
-            {/* <Input
-              id="amenities"
-              name="amenities"
-              placeholder="Gimnasio, Seguridad 24/7, Área de juegos, Mesa de ping pong, etc."
-              value={formData.amenities?.join(", ") ?? ""}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  amenities: e.target.value,
-                }))
-              }
-              onBlur={(e) => {
-                const processed = e.target.value
-                  .split(",")
-                  .map((a) => a.trim())
-                  .filter(Boolean)
-                setFormData((prev) => ({
-                  ...prev,
-                  amenities: processed,
-                }))
-              }}
-              disabled={isSubmitting}
-            /> */}
             <Textarea
               placeholder="Ej: Gimnasio, Seguridad 24/7, Área de juegos, etc."
               value={amenitiesInput}
