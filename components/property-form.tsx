@@ -94,6 +94,8 @@ interface Property {
 
 interface PropertyFormProps {
   editProperty?: Property
+  onSuccess?: () => void // Added onSuccess prop
+  agents?: Array<{ id: string; name: string }> // Added agents prop
 }
 
 interface PropertyFormData {
@@ -132,7 +134,7 @@ interface PropertyFormData {
   videos?: string[] // Added videos field
 }
 
-export function PropertyForm({ editProperty }: PropertyFormProps) {
+export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [isGeocoding, setIsGeocoding] = useState(false)
@@ -183,6 +185,10 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
   )
 
   const [isSubmitting, setIsSubmitting] = useState(false) // Renamed from isLoading for clarity in form context
+
+  const [featuresInput, setFeaturesInput] = useState<string>(editProperty?.features?.join(", ") || "")
+  const [amenitiesInput, setAmenitiesInput] = useState<string>(editProperty?.amenities?.join(", ") || "")
+
   const [formData, setFormData] = useState<PropertyFormData>({
     title: editProperty?.title,
     description: editProperty?.description,
@@ -204,8 +210,9 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
     yearBuilt: editProperty?.yearBuilt,
     price: editProperty?.price,
     currency: editProperty?.currency,
-    amenities: editProperty?.amenities,
+    // Use temporary states for initial form data
     features: editProperty?.features,
+    amenities: editProperty?.amenities,
     transactionType: editProperty?.transactionType || "VENTA",
     rentalPeriod: editProperty?.rentalPeriod,
     zipCode: editProperty?.zipCode,
@@ -298,24 +305,30 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
     finalFormData.append("images", JSON.stringify(images))
 
     try {
+      let result
       if (editProperty) {
         if (!editProperty.id) {
           throw new Error("ID de propiedad no válido")
         }
-        await updateProperty(editProperty.id, finalFormData)
+        result = await updateProperty(editProperty.id, finalFormData)
         toast({
           title: "Propiedad actualizada",
           description: "La propiedad se ha actualizado exitosamente",
         })
       } else {
-        await createProperty(finalFormData)
+        result = await createProperty(finalFormData)
         toast({
           title: "Propiedad creada",
           description: "La propiedad se ha creado exitosamente",
         })
       }
-      router.push("/properties")
-      router.refresh()
+      // Call onSuccess if provided, otherwise navigate
+      if (onSuccess) {
+        onSuccess()
+      } else {
+        router.push("/properties")
+        router.refresh()
+      }
     } catch (err) {
       console.error("[v0] Error submitting form:", err)
       const errorMessage = err instanceof Error ? err.message : "Ocurrió un error al guardar la propiedad"
@@ -1134,42 +1147,91 @@ export function PropertyForm({ editProperty }: PropertyFormProps) {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="features">Características</Label>
-            <Input
+            {/* <Input
               id="features"
               name="features"
-              placeholder="Piscina, Jardín, Terraza, etc."
+              placeholder="Piscina, Jardín, Terraza, Cancha de tenis, etc."
               value={formData.features?.join(", ") ?? ""}
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
-                  features: e.target.value
-                    .split(",")
-                    .map((f) => f.trim())
-                    .filter(Boolean),
+                  features: e.target.value,
                 }))
               }
+              onBlur={(e) => {
+                const processed = e.target.value
+                  .split(",")
+                  .map((f) => f.trim())
+                  .filter(Boolean)
+                setFormData((prev) => ({
+                  ...prev,
+                  features: processed,
+                }))
+              }}
+              disabled={isSubmitting}
+            /> */}
+            <Input
+              placeholder="Ej: Jardín, Piscina, etc."
+              value={featuresInput}
+              onChange={(e) => setFeaturesInput(e.target.value)}
+              onBlur={(e) => {
+                const value = e.target.value
+                const featuresArray = value
+                  .split(",")
+                  .map((item) => item.trim())
+                  .filter((item) => item.length > 0)
+                setFormData((prev) => ({ ...prev, features: featuresArray }))
+              }}
               disabled={isSubmitting}
             />
+            <p className="text-xs text-muted-foreground">
+              Escribe las características separadas por comas. Ej: Piscina, Jardín, Terraza
+            </p>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="amenities">Amenidades</Label>
-            <Input
+            {/* <Input
               id="amenities"
               name="amenities"
-              placeholder="Gimnasio, Seguridad 24/7, Área de juegos, etc."
+              placeholder="Gimnasio, Seguridad 24/7, Área de juegos, Mesa de ping pong, etc."
               value={formData.amenities?.join(", ") ?? ""}
               onChange={(e) =>
                 setFormData((prev) => ({
                   ...prev,
-                  amenities: e.target.value
-                    .split(",")
-                    .map((a) => a.trim())
-                    .filter(Boolean),
+                  amenities: e.target.value,
                 }))
               }
+              onBlur={(e) => {
+                const processed = e.target.value
+                  .split(",")
+                  .map((a) => a.trim())
+                  .filter(Boolean)
+                setFormData((prev) => ({
+                  ...prev,
+                  amenities: processed,
+                }))
+              }}
+              disabled={isSubmitting}
+            /> */}
+            <Textarea
+              placeholder="Ej: Gimnasio, Seguridad 24/7, Área de juegos, etc."
+              value={amenitiesInput}
+              onChange={(e) => setAmenitiesInput(e.target.value)}
+              onBlur={(e) => {
+                const value = e.target.value
+                const amenitiesArray = value
+                  .split(",")
+                  .map((item) => item.trim())
+                  .filter((item) => item.length > 0)
+                setFormData((prev) => ({ ...prev, amenities: amenitiesArray }))
+              }}
+              rows={3}
               disabled={isSubmitting}
             />
+            <p className="text-xs text-muted-foreground">
+              Escribe las amenidades separadas por comas. Ej: Gimnasio, Seguridad 24/7, Área de juegos
+            </p>
           </div>
         </CardContent>
       </Card>
