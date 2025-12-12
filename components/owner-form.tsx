@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -82,10 +82,13 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [selectedCountryId, setSelectedCountryId] = useState(
-    owner?.country_id || "5627a007-5ebf-4044-a337-da2a33ba5d0c",
-  )
-  const [selectedProvinceId, setSelectedProvinceId] = useState(owner?.province_id || "")
+
+  const defaultCountryId = "5627a007-5ebf-4044-a337-da2a33ba5d0c" // Argentina
+  const defaultProvinceId = "f54e20b7-d5f8-4ae1-81f9-a09b2e2ee8f3" // Corrientes province
+  const defaultCityId = "d4e9f123-a5b6-4c7d-8e9f-0a1b2c3d4e5f" // Corrientes city
+
+  const [selectedCountryId, setSelectedCountryId] = useState(owner?.country_id || defaultCountryId)
+  const [selectedProvinceId, setSelectedProvinceId] = useState(owner?.province_id || defaultProvinceId)
 
   const {
     register,
@@ -104,15 +107,26 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
       phone: owner?.phone || "",
       secondaryPhone: owner?.secondary_phone || "",
       address: owner?.address || "",
-      cityId: owner?.city_id || "",
-      provinceId: owner?.province_id || "",
-      countryId: owner?.country_id || "5627a007-5ebf-4044-a337-da2a33ba5d0c",
+      cityId: owner?.city_id || defaultCityId,
+      provinceId: owner?.province_id || defaultProvinceId,
+      countryId: owner?.country_id || defaultCountryId,
       idNumber: owner?.id_number || "",
       taxId: owner?.tax_id || "",
       notes: owner?.notes || "",
       isActive: owner?.is_active ?? true,
     },
   })
+
+  useEffect(() => {
+    if (!owner && countries.length > 0) {
+      // For new owners, ensure default values are set
+      setValue("countryId", defaultCountryId)
+      setValue("provinceId", defaultProvinceId)
+      setValue("cityId", defaultCityId)
+      setSelectedCountryId(defaultCountryId)
+      setSelectedProvinceId(defaultProvinceId)
+    }
+  }, [countries.length, owner, setValue])
 
   const isActive = watch("isActive")
   const cityId = watch("cityId")
@@ -322,7 +336,7 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="countryId">País</Label>
-              <Select value={countryId} onValueChange={handleCountryChange}>
+              <Select value={selectedCountryId} onValueChange={handleCountryChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar país" />
                 </SelectTrigger>

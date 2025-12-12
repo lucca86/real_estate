@@ -4,8 +4,15 @@ import { ContactsTable } from "@/components/contacts-table"
 import { Button } from "@/components/ui/button"
 import { PlusCircle } from "lucide-react"
 import Link from "next/link"
+import { getCurrentUser } from "@/lib/auth"
+import { redirect } from "next/navigation"
 
 export default async function ContactsPage() {
+  const user = await getCurrentUser()
+  if (!user) {
+    redirect("/login")
+  }
+
   const [contacts, services] = await Promise.all([getAllContacts(), getAllServices()])
 
   return (

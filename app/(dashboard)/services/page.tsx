@@ -3,8 +3,15 @@ import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import Link from "next/link"
 import { ServicesTable } from "@/components/services-table"
+import { getCurrentUser } from "@/lib/auth"
+import { redirect } from "next/navigation"
 
 export default async function ServicesPage() {
+  const user = await getCurrentUser()
+  if (!user) {
+    redirect("/login")
+  }
+
   const services = await getAllServices()
 
   return (

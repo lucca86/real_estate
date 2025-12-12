@@ -91,7 +91,7 @@ export async function POST() {
           {
             role,
             permission,
-            granted: true,
+            enabled: true,
           },
           {
             onConflict: "role,permission",

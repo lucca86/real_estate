@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Plus, FileText } from "lucide-react"
 import Link from "next/link"
 import { createServerClient } from "@/lib/supabase/server"
+import { getUserPermissions } from "@/lib/permissions"
 
 export default async function PropertiesPage({
   searchParams,
@@ -17,6 +18,9 @@ export default async function PropertiesPage({
   if (!user) {
     redirect("/login")
   }
+
+  const permissions = await getUserPermissions(user.id)
+  const canCreate = permissions["properties.create"]
 
   const params = await searchParams
 
@@ -109,12 +113,14 @@ export default async function PropertiesPage({
               Formulario Propietarios
             </Link>
           </Button>
-          <Button asChild>
-            <Link href="/properties/new">
-              <Plus className="mr-2 h-4 w-4" />
-              Nueva Propiedad
-            </Link>
-          </Button>
+          {canCreate && (
+            <Button asChild>
+              <Link href="/properties/new">
+                <Plus className="mr-2 h-4 w-4" />
+                Nueva Propiedad
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 

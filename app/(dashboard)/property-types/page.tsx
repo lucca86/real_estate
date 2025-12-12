@@ -1,8 +1,8 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Plus, Building2, Edit } from 'lucide-react'
+import { Plus, Building2, Edit } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
-import { redirect } from 'next/navigation'
+import { redirect } from "next/navigation"
 import { createServerClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -15,18 +15,14 @@ export default async function PropertyTypesPage() {
     redirect("/login")
   }
 
-  if (user.role !== "ADMIN" && user.role !== "SUPERVISOR") {
-    redirect("/dashboard")
-  }
-
   const supabase = await createServerClient()
   const { data: propertyTypes, error } = await supabase
-    .from('property_types')
-    .select('*')
-    .order('name', { ascending: true })
+    .from("property_types")
+    .select("*")
+    .order("name", { ascending: true })
 
   if (error || !propertyTypes) {
-    console.error('[v0] Error fetching property types:', error)
+    console.error("[v0] Error fetching property types:", error)
     return <div>Error al cargar tipos de propiedad</div>
   }
 

@@ -1,3 +1,5 @@
+"use client"
+
 import { getCurrentUser } from "@/lib/auth"
 import { redirect, notFound } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -11,8 +13,8 @@ import { PropertyMap } from "@/components/property-map"
 import { getPropertyById } from "@/lib/actions/properties"
 import { OwnerDetailsModal } from "@/components/owner-details-modal"
 
-export default async function PropertyDetailPage({ params }: { params: { id: string } }) {
-  const { id } = params
+export default async function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const user = await getCurrentUser()
 
   if (!user) {

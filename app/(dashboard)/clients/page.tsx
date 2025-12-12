@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { ClientsTable } from "@/components/clients-table"
 import { Suspense } from "react"
+import { getUserPermissions } from "@/lib/permissions"
 
 export default async function ClientsPage() {
   const user = await getCurrentUser()
@@ -13,6 +14,9 @@ export default async function ClientsPage() {
   if (!user) {
     redirect("/login")
   }
+
+  const permissions = await getUserPermissions(user.id)
+  const canManage = permissions["clients.manage"]
 
   const [clientsResult, agentsResult] = await Promise.all([
     getClients(),
@@ -37,12 +41,14 @@ export default async function ClientsPage() {
           <h1 className="text-3xl font-bold">Clientes</h1>
           <p className="text-muted-foreground mt-1">Gestiona tu base de clientes potenciales</p>
         </div>
-        <Link href="/clients/new">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Nuevo Cliente
-          </Button>
-        </Link>
+        {canManage && (
+          <Link href="/clients/new">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo Cliente
+            </Button>
+          </Link>
+        )}
       </div>
 
       <Suspense fallback={<div>Cargando clientes...</div>}>

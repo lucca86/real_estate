@@ -24,22 +24,34 @@ import { getArgentinaTime, formatArgentinaDate } from "@/lib/timezone-utils"
 
 interface Appointment {
   id: string
-  scheduledAt: string // Changed from Date to string since data comes as ISO string
+  scheduledAt: string
   duration: number
   status: string
-  property?: {
-    title: string
-    address: string
-    city: string
-  }
-  otherLocation?: string // New field added for other location
-  client: {
-    name: string
-  }
-  agent: {
-    name: string
-  }
-  contactName?: string // New field added for contact name
+  property?:
+    | {
+        id: string
+        title: string
+        address: string
+        price: number
+        city: string
+        images: string[]
+      }
+    | null
+    | undefined
+  otherLocation?: string
+  client:
+    | {
+        name: string
+      }
+    | null
+    | undefined
+  agent:
+    | {
+        name: string
+      }
+    | null
+    | undefined
+  contactName?: string
 }
 
 interface AppointmentsCalendarProps {

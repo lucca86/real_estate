@@ -46,12 +46,12 @@ export function OwnersTable({ owners }: OwnersTableProps) {
       // Filtro de búsqueda por texto
       const searchLower = searchQuery.toLowerCase()
       const matchesSearch =
-        owner.name.toLowerCase().includes(searchLower) ||
-        owner.email.toLowerCase().includes(searchLower) ||
-        owner.phone.includes(searchQuery)
+        (owner.name?.toLowerCase() || "").includes(searchLower) ||
+        (owner.email?.toLowerCase() || "").includes(searchLower) ||
+        (owner.phone || "").includes(searchQuery)
 
       // Filtro por letra
-      const matchesLetter = !selectedLetter || owner.name.toUpperCase().startsWith(selectedLetter)
+      const matchesLetter = !selectedLetter || (owner.name?.toUpperCase() || "").startsWith(selectedLetter)
 
       return matchesSearch && matchesLetter
     })
@@ -66,7 +66,7 @@ export function OwnersTable({ owners }: OwnersTableProps) {
   const letterCounts = useMemo(() => {
     const counts: Record<string, number> = {}
     ALPHABET.forEach((letter) => {
-      counts[letter] = owners.filter((o) => o.name.toUpperCase().startsWith(letter)).length
+      counts[letter] = owners.filter((o) => (o.name?.toUpperCase() || "").startsWith(letter)).length
     })
     return counts
   }, [owners])

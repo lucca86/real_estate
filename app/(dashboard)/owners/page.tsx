@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { getOwners } from "@/lib/actions/owners"
+import { getUserPermissions } from "@/lib/permissions"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import Link from "next/link"
@@ -13,6 +14,9 @@ export default async function OwnersPage() {
   if (!user) {
     redirect("/login")
   }
+
+  const permissions = await getUserPermissions(user.id)
+  const canCreate = permissions["owners.manage"]
 
   const result = await getOwners()
 
@@ -30,15 +34,17 @@ export default async function OwnersPage() {
     <div className="container mx-auto py-8 px-4">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Propietarios</h1>
+          <h1 className="text-3xl font-bold">Propietarios / Intermediarios</h1>
           <p className="text-muted-foreground mt-1">Gestiona los propietarios de las propiedades</p>
         </div>
-        <Link href="/owners/new">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Nuevo Propietario
-          </Button>
-        </Link>
+        {canCreate && (
+          <Link href="/owners/new">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Nuevo Propietario
+            </Button>
+          </Link>
+        )}
       </div>
 
       <Suspense fallback={<div>Cargando propietarios...</div>}>

@@ -1,7 +1,8 @@
 "use client"
 
 import type React from "react"
-
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { User, Mail, Phone, MapPin, Building2, FileText } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -44,7 +45,14 @@ export function OwnerDetailsModal({ owner, children }: OwnerDetailsModalProps) {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Detalles del Contacto</DialogTitle>
+          <DialogTitle className="flex items-center justify-between">
+            <span>Detalles del Contacto</span>
+            <Link href={`/owners/${owner.id}/edit`}>
+              <Button variant="outline" size="sm">
+                Editar
+              </Button>
+            </Link>
+          </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           {/* Name and Type */}
@@ -76,7 +84,13 @@ export function OwnerDetailsModal({ owner, children }: OwnerDetailsModalProps) {
                 <Mail className="mt-0.5 h-4 w-4 text-muted-foreground" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">Email</p>
-                  <p className="text-sm">{owner.email}</p>
+                  <a
+                    href={`mailto:${owner.email}`}
+                    className="text-sm text-primary hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {owner.email}
+                  </a>
                 </div>
               </div>
             )}
@@ -86,7 +100,13 @@ export function OwnerDetailsModal({ owner, children }: OwnerDetailsModalProps) {
                 <Phone className="mt-0.5 h-4 w-4 text-muted-foreground" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">Teléfono Principal</p>
-                  <p className="text-sm">{owner.phone}</p>
+                  <a
+                    href={`tel:${owner.phone}`}
+                    className="text-sm text-primary hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {owner.phone}
+                  </a>
                 </div>
               </div>
             )}
@@ -96,7 +116,13 @@ export function OwnerDetailsModal({ owner, children }: OwnerDetailsModalProps) {
                 <Phone className="mt-0.5 h-4 w-4 text-muted-foreground" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-muted-foreground">Teléfono Secundario</p>
-                  <p className="text-sm">{owner.secondary_phone}</p>
+                  <a
+                    href={`tel:${owner.secondary_phone}`}
+                    className="text-sm text-primary hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {owner.secondary_phone}
+                  </a>
                 </div>
               </div>
             )}

@@ -20,25 +20,24 @@ export async function updatePermissions(updates: PermissionUpdate[]) {
   const supabase = await createClient()
 
   try {
-    // Update each permission
     for (const update of updates) {
-      // Prevent modifying ADMIN permissions
-      if (update.role === "ADMIN") {
-        continue
-      }
+      // Allow ADMIN users to modify all role permissions including ADMIN
 
-      const { error: updateError } = await supabase
-        .from("role_permissions")
-        .update({
+      const { error: upsertError } = await supabase.from("role_permissions").upsert(
+        {
+          role: update.role,
+          permission: update.permission,
           enabled: update.enabled,
           updated_at: new Date().toISOString(),
-        })
-        .eq("role", update.role)
-        .eq("permission", update.permission)
+        },
+        {
+          onConflict: "role,permission",
+        },
+      )
 
-      if (updateError) {
-        console.error("Error updating permission:", updateError)
-        continue
+      if (upsertError) {
+        console.error("Error upserting permission:", upsertError)
+        return { error: `Error al actualizar permiso ${update.permission}: ${upsertError.message}` }
       }
 
       // Log to audit table
@@ -73,7 +72,6 @@ export async function resetRolePermissions(role: string) {
   const supabase = await createClient()
 
   try {
-    // Default permissions by role
     const defaults: Record<string, Record<string, boolean>> = {
       SUPERVISOR: {
         "dashboard.view": true,
@@ -113,7 +111,7 @@ export async function resetRolePermissions(role: string) {
         "catalog.view": true,
         "map.view": true,
         "owners.view": true,
-        "owners.manage": false,
+        "owners.manage": true,
         "clients.view": true,
         "clients.manage": true,
         "contacts.view": true,

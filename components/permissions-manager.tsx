@@ -64,8 +64,6 @@ export function PermissionsManager() {
   }
 
   function togglePermission(role: string, permission: string) {
-    if (role === "ADMIN") return // ADMIN permissions cannot be changed
-
     setPermissions((prev) => ({
       ...prev,
       [role]: {
@@ -83,8 +81,6 @@ export function PermissionsManager() {
 
       // Compare current state with original and build updates
       for (const role of ROLES) {
-        if (role.value === "ADMIN") continue
-
         for (const group of PERMISSION_GROUPS) {
           for (const perm of group.permissions) {
             updates.push({
@@ -212,7 +208,7 @@ export function PermissionsManager() {
 
                     {ROLES.map((role) => {
                       const isChecked = permissions[role.value]?.[perm.key] || false
-                      const isDisabled = role.value === "ADMIN"
+                      const isDisabled = false
 
                       return (
                         <div key={role.value} className="flex justify-center">

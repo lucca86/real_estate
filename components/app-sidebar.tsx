@@ -73,7 +73,7 @@ export function AppSidebar({ user, permissions = {} }: AppSidebarProps) {
       roles: ["ADMIN", "SUPERVISOR", "VENDEDOR"],
     },
     {
-      name: "Propietarios",
+      name: "Propietarios / Intermediarios",
       href: "/owners",
       icon: Home,
       roles: ["ADMIN", "SUPERVISOR", "VENDEDOR"],
