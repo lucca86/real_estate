@@ -4,7 +4,7 @@ import { NeighborhoodForm } from "@/components/neighborhood-form"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft } from "lucide-react"
 import Link from "next/link"
-import { getNeighborhoodById, getAllCities } from "@/lib/actions/locations"
+import { getNeighborhoodById, getAllCities, getAllProvinces } from "@/lib/actions/locations"
 
 export default async function EditNeighborhoodPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -18,22 +18,44 @@ export default async function EditNeighborhoodPage({ params }: { params: Promise
     redirect("/dashboard")
   }
 
-  const [neighborhood, citiesResult] = await Promise.all([getNeighborhoodById(id), getAllCities()])
+  const [neighborhood, citiesResult, provincesResult] = await Promise.all([
+    getNeighborhoodById(id),
+    getAllCities(),
+    getAllProvinces(),
+  ])
 
   if (!neighborhood) {
     notFound()
   }
 
-  const cities =
-    citiesResult.success && citiesResult.data
-      ? citiesResult.data.map((c: any) => ({
-          id: c.id,
-          name: c.name,
-          province: {
-            name: c.province?.name || "",
-          },
-        }))
-      : []
+  const citiesData = Array.isArray(citiesResult) ? citiesResult : []
+  const provincesData = provincesResult.success && provincesResult.data ? provincesResult.data : []
+
+  const cities = citiesData
+    .filter((c: any) => c.province && c.province.country)
+    .map((c: any) => ({
+      id: c.id,
+      name: c.name,
+      province: {
+        id: c.province.id,
+        name: c.province.name,
+        country: {
+          id: c.province.country.id,
+          name: c.province.country.name,
+        },
+      },
+    }))
+
+  const provinces = provincesData
+    .filter((p: any) => p.country)
+    .map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      country: {
+        id: p.country.id,
+        name: p.country.name,
+      },
+    }))
 
   return (
     <div className="space-y-6">
@@ -57,6 +79,7 @@ export default async function EditNeighborhoodPage({ params }: { params: Promise
           isActive: neighborhood.is_active,
         }}
         cities={cities}
+        provinces={provinces}
       />
     </div>
   )

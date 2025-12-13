@@ -384,23 +384,8 @@ export function PropertyImageUpload({ images, onChange, maxImages = 12 }: Proper
                             />
                           </div>
 
-                          <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-black/40 opacity-0 transition-opacity group-hover:opacity-100">
-                            <div
-                              {...provided.dragHandleProps}
-                              className="absolute left-2 top-2 cursor-grab rounded bg-black/70 p-1.5 active:cursor-grabbing"
-                              title="Arrastra para reordenar"
-                            >
-                              <GripVertical className="h-5 w-5 text-white" />
-                            </div>
-
-                            {image.isCover && (
-                              <div className="absolute right-2 top-2 flex items-center gap-1 rounded bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground shadow-lg">
-                                <Star className="h-3 w-3 fill-current" />
-                                Portada
-                              </div>
-                            )}
-
-                            <div className="absolute inset-0 flex items-center justify-center gap-2">
+                          <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-black/40 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none">
+                            <div className="absolute inset-0 flex items-center justify-center gap-2 pointer-events-auto">
                               <Button
                                 type="button"
                                 size="icon"
@@ -431,7 +416,7 @@ export function PropertyImageUpload({ images, onChange, maxImages = 12 }: Proper
                               </Button>
                             </div>
 
-                            <div className="absolute bottom-2 left-2 right-2 flex items-center gap-2 rounded bg-black/70 p-2 backdrop-blur-sm">
+                            <div className="absolute bottom-2 left-2 right-2 flex items-center gap-2 rounded bg-black/70 p-2 backdrop-blur-sm pointer-events-auto">
                               <Checkbox
                                 checked={image.syncToWordPress}
                                 onCheckedChange={(checked) => {
@@ -449,6 +434,21 @@ export function PropertyImageUpload({ images, onChange, maxImages = 12 }: Proper
                               </label>
                             </div>
                           </div>
+
+                          <div
+                            {...provided.dragHandleProps}
+                            className="absolute left-2 top-2 cursor-grab rounded bg-black/50 p-1.5 opacity-0 transition-opacity group-hover:opacity-100 active:cursor-grabbing hover:bg-black/70"
+                            title="Arrastra para reordenar"
+                          >
+                            <GripVertical className="h-5 w-5 text-white" />
+                          </div>
+
+                          {image.isCover && (
+                            <div className="absolute right-2 top-2 flex items-center gap-1 rounded bg-primary px-2 py-1 text-xs font-semibold text-primary-foreground shadow-lg">
+                              <Star className="h-3 w-3 fill-current" />
+                              Portada
+                            </div>
+                          )}
                         </Card>
                       )}
                     </Draggable>

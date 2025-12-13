@@ -4,7 +4,7 @@ import { CityForm } from "@/components/city-form"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft } from "lucide-react"
 import Link from "next/link"
-import { getAllProvinces } from "@/lib/actions/locations"
+import { getAllProvinces, getAllCountries } from "@/lib/actions/locations"
 
 export default async function NewCityPage() {
   const user = await getCurrentUser()
@@ -17,15 +17,27 @@ export default async function NewCityPage() {
     redirect("/dashboard")
   }
 
-  const provincesResult = await getAllProvinces()
+  const [provincesResult, countriesResult] = await Promise.all([getAllProvinces(), getAllCountries()])
+
   const provinces =
     provincesResult.success && provincesResult.data
-      ? provincesResult.data.map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          country: {
-            name: p.country?.name || "",
-          },
+      ? provincesResult.data
+          .filter((p: any) => p.country) // Filter out provinces without country
+          .map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            country: {
+              id: p.country.id,
+              name: p.country.name,
+            },
+          }))
+      : []
+
+  const countries =
+    countriesResult.success && countriesResult.data
+      ? countriesResult.data.map((c: any) => ({
+          id: c.id,
+          name: c.name,
         }))
       : []
 
@@ -43,7 +55,7 @@ export default async function NewCityPage() {
         <p className="text-muted-foreground">Agrega una nueva ciudad al sistema</p>
       </div>
 
-      <CityForm provinces={provinces} />
+      <CityForm provinces={provinces} countries={countries} />
     </div>
   )
 }

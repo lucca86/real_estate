@@ -62,8 +62,6 @@ export async function geocodeAddress(address: string): Promise<GeocodingResult |
     const encodedAddress = encodeURIComponent(address)
     const url = `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=20&countrycodes=ar&addressdetails=1&bounded=1&viewbox=-58.9,-27.3,-58.7,-27.6`
 
-    console.log("[v0] Geocoding URL:", url)
-
     const response = await fetch(url, {
       headers: {
         "User-Agent": "Real Estate Management App",
@@ -71,14 +69,13 @@ export async function geocodeAddress(address: string): Promise<GeocodingResult |
     })
 
     if (!response.ok) {
-      console.error("[v0] Geocoding API error:", response.statusText)
+      console.error("Geocoding API error:", response.statusText)
       return null
     }
 
     const data = await response.json()
 
     if (!data || data.length === 0) {
-      console.log("[v0] No geocoding results found for address:", address)
       return null
     }
 
@@ -87,7 +84,6 @@ export async function geocodeAddress(address: string): Promise<GeocodingResult |
       const addressDetails = result.address || {}
       let score = 0
 
-      // Check if it's in Corrientes Capital
       const isCorrientsesCapital =
         (addressDetails.city === "Corrientes" ||
           addressDetails.town === "Corrientes" ||
@@ -98,28 +94,23 @@ export async function geocodeAddress(address: string): Promise<GeocodingResult |
         score += 100
       }
 
-      // Exclude nearby towns that often appear in results
       const excludedLocations = ["paso de la patria", "santa ana", "riachuelo", "empedrado", "san luis del palmar"]
       if (excludedLocations.some((location) => displayName.includes(location))) {
         score -= 200
       }
 
-      // Prioritize results with house numbers
       if (addressDetails.house_number) {
         score += 50
       }
 
-      // Prioritize results with road/street names
       if (addressDetails.road) {
         score += 30
       }
 
-      // Check importance score from Nominatim (higher is better)
       if (result.importance) {
         score += result.importance * 10
       }
 
-      // Prioritize results with type "house" or "building"
       if (result.type === "house" || result.type === "building" || result.type === "residential") {
         score += 40
       }
@@ -127,14 +118,9 @@ export async function geocodeAddress(address: string): Promise<GeocodingResult |
       return { ...result, score }
     })
 
-    // Sort by score descending
     scoredResults.sort((a: any, b: any) => b.score - a.score)
 
     const result = scoredResults[0]
-
-    console.log("[v0] Selected geocoding result:", result.display_name)
-    console.log("[v0] Score:", result.score)
-    console.log("[v0] Coordinates:", result.lat, result.lon)
 
     return {
       latitude: Number.parseFloat(result.lat),
@@ -142,7 +128,7 @@ export async function geocodeAddress(address: string): Promise<GeocodingResult |
       displayName: result.display_name,
     }
   } catch (error) {
-    console.error("[v0] Geocoding error:", error)
+    console.error("Geocoding error:", error)
     return null
   }
 }
@@ -158,59 +144,34 @@ export async function geocodeProperty(
   country = "Argentina",
   neighborhood?: string,
 ): Promise<GeocodingResult | null> {
-  console.log("[v0] Starting geocoding with:", { address, city, state, neighborhood, country })
-
-  // Normalize city name - don't use "Capital"
   const normalizedCity = city === "Capital" ? "Corrientes" : city
 
-  // Strategy 1: Correct common street name errors
   const correctedAddress = correctStreetName(address)
-  if (correctedAddress !== address) {
-    console.log("[v0] Corrected street name:", address, "->", correctedAddress)
-  }
-
-  // Strategy 2: Expand abbreviations
   const expandedAddress = expandAbbreviations(correctedAddress)
 
   const strategies = [
-    // PRIORITY 1: Exact address with street number and city
     `${expandedAddress}, ${normalizedCity}, ${state}, ${country}`,
-
-    // PRIORITY 2: With neighborhood if available
     neighborhood ? `${expandedAddress}, ${neighborhood}, ${normalizedCity}, ${state}, ${country}` : null,
-
-    // PRIORITY 3: Try original address (in case expansion caused issues)
     address !== expandedAddress ? `${address}, ${normalizedCity}, ${state}, ${country}` : null,
-
-    // PRIORITY 4: Just address and city (no state for simpler search)
     `${expandedAddress}, ${normalizedCity}, ${country}`,
-
-    // PRIORITY 5: Without street number (if above failed)
     `${expandedAddress.replace(/\d+/g, "").trim()}, ${normalizedCity}, ${state}, ${country}`,
-
-    // PRIORITY 6: Just street name and city (very broad)
     `${expandedAddress.split(",")[0]}, ${normalizedCity}, ${country}`,
-
-    // Last resort: just city and state
     `${normalizedCity}, ${state}, ${country}`,
   ].filter(Boolean) as string[]
 
   for (let i = 0; i < strategies.length; i++) {
     const strategyAddress = strategies[i]
-    console.log(`[v0] Nominatim strategy ${i + 1}/${strategies.length}:`, strategyAddress)
 
     const result = await geocodeAddress(strategyAddress)
     if (result) {
-      console.log(`[v0] ✓ Nominatim geocoding successful with strategy ${i + 1}`)
       return result
     }
 
-    // Small delay to avoid rate limiting
     if (i < strategies.length - 1) {
       await new Promise((resolve) => setTimeout(resolve, 1000))
     }
   }
 
-  console.error("[v0] All geocoding strategies failed")
+  console.error("All geocoding strategies failed")
   return null
 }

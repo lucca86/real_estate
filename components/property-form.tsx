@@ -286,7 +286,37 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
       }
     }
     fetchData()
-  }, [selectedCountryId, selectedProvinceId, selectedCityId]) // Re-fetch if default IDs change
+  }, [selectedCountryId, selectedProvinceId, selectedCityId])
+
+  useEffect(() => {
+    if (provinces.length > 0 && selectedProvinceId && !selectedProvinceName) {
+      const province = provinces.find((p) => p.id === selectedProvinceId)
+      if (province) {
+        setSelectedProvinceName(province.name)
+        console.log("[v0] Initialized province name:", province.name)
+      }
+    }
+  }, [provinces, selectedProvinceId, selectedProvinceName])
+
+  useEffect(() => {
+    if (cities.length > 0 && selectedCityId && !selectedCityName) {
+      const city = cities.find((c) => c.id === selectedCityId)
+      if (city) {
+        setSelectedCityName(city.name)
+        console.log("[v0] Initialized city name:", city.name)
+      }
+    }
+  }, [cities, selectedCityId, selectedCityName])
+
+  useEffect(() => {
+    if (neighborhoods.length > 0 && formData.neighborhoodId && !selectedNeighborhoodName) {
+      const neighborhood = neighborhoods.find((n) => n.id === formData.neighborhoodId)
+      if (neighborhood) {
+        setSelectedNeighborhoodName(neighborhood.name)
+        console.log("[v0] Initialized neighborhood name:", neighborhood.name)
+      }
+    }
+  }, [neighborhoods, formData.neighborhoodId, selectedNeighborhoodName])
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -352,10 +382,12 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
     setIsGeocoding(true)
 
     try {
-      const address = formData.address
+      const addressInput = document.getElementById("address") as HTMLInputElement
+      const address = addressInput?.value || formData.address
+
       const cityName = selectedCityName
       const provinceName = selectedProvinceName
-      const neighborhoodName = "" // Optional from Georef, not from select
+      const neighborhoodName = selectedNeighborhoodName || ""
 
       console.log("[v0] Geocoding with:", { address, cityName, provinceName, neighborhoodName })
 
@@ -365,9 +397,11 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
         return
       }
 
-      console.log("[v0] Geocoding address:", address, cityName, provinceName, neighborhoodName)
+      console.log("[v0] Calling geocodeProperty with:", { address, cityName, provinceName, neighborhoodName })
 
       const result = await geocodeProperty(address, cityName, provinceName, "Argentina", neighborhoodName)
+
+      console.log("[v0] Geocoding result:", result)
 
       if (result) {
         setFormData((prev) => ({
@@ -375,6 +409,13 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
           latitude: result.latitude,
           longitude: result.longitude,
         }))
+
+        // Update input fields directly
+        const latInput = document.getElementById("latitude") as HTMLInputElement
+        const lngInput = document.getElementById("longitude") as HTMLInputElement
+        if (latInput) latInput.value = result.latitude.toString()
+        if (lngInput) lngInput.value = result.longitude.toString()
+
         setMapCoordinates({ lat: result.latitude, lng: result.longitude })
         setGeocodingMessage(
           `Coordenadas calculadas exitosamente: ${result.latitude.toFixed(6)}, ${result.longitude.toFixed(6)}`,
@@ -383,7 +424,8 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
         setGeocodingMessage("No se pudieron calcular las coordenadas. Verifique la dirección e intente nuevamente.")
       }
     } catch (err) {
-      setGeocodingMessage("Error al calcular las coordenadas. Por favor intente nuevamente.")
+      const errorMsg = err instanceof Error ? err.message : "Error desconocido"
+      setGeocodingMessage(`Error al calcular las coordenadas: ${errorMsg}`)
       console.error("[v0] Geocoding error:", err)
     } finally {
       setIsGeocoding(false)

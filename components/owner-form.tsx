@@ -25,7 +25,15 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 const ownerSchema = z.object({
   firstName: z.string().min(1, "El nombre es requerido"),
@@ -68,8 +76,8 @@ interface OwnerFormProps {
     is_active: boolean
   }
   countries?: Array<{ id: string; name: string }>
-  provinces?: Array<{ id: string; name: string; country_id: string }>
-  cities?: Array<{ id: string; name: string; province_id: string }>
+  provinces?: Array<{ id: string; name: string; country_id: string; country?: { id: string; name: string } }>
+  cities?: Array<{ id: string; name: string; province_id: string; province?: { id: string; name: string } }>
 }
 
 const capitalizeFirst = (str: string) => {
@@ -152,6 +160,32 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
 
   const filteredProvinces = provinces.filter((p) => p.country_id === selectedCountryId)
   const filteredCities = cities.filter((c) => c.province_id === selectedProvinceId)
+
+  const provincesByCountry = provinces.reduce(
+    (acc, province) => {
+      const countryName =
+        province.country?.name || countries.find((c) => c.id === province.country_id)?.name || "Sin país"
+      if (!acc[countryName]) {
+        acc[countryName] = []
+      }
+      acc[countryName].push(province)
+      return acc
+    },
+    {} as Record<string, typeof provinces>,
+  )
+
+  const citiesByProvince = filteredCities.reduce(
+    (acc, city) => {
+      const provinceName =
+        city.province?.name || provinces.find((p) => p.id === city.province_id)?.name || "Sin provincia"
+      if (!acc[provinceName]) {
+        acc[provinceName] = []
+      }
+      acc[provinceName].push(city)
+      return acc
+    },
+    {} as Record<string, typeof filteredCities>,
+  )
 
   const onSubmit = async (data: OwnerFormData) => {
     setIsSubmitting(true)
@@ -358,10 +392,15 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
                   <SelectValue placeholder="Seleccionar provincia..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {filteredProvinces.map((province) => (
-                    <SelectItem key={province.id} value={province.id}>
-                      {province.name}
-                    </SelectItem>
+                  {Object.entries(provincesByCountry).map(([countryName, countryProvinces]) => (
+                    <SelectGroup key={countryName}>
+                      <SelectLabel className="text-xs font-semibold text-primary">🌎 {countryName}</SelectLabel>
+                      {countryProvinces.map((province) => (
+                        <SelectItem key={province.id} value={province.id} className="pl-6">
+                          {province.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   ))}
                 </SelectContent>
               </Select>
@@ -374,10 +413,15 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
                   <SelectValue placeholder="Seleccionar ciudad..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {filteredCities.map((city) => (
-                    <SelectItem key={city.id} value={city.id}>
-                      {city.name}
-                    </SelectItem>
+                  {Object.entries(citiesByProvince).map(([provinceName, provinceCities]) => (
+                    <SelectGroup key={provinceName}>
+                      <SelectLabel className="text-xs font-semibold text-primary">📍 {provinceName}</SelectLabel>
+                      {provinceCities.map((city) => (
+                        <SelectItem key={city.id} value={city.id} className="pl-6">
+                          {city.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   ))}
                 </SelectContent>
               </Select>

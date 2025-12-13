@@ -4,7 +4,7 @@ import { CityForm } from "@/components/city-form"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft } from "lucide-react"
 import Link from "next/link"
-import { getCityById, getAllProvinces } from "@/lib/actions/locations"
+import { getCityById, getAllProvinces, getAllCountries } from "@/lib/actions/locations"
 
 export default async function EditCityPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -18,7 +18,11 @@ export default async function EditCityPage({ params }: { params: Promise<{ id: s
     redirect("/dashboard")
   }
 
-  const [city, provincesResult] = await Promise.all([getCityById(id), getAllProvinces()])
+  const [city, provincesResult, countriesResult] = await Promise.all([
+    getCityById(id),
+    getAllProvinces(),
+    getAllCountries(),
+  ])
 
   if (!city) {
     notFound()
@@ -26,12 +30,23 @@ export default async function EditCityPage({ params }: { params: Promise<{ id: s
 
   const provinces =
     provincesResult.success && provincesResult.data
-      ? provincesResult.data.map((p: any) => ({
-          id: p.id,
-          name: p.name,
-          country: {
-            name: p.country?.name || "",
-          },
+      ? provincesResult.data
+          .filter((p: any) => p.country) // Only include provinces with country data
+          .map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            country: {
+              id: p.country.id,
+              name: p.country.name,
+            },
+          }))
+      : []
+
+  const countries =
+    countriesResult.success && countriesResult.data
+      ? countriesResult.data.map((c: any) => ({
+          id: c.id,
+          name: c.name,
         }))
       : []
 
@@ -57,6 +72,7 @@ export default async function EditCityPage({ params }: { params: Promise<{ id: s
           isActive: city.is_active,
         }}
         provinces={provinces}
+        countries={countries}
       />
     </div>
   )

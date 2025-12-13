@@ -1,16 +1,18 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useTransition, useMemo, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createNeighborhood, updateNeighborhood } from "@/lib/actions/locations"
+import { checkDuplicateNeighborhood } from "@/lib/actions/locations"
+import { AlertCircle } from "lucide-react"
 
 interface NeighborhoodFormProps {
   neighborhood?: {
@@ -19,66 +21,171 @@ interface NeighborhoodFormProps {
     cityId: string
     isActive: boolean
   }
-  cities: Array<{ id: string; name: string; province: { name: string } }>
+  cities: Array<{
+    id: string
+    name: string
+    province: {
+      id: string
+      name: string
+      country: {
+        id: string
+        name: string
+      }
+    }
+  }>
+  provinces: Array<{
+    id: string
+    name: string
+    country: {
+      id: string
+      name: string
+    }
+  }>
 }
 
-export function NeighborhoodForm({ neighborhood, cities }: NeighborhoodFormProps) {
+export function NeighborhoodForm({ neighborhood, cities, provinces }: NeighborhoodFormProps) {
   const router = useRouter()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
+  const [name, setName] = useState(neighborhood?.name || "")
   const [cityId, setCityId] = useState(neighborhood?.cityId || "")
+  const [selectedProvinceId, setSelectedProvinceId] = useState("")
+  const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null)
+
+  const filteredCities = useMemo(() => {
+    return selectedProvinceId ? cities.filter((city) => city.province.id === selectedProvinceId) : []
+  }, [cities, selectedProvinceId])
+
+  useEffect(() => {
+    if (neighborhood?.cityId && cities.length > 0) {
+      const city = cities.find((c) => c.id === neighborhood.cityId)
+      if (city) {
+        setSelectedProvinceId(city.province.id)
+      }
+    }
+  }, [neighborhood?.cityId, cities])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setIsSubmitting(true)
-    setError(null)
+
+    if (!name || !cityId) {
+      alert("Por favor completa todos los campos requeridos")
+      return
+    }
 
     const formData = new FormData(e.currentTarget)
-    formData.set("cityId", cityId)
 
-    try {
-      if (neighborhood) {
-        await updateNeighborhood(neighborhood.id, formData)
-      } else {
-        await createNeighborhood(formData)
+    startTransition(async () => {
+      try {
+        if (neighborhood) {
+          await updateNeighborhood(neighborhood.id, formData)
+        } else {
+          await createNeighborhood(formData)
+        }
+        router.push("/locations/neighborhoods")
+        router.refresh()
+      } catch (error) {
+        console.error("Error saving neighborhood:", error)
+        alert("Error al guardar el barrio")
       }
-      router.push("/locations")
-      router.refresh()
-    } catch (err: any) {
-      setError(err.message || "Error al guardar el barrio")
-    } finally {
-      setIsSubmitting(false)
-    }
+    })
   }
 
+  useEffect(() => {
+    const checkDuplicate = async () => {
+      if (!name || !cityId) {
+        setDuplicateWarning(null)
+        return
+      }
+
+      const isDuplicate = await checkDuplicateNeighborhood(
+        name,
+        cityId,
+        neighborhood?.id, // Exclude current neighborhood when editing
+      )
+
+      setDuplicateWarning(
+        isDuplicate ? `Ya existe un barrio llamado "${name}" en esta ciudad. ¿Deseas continuar de todas formas?` : null,
+      )
+    }
+
+    // Debounce the check to avoid too many requests
+    const timeoutId = setTimeout(checkDuplicate, 500)
+    return () => clearTimeout(timeoutId)
+  }, [name, cityId, neighborhood?.id])
+
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Información del Barrio</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {error && <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
+          {duplicateWarning && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{duplicateWarning}</AlertDescription>
+            </Alert>
+          )}
 
           <div className="space-y-2">
-            <Label htmlFor="name">Nombre *</Label>
-            <Input id="name" name="name" defaultValue={neighborhood?.name} required placeholder="Centro" />
+            <Label htmlFor="name">Nombre del Barrio *</Label>
+            <Input
+              id="name"
+              name="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              placeholder="Centro"
+            />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="cityId">Ciudad *</Label>
-            <Select value={cityId} onValueChange={setCityId} required>
+            <Label htmlFor="provinceId">Provincia *</Label>
+            <Select
+              value={selectedProvinceId}
+              onValueChange={(value) => {
+                setSelectedProvinceId(value)
+                setCityId("")
+              }}
+            >
               <SelectTrigger>
-                <SelectValue placeholder="Selecciona una ciudad" />
+                <SelectValue placeholder="Selecciona una provincia..." />
               </SelectTrigger>
               <SelectContent>
-                {cities.map((city) => (
-                  <SelectItem key={city.id} value={city.id}>
-                    {city.name} ({city.province.name})
+                {provinces.map((province) => (
+                  <SelectItem key={province.id} value={province.id}>
+                    {province.name} {province.country ? `(${province.country.name})` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">
+              Selecciona la provincia para filtrar las ciudades disponibles
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="cityId">Ciudad *</Label>
+            <input type="hidden" name="cityId" value={cityId} />
+            <Select value={cityId} onValueChange={setCityId} disabled={!selectedProvinceId}>
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={selectedProvinceId ? "Selecciona una ciudad..." : "Primero selecciona una provincia"}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {filteredCities.map((city) => (
+                  <SelectItem key={city.id} value={city.id}>
+                    {city.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {selectedProvinceId
+                ? `Mostrando ${filteredCities.length} ciudad${filteredCities.length !== 1 ? "es" : ""} en la provincia seleccionada`
+                : "Selecciona una provincia para ver las ciudades disponibles"}
+            </p>
           </div>
 
           <div className="flex items-center justify-between rounded-lg border p-4">
@@ -88,17 +195,17 @@ export function NeighborhoodForm({ neighborhood, cities }: NeighborhoodFormProps
             </div>
             <Switch id="isActive" name="isActive" defaultChecked={neighborhood?.isActive ?? true} />
           </div>
-
-          <div className="flex gap-4">
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Guardando..." : neighborhood ? "Actualizar" : "Crear"}
-            </Button>
-            <Button type="button" variant="outline" onClick={() => router.push("/locations")} disabled={isSubmitting}>
-              Cancelar
-            </Button>
-          </div>
         </CardContent>
       </Card>
+
+      <div className="flex gap-4">
+        <Button type="submit" disabled={isPending || !cityId}>
+          {isPending ? "Guardando..." : neighborhood ? "Actualizar" : "Crear"}
+        </Button>
+        <Button type="button" variant="outline" onClick={() => router.back()} disabled={isPending}>
+          Cancelar
+        </Button>
+      </div>
     </form>
   )
 }

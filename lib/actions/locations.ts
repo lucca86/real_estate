@@ -395,20 +395,25 @@ export async function getAllProvinces() {
         name,
         is_active,
         created_at,
+        country_id,
         country:countries(id, name)
       `)
+      .eq("is_active", true)
       .order("name", { ascending: true })
 
-    if (error) throw error
+    if (error) {
+      console.error("[getAllProvinces] Supabase error:", error)
+      throw error
+    }
 
-    const transformedData = (data || []).map((province) => ({
-      ...province,
-      country: Array.isArray(province.country) && province.country.length > 0 ? province.country[0] : null,
-    }))
-
-    return { success: true, data: transformedData }
+    return { success: true, data: data || [] }
   } catch (error: any) {
-    console.error("[getAllProvinces] Error:", error)
+    console.error("[getAllProvinces] Error:", {
+      message: error.message,
+      details: error.stack,
+      hint: error.hint || "",
+      code: error.code || "",
+    })
     return { success: false, error: error.message }
   }
 }
@@ -416,28 +421,67 @@ export async function getAllProvinces() {
 export async function getAllCities() {
   try {
     const supabase = await createServerClient()
-    const { data, error } = await supabase
+
+    const { data: cities, error } = await supabase
       .from("cities")
-      .select(`
+      .select(
+        `
         id,
         name,
         is_active,
-        created_at,
-        province:provinces(id, name)
-      `)
-      .order("name", { ascending: true })
+        province:provinces!cities_province_id_fkey (
+          id,
+          name,
+          country:countries!provinces_country_id_fkey (
+            id,
+            name
+          )
+        )
+      `,
+      )
+      .eq("is_active", true)
 
-    if (error) throw error
+    if (error) {
+      console.error("[getAllCities] Error:", error)
+      throw error
+    }
 
-    const transformedData = (data || []).map((city) => ({
-      ...city,
-      province: Array.isArray(city.province) && city.province.length > 0 ? city.province[0] : null,
-    }))
+    if (!cities) {
+      return []
+    }
 
-    return { success: true, data: transformedData }
+    const transformed = cities
+      .map((city: any) => {
+        const provinceData = Array.isArray(city.province) ? city.province[0] : city.province
+        if (!provinceData) return null
+
+        const countryData = Array.isArray(provinceData.country) ? provinceData.country[0] : provinceData.country
+        if (!countryData) return null
+
+        return {
+          id: city.id,
+          name: city.name,
+          province: {
+            id: provinceData.id,
+            name: provinceData.name,
+            country: {
+              id: countryData.id,
+              name: countryData.name,
+            },
+          },
+        }
+      })
+      .filter(Boolean)
+
+    return transformed
   } catch (error: any) {
-    console.error("[getAllCities] Error:", error)
-    return { success: false, error: error.message }
+    console.error("[getAllCities] Error:", {
+      message: error.message,
+      details: error.details || "",
+      hint: error.hint || "",
+      code: error.code || "",
+    })
+    throw new Error(error.message || "Error al obtener las ciudades")
   }
 }
 
@@ -519,5 +563,128 @@ export async function getNeighborhoodById(id: string) {
   } catch (error: any) {
     console.error("[getNeighborhoodById] Error:", error)
     return null
+  }
+}
+
+export async function checkCityExists(name: string, provinceId: string, excludeId?: string) {
+  try {
+    const supabase = await createServerClient()
+    let query = supabase.from("cities").select("id, name").eq("province_id", provinceId).ilike("name", name)
+
+    if (excludeId) {
+      query = query.neq("id", excludeId)
+    }
+
+    const { data, error } = await query
+
+    if (error) throw error
+    return { exists: (data || []).length > 0, matches: data || [] }
+  } catch (error) {
+    console.error("[checkCityExists] Error:", error)
+    return { exists: false, matches: [] }
+  }
+}
+
+export async function checkNeighborhoodExists(name: string, cityId: string, excludeId?: string) {
+  try {
+    const supabase = await createServerClient()
+    let query = supabase.from("neighborhoods").select("id, name").eq("city_id", cityId).ilike("name", name)
+
+    if (excludeId) {
+      query = query.neq("id", excludeId)
+    }
+
+    const { data, error } = await query
+
+    if (error) throw error
+    return { exists: (data || []).length > 0, matches: data || [] }
+  } catch (error) {
+    console.error("[checkNeighborhoodExists] Error:", error)
+    return { exists: false, matches: [] }
+  }
+}
+
+// Duplicate check functions for neighborhoods and cities
+export async function checkDuplicateNeighborhood(name: string, cityId: string, excludeId?: string) {
+  try {
+    const supabase = await createServerClient()
+    let query = supabase
+      .from("neighborhoods")
+      .select("id, name")
+      .eq("city_id", cityId)
+      .ilike("name", name)
+      .eq("is_active", true)
+
+    if (excludeId) {
+      query = query.neq("id", excludeId)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error("[checkDuplicateNeighborhood] Error:", error)
+      return false
+    }
+
+    return data && data.length > 0
+  } catch (error) {
+    console.error("[checkDuplicateNeighborhood] Error:", error)
+    return false
+  }
+}
+
+export async function checkDuplicateCity(name: string, provinceId: string, excludeId?: string) {
+  try {
+    const supabase = await createServerClient()
+    let query = supabase
+      .from("cities")
+      .select("id, name")
+      .eq("province_id", provinceId)
+      .ilike("name", name)
+      .eq("is_active", true)
+
+    if (excludeId) {
+      query = query.neq("id", excludeId)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error("[checkDuplicateCity] Error:", error)
+      return false
+    }
+
+    return data && data.length > 0
+  } catch (error) {
+    console.error("[checkDuplicateCity] Error:", error)
+    return false
+  }
+}
+
+export async function checkDuplicateProvince(name: string, countryId: string, excludeId?: string) {
+  try {
+    const supabase = await createServerClient()
+    let query = supabase
+      .from("provinces")
+      .select("id, name")
+      .eq("country_id", countryId)
+      .ilike("name", name)
+      .eq("is_active", true)
+
+    if (excludeId) {
+      query = query.neq("id", excludeId)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error("[checkDuplicateProvince] Error:", error)
+      return false
+    }
+
+    return data && data.length > 0
+  } catch (error) {
+    console.error("[checkDuplicateProvince] Error:", error)
+    return false
   }
 }

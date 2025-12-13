@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { createProvince, updateProvince } from "@/lib/actions/locations"
+import { createProvince, updateProvince, checkDuplicateProvince } from "@/lib/actions/locations"
+import { AlertCircle } from "lucide-react"
 
 interface ProvinceFormProps {
   province?: {
@@ -27,6 +28,25 @@ export function ProvinceForm({ province, countries }: ProvinceFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [countryId, setCountryId] = useState(province?.countryId || "")
+  const [name, setName] = useState(province?.name || "")
+  const [isDuplicateChecking, setIsDuplicateChecking] = useState(false)
+  const [isDuplicate, setIsDuplicate] = useState(false)
+
+  useEffect(() => {
+    if (!name || !countryId || name.length < 2) {
+      setIsDuplicate(false)
+      return
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setIsDuplicateChecking(true)
+      const duplicate = await checkDuplicateProvince(name, countryId, province?.id)
+      setIsDuplicate(duplicate)
+      setIsDuplicateChecking(false)
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+  }, [name, countryId, province?.id])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -60,10 +80,17 @@ export function ProvinceForm({ province, countries }: ProvinceFormProps) {
         <CardContent className="space-y-4">
           {error && <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
 
-          <div className="space-y-2">
-            <Label htmlFor="name">Nombre *</Label>
-            <Input id="name" name="name" defaultValue={province?.name} required placeholder="Buenos Aires" />
-          </div>
+          {isDuplicate && (
+            <div className="flex items-start gap-2 rounded-lg border border-red-500 bg-red-50 p-3 text-sm text-red-700">
+              <AlertCircle className="h-5 w-5 shrink-0" />
+              <div>
+                <p className="font-medium">Ya existe una provincia con este nombre en el país seleccionado</p>
+                <p className="mt-1 text-xs">
+                  Puedes continuar si estás seguro de que son diferentes, pero te recomendamos verificar primero.
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="countryId">País *</Label>
@@ -79,6 +106,21 @@ export function ProvinceForm({ province, countries }: ProvinceFormProps) {
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">Selecciona el país para filtrar las opciones</p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="name">
+              Nombre * {isDuplicateChecking && <span className="text-xs text-muted-foreground">(verificando...)</span>}
+            </Label>
+            <Input
+              id="name"
+              name="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              placeholder="Buenos Aires"
+            />
           </div>
 
           <div className="flex items-center justify-between rounded-lg border p-4">
