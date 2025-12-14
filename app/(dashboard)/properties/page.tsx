@@ -26,7 +26,7 @@ export default async function PropertiesPage({
 
   const search = params.search as string
   const propertyType = params.propertyType as string
-  const transactionType = (params.transactionType as string) || "VENTA"
+  const transactionType = params.transactionType as string
   const status = params.status as string
   const city = params.city as string
   const neighborhood = params.neighborhood as string

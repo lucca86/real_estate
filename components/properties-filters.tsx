@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import { Combobox } from "@/components/ui/combobox"
 import { X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { createBrowserClient } from "@/lib/supabase/client"
@@ -34,7 +35,7 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
 
   const [search, setSearch] = useState(searchParams.get("search") || "")
   const [propertyType, setPropertyType] = useState(searchParams.get("propertyType") || "Todos")
-  const [transactionType, setTransactionType] = useState(searchParams.get("transactionType") || "VENTA")
+  const [transactionType, setTransactionType] = useState(searchParams.get("transactionType") || "Todas")
   const [status, setStatus] = useState(searchParams.get("status") || "Todos")
   const [city, setCity] = useState(searchParams.get("city") || "all")
   const [neighborhood, setNeighborhood] = useState(searchParams.get("neighborhood") || "all")
@@ -105,7 +106,7 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
   const clearFilters = () => {
     setSearch("")
     setPropertyType("Todos")
-    setTransactionType("VENTA")
+    setTransactionType("Todas")
     setStatus("Todos")
     setCity("all")
     setNeighborhood("all")
@@ -181,7 +182,7 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
           <Label htmlFor="transactionType">Transacción</Label>
           <Select value={transactionType} onValueChange={setTransactionType}>
             <SelectTrigger>
-              <SelectValue placeholder="Venta" />
+              <SelectValue placeholder="Todas" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Todas">Todas</SelectItem>
@@ -211,36 +212,32 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
 
         <div className="space-y-2">
           <Label htmlFor="city">Ciudad</Label>
-          <Select value={city || "all"} onValueChange={setCity}>
-            <SelectTrigger>
-              <SelectValue placeholder="Todas las ciudades" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas las ciudades</SelectItem>
-              {cities.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Combobox
+            options={[
+              { value: "all", label: "Todas las ciudades" },
+              ...cities.map((c) => ({ value: c.id, label: c.name })),
+            ]}
+            value={city}
+            onValueChange={setCity}
+            placeholder="Todas las ciudades"
+            searchPlaceholder="Buscar ciudad..."
+            emptyText="No se encontraron ciudades."
+          />
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="neighborhood">Barrio</Label>
-          <Select value={neighborhood || "all"} onValueChange={setNeighborhood}>
-            <SelectTrigger>
-              <SelectValue placeholder="Todos los barrios" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los barrios</SelectItem>
-              {filteredNeighborhoods.map((n) => (
-                <SelectItem key={n.id} value={n.id}>
-                  {n.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Combobox
+            options={[
+              { value: "all", label: "Todos los barrios" },
+              ...filteredNeighborhoods.map((n) => ({ value: n.id, label: n.name })),
+            ]}
+            value={neighborhood}
+            onValueChange={setNeighborhood}
+            placeholder="Todos los barrios"
+            searchPlaceholder="Buscar barrio..."
+            emptyText="No se encontraron barrios."
+          />
         </div>
 
         <div className="space-y-2">

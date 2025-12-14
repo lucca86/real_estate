@@ -18,7 +18,7 @@ interface Property {
   title: string
   images: any[]
   status: string
-  transactionType: string
+  transaction_type: string
   price: number
   currency: string
   bedrooms: number | null
@@ -156,13 +156,13 @@ function PropertyCard({ property, currentUser }: { property: Property; currentUs
 
         <div className="mb-3 flex flex-wrap gap-2">
           <Badge variant="outline">{property.propertyType?.name || "Sin tipo"}</Badge>
-          {property.transactionType && (
+          {property.transaction_type && (
             <Badge
               variant="outline"
-              className={transactionColors[property.transactionType as keyof typeof transactionColors] || ""}
+              className={transactionColors[property.transaction_type as keyof typeof transactionColors] || ""}
             >
-              {transactionLabels[property.transactionType as keyof typeof transactionLabels] ||
-                property.transactionType}
+              {transactionLabels[property.transaction_type as keyof typeof transactionLabels] ||
+                property.transaction_type}
             </Badge>
           )}
         </div>
