@@ -96,7 +96,7 @@ export default async function PropertiesPage({
   const { data: properties, error } = await query
 
   if (error) {
-    console.error("[v0] Error fetching properties:", error)
+    console.log("[v0] Error fetching properties:", error)
   }
 
   return (

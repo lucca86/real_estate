@@ -65,6 +65,9 @@ interface Property {
   bathrooms?: number | null
   parkingSpaces?: number | null
   area?: number
+  lotSize?: number | null
+  frontSize?: number | null // Added frontSize
+  depthSize?: number | null // Added depthSize
   yearBuilt?: number | null
   price?: number
   currency?: string | null
@@ -81,8 +84,6 @@ interface Property {
   transactionType?: string
   rentalPeriod?: string | null
   zipCode?: string | null
-  lotSize?: number | null
-  pricePerM2?: number | null
   rentalPrice?: number | null
   virtualTour?: string | null
   propertyLabel?: string | null
@@ -116,17 +117,19 @@ interface PropertyFormData {
   bedrooms?: number
   bathrooms?: number
   parkingSpaces?: number | null
-  area?: number
+  area?: number | undefined // Changed to undefined to allow empty values
+  lotSize?: number | undefined // Changed to undefined
+  frontSize?: number | undefined // Added frontSize
+  depthSize?: number | undefined // Added depthSize
   yearBuilt?: number | null
-  price?: number
+  price?: number | undefined // Changed to undefined
   currency?: string | null
   amenities?: string[]
   features?: string[]
   transactionType?: string
   rentalPeriod?: string | null
   zipCode?: string | null
-  lotSize?: number | null
-  rentalPrice?: number | null
+  rentalPrice?: number | undefined // Changed to undefined
   virtualTour?: string | null
   propertyLabel?: string | null
   syncToWordPress?: boolean
@@ -212,17 +215,19 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
     bathrooms: editProperty?.bathrooms ?? undefined,
     parkingSpaces: editProperty?.parkingSpaces,
     area: editProperty?.area,
+    lotSize: editProperty?.lotSize ?? undefined,
+    frontSize: editProperty?.frontSize ?? undefined,
+    depthSize: editProperty?.depthSize ?? undefined,
     yearBuilt: editProperty?.yearBuilt,
     price: editProperty?.price,
-    currency: editProperty?.currency,
+    currency: editProperty?.currency || "USD",
     // Use temporary states for initial form data
     features: editProperty?.features,
     amenities: editProperty?.amenities,
     transactionType: editProperty?.transactionType || "VENTA",
     rentalPeriod: editProperty?.rentalPeriod,
     zipCode: editProperty?.zipCode,
-    lotSize: editProperty?.lotSize,
-    rentalPrice: editProperty?.rentalPrice,
+    rentalPrice: editProperty?.rentalPrice ?? undefined,
     virtualTour: editProperty?.virtualTour,
     propertyLabel: editProperty?.propertyLabel || "NONE",
     syncToWordPress: editProperty?.syncToWordPress ?? true,
@@ -282,7 +287,7 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
           setNeighborhoods(neighborhoodsData)
         }
       } catch (error) {
-        console.error("[v0] Error fetching data:", error)
+        console.error("Error fetching data:", error)
       }
     }
     fetchData()
@@ -293,7 +298,6 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
       const province = provinces.find((p) => p.id === selectedProvinceId)
       if (province) {
         setSelectedProvinceName(province.name)
-        console.log("[v0] Initialized province name:", province.name)
       }
     }
   }, [provinces, selectedProvinceId, selectedProvinceName])
@@ -303,7 +307,6 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
       const city = cities.find((c) => c.id === selectedCityId)
       if (city) {
         setSelectedCityName(city.name)
-        console.log("[v0] Initialized city name:", city.name)
       }
     }
   }, [cities, selectedCityId, selectedCityName])
@@ -313,7 +316,6 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
       const neighborhood = neighborhoods.find((n) => n.id === formData.neighborhoodId)
       if (neighborhood) {
         setSelectedNeighborhoodName(neighborhood.name)
-        console.log("[v0] Initialized neighborhood name:", neighborhood.name)
       }
     }
   }, [neighborhoods, formData.neighborhoodId, selectedNeighborhoodName])
@@ -322,6 +324,36 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
     event.preventDefault()
     setError(null)
     setIsSubmitting(true)
+
+    const validationErrors: string[] = []
+
+    if (!formData.title?.trim()) validationErrors.push("El título es requerido")
+    if (!formData.description?.trim()) validationErrors.push("La descripción es requerida")
+    if (!formData.ownerId) validationErrors.push("Debe seleccionar un propietario")
+    if (!formData.propertyTypeId) validationErrors.push("Debe seleccionar un tipo de propiedad")
+    if (!formData.status) validationErrors.push("Debe seleccionar un estado")
+    if (!formData.cityId) validationErrors.push("Debe seleccionar una ciudad")
+    if (!formData.provinceId) validationErrors.push("Debe seleccionar una provincia")
+    if (!formData.countryId) validationErrors.push("Debe seleccionar un país")
+    if (!formData.address?.trim()) validationErrors.push("La dirección es requerida")
+    if (formData.price === undefined || formData.price === null) {
+      validationErrors.push("El precio es requerido")
+    }
+    if (!formData.currency) validationErrors.push("Debe seleccionar una moneda")
+
+    if (validationErrors.length > 0) {
+      const errorMessage = validationErrors.join(", ")
+      setError(errorMessage)
+      toast({
+        title: "Errores de validación",
+        description: errorMessage,
+        variant: "destructive",
+      })
+      setIsSubmitting(false)
+      // Scroll to top to show the error
+      window.scrollTo({ top: 0, behavior: "smooth" })
+      return
+    }
 
     const finalFormData = new FormData(event.currentTarget)
 
@@ -364,7 +396,7 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
         router.refresh()
       }
     } catch (err) {
-      console.error("[v0] Error submitting form:", err)
+      console.error("Error submitting form:", err)
       const errorMessage = err instanceof Error ? err.message : "Ocurrió un error al guardar la propiedad"
       setError(errorMessage)
       toast({
@@ -389,19 +421,13 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
       const provinceName = selectedProvinceName
       const neighborhoodName = selectedNeighborhoodName || ""
 
-      console.log("[v0] Geocoding with:", { address, cityName, provinceName, neighborhoodName })
-
       if (!address || !cityName || !provinceName) {
         setGeocodingMessage("Por favor complete la dirección, ciudad y provincia primero")
         setIsGeocoding(false)
         return
       }
 
-      console.log("[v0] Calling geocodeProperty with:", { address, cityName, provinceName, neighborhoodName })
-
       const result = await geocodeProperty(address, cityName, provinceName, "Argentina", neighborhoodName)
-
-      console.log("[v0] Geocoding result:", result)
 
       if (result) {
         setFormData((prev) => ({
@@ -426,14 +452,13 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Error desconocido"
       setGeocodingMessage(`Error al calcular las coordenadas: ${errorMsg}`)
-      console.error("[v0] Geocoding error:", err)
+      console.error("Geocoding error:", err)
     } finally {
       setIsGeocoding(false)
     }
   }
 
   async function handleGenerateTitle() {
-    console.log("[v0] Generate title button clicked")
     setIsGeneratingTitle(true)
 
     try {
@@ -459,11 +484,7 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
         amenities: formData.amenities || [],
       }
 
-      console.log("[v0] Property details for AI:", details)
-
       const result = await generatePropertyTitle(details)
-
-      console.log("[v0] AI result:", result)
 
       if (result.success && result.title) {
         setFormData((prev) => ({ ...prev, title: result.title }))
@@ -472,7 +493,7 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
           description: "El título ha sido generado exitosamente con AI",
         })
       } else {
-        console.error("[v0] AI generation failed:", result.error)
+        console.error("AI generation failed:", result.error)
         toast({
           title: "Error",
           description: result.error || "No se pudo generar el título",
@@ -480,7 +501,7 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
         })
       }
     } catch (err) {
-      console.error("[v0] Error in handleGenerateTitle:", err)
+      console.error("Error in handleGenerateTitle:", err)
       toast({
         title: "Error",
         description: "Error al generar el título con AI",
@@ -488,7 +509,6 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
       })
     } finally {
       setIsGeneratingTitle(false)
-      console.log("[v0] Generate title finished")
     }
   }
 
@@ -518,7 +538,7 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
         const countryProvinces = await getProvinces(countryId)
         setProvinces(countryProvinces)
       } catch (error) {
-        console.error("[v0] Error loading provinces:", error)
+        console.error("Error loading provinces:", error)
       } finally {
         setIsLoading(false)
       }
@@ -572,7 +592,6 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
     const selectedNeighborhood = neighborhoods.find((n) => n.id === neighborhoodId)
     if (selectedNeighborhood) {
       setSelectedNeighborhoodName(selectedNeighborhood.name)
-      console.log("[v0] Neighborhood changed to:", selectedNeighborhood.name)
     }
   }
 
@@ -691,7 +710,6 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
                 variant="outline"
                 size="icon"
                 onClick={() => {
-                  console.log("[v0] Create owner button clicked")
                   setShowCreateOwner(true)
                 }}
                 disabled={isSubmitting}
@@ -1106,9 +1124,7 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="area">
-                Área (m²) <span className="text-destructive">*</span>
-              </Label>
+              <Label htmlFor="area">Área cubierta (m²)</Label>
               <Input
                 id="area"
                 name="area"
@@ -1116,8 +1132,10 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
                 step="0.01"
                 min="0"
                 value={formData.area ?? ""}
-                onChange={(e) => setFormData((prev) => ({ ...prev, area: Number(e.target.value) }))}
-                required
+                onChange={(e) => {
+                  const val = e.target.value
+                  setFormData((prev) => ({ ...prev, area: val === "" ? undefined : Number(val) }))
+                }}
                 disabled={isSubmitting}
               />
             </div>
@@ -1131,8 +1149,49 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
                 step="0.01"
                 min="0"
                 value={formData.lotSize ?? ""}
-                onChange={(e) => setFormData((prev) => ({ ...prev, lotSize: Number(e.target.value) }))}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setFormData((prev) => ({ ...prev, lotSize: val === "" ? undefined : Number(val) }))
+                }}
                 disabled={isSubmitting}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="frontSize">Frente (m)</Label>
+              <Input
+                id="frontSize"
+                name="frontSize"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.frontSize ?? ""}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setFormData((prev) => ({ ...prev, frontSize: val === "" ? undefined : Number(val) }))
+                }}
+                disabled={isSubmitting}
+                placeholder="Metros de frente"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="depthSize">Fondo (m)</Label>
+              <Input
+                id="depthSize"
+                name="depthSize"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.depthSize ?? ""}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setFormData((prev) => ({ ...prev, depthSize: val === "" ? undefined : Number(val) }))
+                }}
+                disabled={isSubmitting}
+                placeholder="Metros de fondo"
               />
             </div>
           </div>
@@ -1157,7 +1216,10 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
                 step="0.01"
                 min="0"
                 value={formData.price ?? ""}
-                onChange={(e) => setFormData((prev) => ({ ...prev, price: Number(e.target.value) }))}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setFormData((prev) => ({ ...prev, price: val === "" ? undefined : Number(val) }))
+                }}
                 required
                 disabled={isSubmitting}
               />
@@ -1169,17 +1231,18 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
               </Label>
               <Select
                 name="currency"
-                value={formData.currency || undefined} // Convert null to undefined for Select component
+                value={formData.currency || "USD"}
                 onValueChange={(value) => setFormData((prev) => ({ ...prev, currency: value }))}
                 disabled={isSubmitting}
                 required
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Seleccione moneda" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="DOP">Pesos</SelectItem>
                   <SelectItem value="USD">Dólares</SelectItem>
+                  <SelectItem value="ARS">Pesos Argentinos</SelectItem>
+                  <SelectItem value="DOP">Pesos Dominicanos</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1193,7 +1256,10 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
                 step="0.01"
                 min="0"
                 value={formData.rentalPrice ?? ""}
-                onChange={(e) => setFormData((prev) => ({ ...prev, rentalPrice: Number(e.target.value) }))}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setFormData((prev) => ({ ...prev, rentalPrice: val === "" ? undefined : Number(val) }))
+                }}
                 disabled={isSubmitting}
               />
             </div>

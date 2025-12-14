@@ -156,12 +156,15 @@ function PropertyCard({ property, currentUser }: { property: Property; currentUs
 
         <div className="mb-3 flex flex-wrap gap-2">
           <Badge variant="outline">{property.propertyType?.name || "Sin tipo"}</Badge>
-          <Badge
-            variant="outline"
-            className={transactionColors[property.transactionType as keyof typeof transactionColors] || ""}
-          >
-            {transactionLabels[property.transactionType as keyof typeof transactionLabels] || property.transactionType}
-          </Badge>
+          {property.transactionType && (
+            <Badge
+              variant="outline"
+              className={transactionColors[property.transactionType as keyof typeof transactionColors] || ""}
+            >
+              {transactionLabels[property.transactionType as keyof typeof transactionLabels] ||
+                property.transactionType}
+            </Badge>
+          )}
         </div>
 
         {property.bedrooms && property.bathrooms && (
@@ -178,7 +181,9 @@ function PropertyCard({ property, currentUser }: { property: Property; currentUs
         </div>
 
         <div className="flex items-center justify-between border-t border-border pt-3">
-          <span className="text-xs text-muted-foreground">Por {property.owner?.name}</span>
+          <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+            {property.owner?.name && <span>Propietario: {property.owner.name}</span>}
+          </div>
           <div className="flex gap-1">
             <Button variant="ghost" size="icon" asChild>
               <Link href={`/properties/${property.id}/edit`}>
