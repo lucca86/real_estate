@@ -349,6 +349,7 @@ export async function getAppointments(filters?: {
         property_id,
         client_id,
         contact_name,
+        other_location,
         agent_id,
         scheduled_date,
         duration,
@@ -396,6 +397,7 @@ export async function getAppointments(filters?: {
           status: apt.status,
           notes: apt.notes,
           contactName: apt.contact_name,
+          otherLocation: apt.other_location,
           property: property
             ? {
                 id: property.id,

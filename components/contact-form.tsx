@@ -52,11 +52,17 @@ export function ContactForm({ services, contact }: ContactFormProps) {
   const onSubmit = async (data: any) => {
     setIsSubmitting(true)
 
+    console.log("[v0] Form data:", data)
+    console.log("[v0] Selected services:", selectedServices)
+
     const formData = new FormData()
     Object.entries(data).forEach(([key, value]) => {
       formData.append(key, String(value))
     })
     formData.append("serviceIds", JSON.stringify(selectedServices))
+
+    console.log("[v0] FormData company:", formData.get("company"))
+    console.log("[v0] FormData serviceIds:", formData.get("serviceIds"))
 
     const result = contact ? await updateContact(contact.id, formData) : await createContact(formData)
 

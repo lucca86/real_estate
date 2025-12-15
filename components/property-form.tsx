@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -192,6 +192,7 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
     editProperty?.neighborhoodId ? neighborhoods.find((n) => n.id === editProperty.neighborhoodId)?.name : undefined,
   )
 
+  const isSubmittingRef = useRef(false)
   const [isSubmitting, setIsSubmitting] = useState(false) // Renamed from isLoading for clarity in form context
 
   const [featuresInput, setFeaturesInput] = useState<string>(editProperty?.features?.join(", ") || "")
@@ -235,6 +236,8 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
     adrema: editProperty?.adrema,
     videos: editProperty?.videos, // Initialize videos
   })
+
+  const scrollRef = useRef<HTMLFormElement>(null)
 
   useEffect(() => {
     // Save the current scroll position
@@ -322,8 +325,15 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+
+    if (isSubmittingRef.current) {
+      console.log("[v0] Submit blocked: already submitting")
+      return
+    }
+
     setError(null)
     setIsSubmitting(true)
+    isSubmittingRef.current = true
 
     const validationErrors: string[] = []
 
@@ -349,6 +359,8 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
         description: errorMessage,
         variant: "destructive",
       })
+      // Resetting submission state
+      isSubmittingRef.current = false
       setIsSubmitting(false)
       // Scroll to top to show the error
       window.scrollTo({ top: 0, behavior: "smooth" })
@@ -405,6 +417,8 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
         variant: "destructive",
       })
     } finally {
+      // Resetting submission state
+      isSubmittingRef.current = false
       setIsSubmitting(false)
     }
   }
@@ -617,7 +631,7 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6" ref={scrollRef}>
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>

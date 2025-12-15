@@ -1,49 +1,78 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { revalidatePath } from "next/cache"
 
 export async function getAllContacts() {
   const supabase = await createClient()
+  const adminClient = await createAdminClient()
 
-  const { data, error } = await supabase
-    .from("Contact")
-    .select(`
-      *,
-      services:ContactService(
-        service:Service(*)
-      )
-    `)
-    .order("lastName", { ascending: true })
+  const { data: contacts, error } = await supabase.from("Contact").select("*").order("lastName", { ascending: true })
 
   if (error) {
-    console.error("Error fetching contacts:", error)
+    console.error("[v0] Error fetching contacts:", error)
     return []
   }
 
-  return data || []
+  if (!contacts || contacts.length === 0) {
+    return []
+  }
+
+  const contactIds = contacts.map((c) => c.id)
+  const { data: contactServices, error: servicesError } = await adminClient
+    .from("ContactService")
+    .select(`
+      contactId,
+      service:Service(*)
+    `)
+    .in("contactId", contactIds)
+
+  if (servicesError) {
+    console.error("[v0] Error fetching contact services:", servicesError)
+    // Return contacts without services rather than failing completely
+    return contacts.map((contact) => ({
+      ...contact,
+      services: [],
+    }))
+  }
+
+  const contactsWithServices = contacts.map((contact) => ({
+    ...contact,
+    services: (contactServices || [])
+      .filter((cs) => cs.contactId === contact.id)
+      .map((cs) => ({ service: cs.service })),
+  }))
+
+  return contactsWithServices
 }
 
 export async function getContactById(id: string) {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
-    .from("Contact")
-    .select(`
-      *,
-      services:ContactService(
-        service:Service(*)
-      )
-    `)
-    .eq("id", id)
-    .single()
+  const { data: contact, error } = await supabase.from("Contact").select("*").eq("id", id).single()
 
   if (error) {
     console.error("Error fetching contact:", error)
     return null
   }
 
-  return data
+  const adminSupabase = createAdminClient()
+  const { data: contactServices, error: servicesError } = await adminSupabase
+    .from("ContactService")
+    .select(`
+      service:Service(*)
+    `)
+    .eq("contactId", id)
+
+  if (servicesError) {
+    console.error("Error fetching contact services:", servicesError)
+  }
+
+  return {
+    ...contact,
+    services: contactServices || [],
+  }
 }
 
 export async function createContact(formData: FormData) {
@@ -59,6 +88,9 @@ export async function createContact(formData: FormData) {
   const notes = formData.get("notes") as string
   const isActive = formData.get("isActive") === "true"
   const serviceIds = formData.get("serviceIds") as string
+
+  console.log("[v0] createContact - company:", company)
+  console.log("[v0] createContact - serviceIds:", serviceIds)
 
   // Crear contacto
   const { data: contact, error: contactError } = await supabase
@@ -80,12 +112,14 @@ export async function createContact(formData: FormData) {
     .single()
 
   if (contactError) {
-    console.error("Error creating contact:", contactError)
+    console.error("[v0] Error creating contact:", contactError)
     return { success: false, error: contactError.message }
   }
 
-  // Asignar servicios
+  console.log("[v0] Created contact:", contact)
+
   if (serviceIds && contact) {
+    const adminSupabase = createAdminClient()
     const services = JSON.parse(serviceIds) as string[]
     const contactServices = services.map((serviceId) => ({
       contactId: contact.id,
@@ -93,10 +127,12 @@ export async function createContact(formData: FormData) {
       createdAt: new Date().toISOString(),
     }))
 
-    const { error: servicesError } = await supabase.from("ContactService").insert(contactServices)
+    const { error: servicesError } = await adminSupabase.from("ContactService").insert(contactServices)
 
     if (servicesError) {
-      console.error("Error assigning services:", servicesError)
+      console.error("[v0] Error assigning services:", servicesError)
+    } else {
+      console.log("[v0] Successfully assigned services")
     }
   }
 
@@ -140,8 +176,10 @@ export async function updateContact(id: string, formData: FormData) {
     return { success: false, error: contactError.message }
   }
 
+  const adminSupabase = createAdminClient()
+
   // Actualizar servicios - eliminar existentes y agregar nuevos
-  await supabase.from("ContactService").delete().eq("contactId", id)
+  await adminSupabase.from("ContactService").delete().eq("contactId", id)
 
   if (serviceIds) {
     const services = JSON.parse(serviceIds) as string[]
@@ -151,7 +189,7 @@ export async function updateContact(id: string, formData: FormData) {
       createdAt: new Date().toISOString(),
     }))
 
-    const { error: servicesError } = await supabase.from("ContactService").insert(contactServices)
+    const { error: servicesError } = await adminSupabase.from("ContactService").insert(contactServices)
 
     if (servicesError) {
       console.error("Error updating services:", servicesError)
@@ -159,7 +197,6 @@ export async function updateContact(id: string, formData: FormData) {
   }
 
   revalidatePath("/contacts")
-  revalidatePath(`/contacts/${id}`)
   return { success: true }
 }
 
