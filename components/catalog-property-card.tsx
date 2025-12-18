@@ -77,7 +77,7 @@ const labelTexts = {
 
 const currencyLabels: Record<string, string> = {
   USD: "Dólares",
-  DOP: "Pesos",
+  ARS: "Pesos",
 }
 
 export function CatalogPropertyCard({ property }: CatalogPropertyCardProps) {

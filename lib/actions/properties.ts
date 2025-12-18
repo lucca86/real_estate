@@ -53,7 +53,6 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
     const imagesJson = formData.get("images") as string
     const isFeatured = formData.get("isFeatured") === "true"
     const propertyLabel = formData.get("propertyLabel") as string
-    const adrema = formData.get("adrema") as string
     const features = formData.get("features") as string
     const videos = formData.get("videos") as string
     const virtualTour = formData.get("virtualTour") as string
@@ -61,6 +60,7 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
     const syncToWordPress = formData.get("syncToWordPress") === "true"
     const frontSize = formData.get("frontSize") ? Number.parseFloat(formData.get("frontSize") as string) : null
     const depthSize = formData.get("depthSize") ? Number.parseFloat(formData.get("depthSize") as string) : null
+    const adrema = formData.get("adrema") as string
 
     console.log("[v0] Form data extracted:", { title, ownerId, propertyTypeId, status, cityId })
 
@@ -132,11 +132,11 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
         price_per_m2: pricePerM2,
         currency,
         rental_price: rentalPrice ? Number.parseFloat(rentalPrice) : null,
-        amenities: amenities ? amenities.split(",").map((a) => a.trim()) : [],
+        amenities: parseArrayField(amenities),
         images: sortedImages,
         property_label: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
         adrema: adrema || null,
-        features: features ? features.split(",").map((f) => f.trim()) : [],
+        features: parseArrayField(features),
         videos: videos ? videos.split(",").map((v) => v.trim()) : [],
         virtual_tour: virtualTour || null,
         published,
@@ -247,7 +247,6 @@ export async function updateProperty(propertyId: string, formData: FormData) {
   const imagesJson = formData.get("images") as string
   const isFeatured = formData.get("isFeatured") === "true"
   const propertyLabel = formData.get("propertyLabel") as string
-  const adrema = formData.get("adrema") as string
   const features = formData.get("features") as string
   const videos = formData.get("videos") as string
   const virtualTour = formData.get("virtualTour") as string
@@ -263,6 +262,7 @@ export async function updateProperty(propertyId: string, formData: FormData) {
   const area = formData.get("area") as string
   const lotSize = formData.get("lotSize") as string
   const yearBuilt = formData.get("yearBuilt") as string
+  const adrema = formData.get("adrema") as string
 
   const parsedImages: any[] = imagesJson ? JSON.parse(imagesJson) : []
 
@@ -322,11 +322,11 @@ export async function updateProperty(propertyId: string, formData: FormData) {
       price_per_m2: pricePerM2,
       currency,
       rental_price: rentalPrice ? Number.parseFloat(rentalPrice) : null,
-      amenities: amenities ? amenities.split(",").map((a) => a.trim()) : [],
+      amenities: parseArrayField(amenities),
       images: sortedImages,
       property_label: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
       adrema: adrema || null,
-      features: features ? features.split(",").map((f) => f.trim()) : [],
+      features: parseArrayField(features),
       videos: videos ? videos.split(",").map((v) => v.trim()) : [],
       virtual_tour: virtualTour || null,
       published,
@@ -342,9 +342,11 @@ export async function updateProperty(propertyId: string, formData: FormData) {
     throw new Error(`Error updating property: ${updateError.message}`)
   }
 
+  let wordpressSyncResult: { success: boolean; wordpressId?: number; error?: string } = { success: false }
+
   if (syncToWordPress) {
     try {
-      console.log("Syncing updated property to WordPress:", updatedProperty.id)
+      console.log("[v0] Syncing updated property to WordPress:", updatedProperty.id)
 
       const imagesToSync = sortedImages
         .filter((img: any) => img.syncToWordPress)
@@ -365,20 +367,38 @@ export async function updateProperty(propertyId: string, formData: FormData) {
           .single()
 
         if (propertyWithRelations) {
-          const syncPromise = wordpressAPI.syncProperty(propertyWithRelations as any)
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("WordPress sync timeout")), 30000),
-          )
+          const propertyForSync = {
+            ...propertyWithRelations,
+            wordpressId: propertyWithRelations.wordpress_id || null,
+          }
 
-          await Promise.race([syncPromise, timeoutPromise]).catch((wpError) => {
-            console.error("Error syncing to WordPress:", wpError)
-          })
+          console.log("[v0] Existing WordPress ID:", propertyForSync.wordpressId)
+
+          const syncResult = await wordpressAPI.syncProperty(propertyForSync as any)
+          wordpressSyncResult = {
+            success: true,
+            wordpressId: syncResult,
+          }
+          console.log("[v0] WordPress sync successful, ID:", syncResult)
+
+          await supabase
+            .from("properties")
+            .update({
+              wordpress_id: syncResult,
+              wordpress_synced_at: new Date().toISOString(),
+            })
+            .eq("id", updatedProperty.id)
         }
       } else {
-        console.log("Skipping WordPress sync: No images marked for sync")
+        console.log("[v0] Skipping WordPress sync: No images marked for sync")
+        wordpressSyncResult = { success: false, error: "No hay imágenes marcadas para sincronizar" }
       }
     } catch (wpError: any) {
-      console.error("Error in WordPress sync process:", wpError)
+      console.error("[v0] Error in WordPress sync process:", wpError)
+      wordpressSyncResult = {
+        success: false,
+        error: wpError.message || "Error desconocido al sincronizar con WordPress",
+      }
     }
   }
 
@@ -386,6 +406,11 @@ export async function updateProperty(propertyId: string, formData: FormData) {
   revalidatePath("/properties")
   revalidatePath(`/properties/${propertyId}`)
   revalidatePath(`/properties/${propertyId}/edit`)
+
+  return {
+    property: updatedProperty,
+    wordpressSync: wordpressSyncResult,
+  }
 }
 
 export async function deleteProperty(propertyId: string) {
@@ -496,4 +521,60 @@ export async function getPropertyById(id: string) {
   }
 
   return property
+}
+
+const parseArrayField = (value: any): string[] => {
+  if (!value) return []
+
+  // If it's already a clean array of strings, return it
+  if (Array.isArray(value)) {
+    // Check if array contains escaped JSON strings like ["[\"item\"]"]
+    const cleanedArray = value
+      .flatMap((item) => {
+        if (typeof item === "string") {
+          // Remove escaped quotes and brackets
+          let cleaned = item.trim()
+
+          // If it starts with [" and ends with "], it's a corrupted JSON string
+          if (cleaned.startsWith('["') || cleaned.startsWith("['")) {
+            try {
+              // Try to parse the inner JSON
+              const parsed = JSON.parse(cleaned)
+              return Array.isArray(parsed) ? parsed : [cleaned]
+            } catch {
+              // If parsing fails, clean manually
+              cleaned = cleaned.replace(/^\["|"\]$/g, "") // Remove [" and "]
+              cleaned = cleaned.replace(/^\\"|"\\/g, "") // Remove escaped quotes
+              cleaned = cleaned.replace(/\\\\/g, "") // Remove escaped backslashes
+              return cleaned
+            }
+          }
+          return cleaned
+        }
+        return item
+      })
+      .filter(Boolean)
+
+    return cleanedArray
+  }
+
+  // If it's a string, try to parse or split
+  if (typeof value === "string") {
+    // Try JSON parse first
+    try {
+      const parsed = JSON.parse(value)
+      if (Array.isArray(parsed)) {
+        // Recursively clean the parsed array
+        return parseArrayField(parsed)
+      }
+    } catch {
+      // Not JSON, try comma-separated
+      return value
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
+    }
+  }
+
+  return []
 }

@@ -4,15 +4,15 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Building2, MapPin, Bed, Bath, Car, Maximize, Calendar, User, Mail, Phone, ChevronLeft } from "lucide-react"
+import { Building2, MapPin, Bed, Bath, Car, Maximize, Calendar, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { ImageGallery } from "@/components/image-gallery"
 import { PropertyMap } from "@/components/property-map"
 import { getPropertyById } from "@/lib/actions/properties"
-import { OwnerDetailsModal } from "@/components/owner-details-modal"
+import { PropertyContactCard } from "@/components/property-contact-card"
 
-export default async function PropertyDetailPage({ params }: { params: { id: string } }) {
-  const { id } = params
+export default async function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const user = await getCurrentUser()
 
   if (!user) {
@@ -139,6 +139,24 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
                 </div>
               </div>
 
+              {/* New Características section */}
+              {property.features && property.features.length > 0 && (
+                <>
+                  <Separator />
+                  <div>
+                    <h3 className="mb-3 font-semibold">Características</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {property.features.map((feature: string, index: number) => (
+                        <Badge key={index} variant="outline">
+                          {feature}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Amenidades */}
               {property.amenities && property.amenities.length > 0 && (
                 <>
                   <Separator />
@@ -220,44 +238,7 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
             </CardContent>
           </Card>
 
-          {/* Contact */}
-          {property.owner && (
-            <OwnerDetailsModal owner={property.owner}>
-              <Card className="cursor-pointer transition-colors hover:bg-accent">
-                <CardHeader>
-                  <CardTitle>Contacto</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">{property.owner.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <a
-                      href={`mailto:${property.owner.email}`}
-                      className="font-medium text-primary hover:underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {property.owner.email}
-                    </a>
-                  </div>
-                  {property.owner.phone && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <a
-                        href={`tel:${property.owner.phone}`}
-                        className="font-medium text-primary hover:underline"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {property.owner.phone}
-                      </a>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </OwnerDetailsModal>
-          )}
+          {property.owner && <PropertyContactCard owner={property.owner} />}
 
           {/* Stats */}
           <Card>

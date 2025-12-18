@@ -45,7 +45,9 @@ export default async function PropertiesPage({
       owner:owners!owner_id(name),
       propertyType:property_types!property_type_id(name),
       city:cities!city_id(name),
-      province:provinces!province_id(name)
+      province:provinces!province_id(name),
+      wordpress_id,
+      wordpress_synced_at
     `)
     .order("created_at", { ascending: false })
 

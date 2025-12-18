@@ -92,12 +92,28 @@ interface Property {
   videos?: string[]
   createdAt?: Date
   updatedAt?: Date
+  // Added properties from the update section
+  category?: string
+  type?: string
+  lotArea?: number
+  garages?: number
+  floors?: number
+  constructionYear?: number
+  orientation?: string
+  frontMeters?: number
+  backMeters?: number
+  mainImage?: string
+  ownerName?: string
+  ownerEmail?: string
+  ownerPhone?: string
+  createdBy?: string
 }
 
 interface PropertyFormProps {
   editProperty?: Property
   onSuccess?: () => void // Added onSuccess prop
   agents?: Array<{ id: string; name: string }> // Added agents prop
+  userId?: string // Added userId prop
 }
 
 interface PropertyFormData {
@@ -136,9 +152,24 @@ interface PropertyFormData {
   published?: boolean
   adrema?: string | null
   videos?: string[] // Added videos field
+  // Added properties from the update section
+  category?: string
+  type?: string
+  lotArea?: number | undefined
+  garages?: number | undefined
+  floors?: number | undefined
+  constructionYear?: number | null
+  orientation?: string | undefined
+  frontMeters?: number | undefined
+  backMeters?: number | undefined
+  mainImage?: string | undefined
+  ownerName?: string | undefined
+  ownerEmail?: string | undefined
+  ownerPhone?: string | undefined
+  createdBy?: string | undefined
 }
 
-export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyFormProps) {
+export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: PropertyFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [isGeocoding, setIsGeocoding] = useState(false)
@@ -195,16 +226,55 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
   const isSubmittingRef = useRef(false)
   const [isSubmitting, setIsSubmitting] = useState(false) // Renamed from isLoading for clarity in form context
 
-  const [featuresInput, setFeaturesInput] = useState<string>(editProperty?.features?.join(", ") || "")
-  const [amenitiesInput, setAmenitiesInput] = useState<string>(editProperty?.amenities?.join(", ") || "")
+  const parseArrayField = (field: any): string[] => {
+    if (!field) return []
+
+    // If it's already an array
+    if (Array.isArray(field)) {
+      const cleanedArray = field
+        .map((item) => {
+          if (typeof item === "string") {
+            // Clean escaped JSON strings like ["\"item\""]
+            const cleaned = item.replace(/^[["\s]+|[\]"\s]+$/g, "").replace(/\\/g, "")
+            return cleaned || null
+          }
+          return item
+        })
+        .filter(Boolean)
+
+      return cleanedArray
+    }
+
+    // If it's a string
+    if (typeof field === "string") {
+      try {
+        const parsed = JSON.parse(field)
+        if (Array.isArray(parsed)) {
+          // Recursively clean the parsed array
+          return parseArrayField(parsed)
+        }
+      } catch {
+        // Not JSON, try comma-separated
+        return field
+          .split(",")
+          .map((item) => item.trim())
+          .filter((item) => item.length > 0)
+      }
+    }
+
+    return []
+  }
+
+  const [featuresInput, setFeaturesInput] = useState<string>(parseArrayField(editProperty?.features).join(", "))
+  const [amenitiesInput, setAmenitiesInput] = useState<string>(parseArrayField(editProperty?.amenities).join(", "))
 
   const [formData, setFormData] = useState<PropertyFormData>({
-    title: editProperty?.title,
-    description: editProperty?.description,
+    title: editProperty?.title || "",
+    description: editProperty?.description || "",
     ownerId: editProperty?.ownerId,
     propertyTypeId: editProperty?.propertyTypeId,
     status: editProperty?.status || "ACTIVO",
-    address: editProperty?.address,
+    address: editProperty?.address || "",
     cityId: editProperty?.cityId || "18377e89-ca6e-4e27-ab35-6892af66143b",
     countryId: editProperty?.countryId || "clyqxm3uy0000svxl6d4vgxwz",
     state: editProperty?.state || undefined,
@@ -231,10 +301,41 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
     rentalPrice: editProperty?.rentalPrice ?? undefined,
     virtualTour: editProperty?.virtualTour,
     propertyLabel: editProperty?.propertyLabel || "NONE",
-    syncToWordPress: editProperty?.syncToWordPress ?? true,
-    published: editProperty?.published ?? true,
+    syncToWordPress: (() => {
+      const value = (editProperty as any)?.sync_to_wordpress ?? true
+      console.log("[v0] syncToWordPress init:", {
+        raw: (editProperty as any)?.sync_to_wordpress,
+        final: value,
+        editProperty: editProperty ? "exists" : "null",
+      })
+      return value
+    })(),
+    published: (() => {
+      const value = editProperty?.published ?? true
+      console.log("[v0] published init:", {
+        raw: editProperty?.published,
+        final: value,
+        editProperty: editProperty ? "exists" : "null",
+      })
+      return value
+    })(),
     adrema: editProperty?.adrema,
     videos: editProperty?.videos, // Initialize videos
+    // Properties from the update section
+    category: editProperty?.category || "",
+    type: editProperty?.type || "Venta",
+    lotArea: editProperty?.lotArea ?? undefined,
+    garages: editProperty?.garages ?? undefined,
+    floors: editProperty?.floors ?? undefined,
+    constructionYear: editProperty?.constructionYear,
+    orientation: editProperty?.orientation,
+    frontMeters: editProperty?.frontMeters,
+    backMeters: editProperty?.backMeters,
+    mainImage: editProperty?.mainImage,
+    ownerName: editProperty?.ownerName,
+    ownerEmail: editProperty?.ownerEmail,
+    ownerPhone: editProperty?.ownerPhone,
+    createdBy: editProperty?.createdBy || userId || "",
   })
 
   const scrollRef = useRef<HTMLFormElement>(null)
@@ -327,13 +428,13 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
     event.preventDefault()
 
     if (isSubmittingRef.current) {
-      console.log("[v0] Submit blocked: already submitting")
+      console.log("[v0] Form already submitting, ignoring duplicate submission")
       return
     }
 
-    setError(null)
-    setIsSubmitting(true)
     isSubmittingRef.current = true
+    setIsSubmitting(true)
+    setError(null)
 
     const validationErrors: string[] = []
 
@@ -367,20 +468,39 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
       return
     }
 
-    const finalFormData = new FormData(event.currentTarget)
+    if (!images || images.length === 0) {
+      const errorMessage = "Debes agregar al menos una imagen a la propiedad"
+      setError(errorMessage)
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
+      isSubmittingRef.current = false
+      setIsSubmitting(false)
+      return
+    }
 
-    // Append current formData state, ensuring all fields are present
+    console.log("[v0] Starting form submission")
+
+    const finalFormData = new FormData()
+
     Object.entries(formData).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        if (Array.isArray(value)) {
-          finalFormData.append(key, JSON.stringify(value))
+      if (value !== null && value !== undefined) {
+        if (key === "images" || key === "videos" || key === "amenities" || key === "features") {
+          finalFormData.set(key, JSON.stringify(value))
+        } else if (typeof value === "boolean") {
+          finalFormData.set(key, String(value))
         } else {
-          finalFormData.append(key, String(value))
+          finalFormData.set(key, String(value))
         }
       }
     })
 
-    finalFormData.append("images", JSON.stringify(images))
+    // Explicitly append images as JSON string as per PropertyImageUpload component's expected format
+    if (images.length > 0) {
+      finalFormData.append("images", JSON.stringify(images))
+    }
 
     try {
       let result
@@ -388,19 +508,15 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
         if (!editProperty.id) {
           throw new Error("ID de propiedad no válido")
         }
-        result = await updateProperty(editProperty.id, finalFormData)
-        toast({
-          title: "Propiedad actualizada",
-          description: "La propiedad se ha actualizado exitosamente",
-        })
+        await updateProperty(editProperty.id, finalFormData)
       } else {
         result = await createProperty(finalFormData)
-        toast({
-          title: "Propiedad creada",
-          description: "La propiedad se ha creado exitosamente",
-        })
+
+        if (!result.success) {
+          throw new Error(result.error || "Error al crear la propiedad")
+        }
       }
-      // Call onSuccess if provided, otherwise navigate
+
       if (onSuccess) {
         onSuccess()
       } else {
@@ -409,17 +525,14 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
       }
     } catch (err) {
       console.error("Error submitting form:", err)
-      const errorMessage = err instanceof Error ? err.message : "Ocurrió un error al guardar la propiedad"
-      setError(errorMessage)
       toast({
         title: "Error",
-        description: errorMessage,
+        description: err instanceof Error ? err.message : "Error al procesar la solicitud",
         variant: "destructive",
       })
     } finally {
-      // Resetting submission state
-      isSubmittingRef.current = false
       setIsSubmitting(false)
+      isSubmittingRef.current = false
     }
   }
 
@@ -1174,17 +1287,17 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="frontSize">Frente (m)</Label>
+              <Label htmlFor="frontMeters">Frente (m)</Label>
               <Input
-                id="frontSize"
-                name="frontSize"
+                id="frontMeters"
+                name="frontMeters"
                 type="number"
                 step="0.01"
                 min="0"
-                value={formData.frontSize ?? ""}
+                value={formData.frontMeters ?? ""}
                 onChange={(e) => {
                   const val = e.target.value
-                  setFormData((prev) => ({ ...prev, frontSize: val === "" ? undefined : Number(val) }))
+                  setFormData((prev) => ({ ...prev, frontMeters: val === "" ? undefined : Number(val) }))
                 }}
                 disabled={isSubmitting}
                 placeholder="Metros de frente"
@@ -1192,22 +1305,80 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="depthSize">Fondo (m)</Label>
+              <Label htmlFor="backMeters">Fondo (m)</Label>
               <Input
-                id="depthSize"
-                name="depthSize"
+                id="backMeters"
+                name="backMeters"
                 type="number"
                 step="0.01"
                 min="0"
-                value={formData.depthSize ?? ""}
+                value={formData.backMeters ?? ""}
                 onChange={(e) => {
                   const val = e.target.value
-                  setFormData((prev) => ({ ...prev, depthSize: val === "" ? undefined : Number(val) }))
+                  setFormData((prev) => ({ ...prev, backMeters: val === "" ? undefined : Number(val) }))
                 }}
                 disabled={isSubmitting}
                 placeholder="Metros de fondo"
               />
             </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="garages">Estacionamientos (Garages)</Label>
+              <Input
+                id="garages"
+                name="garages"
+                type="number"
+                min="0"
+                value={formData.garages ?? ""}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setFormData((prev) => ({ ...prev, garages: val === "" ? undefined : Number(val) }))
+                }}
+                disabled={isSubmitting}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="floors">Pisos</Label>
+              <Input
+                id="floors"
+                name="floors"
+                type="number"
+                min="0"
+                value={formData.floors ?? ""}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setFormData((prev) => ({ ...prev, floors: val === "" ? undefined : Number(val) }))
+                }}
+                disabled={isSubmitting}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="orientation">Orientación</Label>
+            <Select
+              name="orientation"
+              value={formData.orientation || ""}
+              onValueChange={(value) => setFormData((prev) => ({ ...prev, orientation: value }))}
+              disabled={isSubmitting}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Seleccione una orientación" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="NORTE">Norte</SelectItem>
+                <SelectItem value="SUR">Sur</SelectItem>
+                <SelectItem value="ESTE">Este</SelectItem>
+                <SelectItem value="OESTE">Oeste</SelectItem>
+                <SelectItem value="NORESTE">Noreste</SelectItem>
+                <SelectItem value="NOROESTE">Noroeste</SelectItem>
+                <SelectItem value="SURESTE">Sureste</SelectItem>
+                <SelectItem value="SUROESTE">Suroeste</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -1246,7 +1417,9 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
               <Select
                 name="currency"
                 value={formData.currency || "USD"}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, currency: value }))}
+                onValueChange={(value) => {
+                  setFormData({ ...formData, currency: value })
+                }}
                 disabled={isSubmitting}
                 required
               >
@@ -1255,8 +1428,7 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="USD">Dólares</SelectItem>
-                  <SelectItem value="ARS">Pesos Argentinos</SelectItem>
-                  <SelectItem value="DOP">Pesos Dominicanos</SelectItem>
+                  <SelectItem value="ARS">Pesos</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1423,7 +1595,7 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
               name="syncToWordPress"
               checked={formData.syncToWordPress ?? true}
               onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, syncToWordPress: checked }))}
-              disabled={isSubmitting}
+              disabled={false}
             />
           </div>
 
@@ -1437,7 +1609,7 @@ export function PropertyForm({ editProperty, onSuccess, agents = [] }: PropertyF
               name="published"
               checked={formData.published ?? true}
               onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, published: checked }))}
-              disabled={isSubmitting}
+              disabled={false}
             />
           </div>
         </CardContent>

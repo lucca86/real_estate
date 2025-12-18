@@ -1,8 +1,6 @@
 "use client"
 
 import type React from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { User, Mail, Phone, MapPin, Building2, FileText } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -45,14 +43,7 @@ export function OwnerDetailsModal({ owner, children }: OwnerDetailsModalProps) {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Detalles del Contacto</span>
-            <Link href={`/owners/${owner.id}/edit`}>
-              <Button variant="outline" size="sm">
-                Editar
-              </Button>
-            </Link>
-          </DialogTitle>
+          <DialogTitle>Detalles del Contacto</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           {/* Name and Type */}

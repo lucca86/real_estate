@@ -28,6 +28,8 @@ interface Property {
   province: { name: string } | null
   propertyType: { name: string } | null
   owner: { name: string } | null
+  wordpress_id: number | null
+  wordpress_synced_at: string | null
 }
 
 interface PropertiesTableProps {
@@ -69,7 +71,7 @@ const transactionColors: Record<string, string> = {
 
 const currencyLabels: Record<string, string> = {
   USD: "Dólares",
-  DOP: "Pesos",
+  ARS: "Pesos",
 }
 
 function PropertyCard({ property, currentUser }: { property: Property; currentUser: SessionUser }) {
@@ -183,6 +185,18 @@ function PropertyCard({ property, currentUser }: { property: Property; currentUs
         <div className="flex items-center justify-between border-t border-border pt-3">
           <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
             {property.owner?.name && <span>Propietario: {property.owner.name}</span>}
+            {property.wordpress_id && property.wordpress_synced_at && (
+              <span className="text-green-600">
+                Sincronizada:{" "}
+                {new Date(property.wordpress_synced_at).toLocaleString("es-AR", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            )}
           </div>
           <div className="flex gap-1">
             <Button variant="ghost" size="icon" asChild>
