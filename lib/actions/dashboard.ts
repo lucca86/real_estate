@@ -1,9 +1,9 @@
 "use server"
 
-import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 
 export async function getDashboardStats() {
-  const supabase = await createServerClient()
+  const supabase = await createAdminClient()
 
   try {
     const { count: totalProperties } = await supabase.from("properties").select("*", { count: "exact", head: true })
@@ -72,6 +72,17 @@ export async function getDashboardStats() {
         cities: prop.cities?.[0] || null,
       })) || []
 
+    const chartData = {
+      propertyTypes: Object.entries(propertyTypeCounts || {}).map(([name, count]) => ({
+        name,
+        count,
+      })),
+      transactionTypes: Object.entries(transactionCounts || {}).map(([name, count]) => ({
+        name,
+        count,
+      })),
+    }
+
     return {
       stats: {
         totalProperties: totalProperties || 0,
@@ -80,16 +91,7 @@ export async function getDashboardStats() {
         totalOwners: totalOwners || 0,
         upcomingAppointments: upcomingAppointments || 0,
       },
-      charts: {
-        propertyTypes: Object.entries(propertyTypeCounts || {}).map(([name, count]) => ({
-          name,
-          count,
-        })),
-        transactionTypes: Object.entries(transactionCounts || {}).map(([name, count]) => ({
-          name,
-          count,
-        })),
-      },
+      charts: chartData,
       recentProperties: transformedRecentProperties,
     }
   } catch (error) {

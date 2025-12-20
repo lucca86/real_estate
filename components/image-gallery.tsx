@@ -12,27 +12,22 @@ interface ImageGalleryProps {
 }
 
 function normalizeImageUrl(image: string | { url: string; sizes?: { medium?: string; large?: string } }): string {
-  // Base case: if it's a string starting with http, it's a real URL
   if (typeof image === "string") {
     if (image.startsWith("http")) {
       return image
     }
-    // Try to parse as JSON
     try {
       const parsed = JSON.parse(image)
-      return normalizeImageUrl(parsed) // Recursive call
+      return normalizeImageUrl(parsed)
     } catch (e) {
       return ""
     }
   }
 
-  // If image is an object
   if (typeof image === "object" && image !== null) {
-    // Try to extract and recursively parse the url field
     if ((image as any).url) {
-      return normalizeImageUrl((image as any).url) // Recursive call
+      return normalizeImageUrl((image as any).url)
     }
-    // Try sizes
     if (image.sizes?.large) {
       return normalizeImageUrl(image.sizes.large)
     }
@@ -47,9 +42,6 @@ function normalizeImageUrl(image: string | { url: string; sizes?: { medium?: str
 export function ImageGallery({ images, title }: ImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
-
-  console.log("[v0] ImageGallery - Received images:", images)
-  console.log("[v0] ImageGallery - Images length:", images?.length)
 
   if (images.length === 0) {
     return null

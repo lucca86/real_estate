@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { isValidCoordinate, normalizeCoordinate, CORRIENTES_CENTER } from "@/lib/map-utils"
+import { normalizeImageUrl } from "@/lib/image-utils"
 
 interface PropertyImage {
   url: string
@@ -29,24 +30,16 @@ interface Property {
   currency: string
   propertyType: string
   status: string
-  images: PropertyImage[]
+  images: (string | PropertyImage)[]
 }
 
 interface PropertiesMapProps {
   properties: Property[]
   defaultCenter?: [number, number]
   defaultZoom?: number
-  draggable?: boolean
-  onMarkerDrag?: (lat: number, lng: number) => void
 }
 
-export function PropertiesMap({
-  properties,
-  defaultCenter = CORRIENTES_CENTER,
-  defaultZoom = 13,
-  draggable = false,
-  onMarkerDrag,
-}: PropertiesMapProps) {
+export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, defaultZoom = 13 }: PropertiesMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<any[]>([])
@@ -127,58 +120,19 @@ export function PropertiesMap({
           const lat = property.latitude!
           const lng = property.longitude!
 
-          const marker = L.marker([lat, lng], {
-            draggable: draggable,
-          })
-
-          marker.bindPopup(`
-            <div class="text-sm">
-              <strong>${property.address}</strong><br/>
-              ${property.city}<br/>
-              <span class="text-xs text-muted-foreground">
-                ${lat.toFixed(6)}, ${lng.toFixed(6)}
-              </span>
-            </div>
-          `)
+          const marker = L.marker([lat, lng])
 
           marker.on("click", () => {
             setSelectedProperty(property)
             map.setView([lat, lng], 16, { animate: true })
-            marker.openPopup()
           })
-
-          if (draggable && onMarkerDrag) {
-            marker.on("dragend", (event) => {
-              const newPos = event.target.getLatLng()
-              onMarkerDrag(newPos.lat, newPos.lng)
-
-              marker.setPopupContent(`
-                <div class="text-sm">
-                  <strong>${property.address}</strong><br/>
-                  ${property.city}<br/>
-                  <span class="text-xs text-muted-foreground">
-                    ${newPos.lat.toFixed(6)}, ${newPos.lng.toFixed(6)}
-                  </span>
-                  <br/>
-                  <span class="text-xs text-green-600">✓ Ubicación actualizada</span>
-                </div>
-              `)
-              marker.openPopup()
-            })
-          }
 
           marker.addTo(map)
           markersRef.current.push(marker)
         })
 
         setTimeout(() => {
-          if (mapInstanceRef.current && mapRef.current) {
-            try {
-              mapInstanceRef.current.invalidateSize()
-            } catch (err) {
-              console.error("[v0] Error invalidating map size:", err)
-            }
-          }
+          map.invalidateSize()
           setIsLoading(false)
         }, 300)
       } catch (err) {
@@ -197,7 +151,7 @@ export function PropertiesMap({
         mapInstanceRef.current = null
       }
     }
-  }, [properties, validProperties, defaultCenter, defaultZoom, draggable, onMarkerDrag])
+  }, [properties, validProperties, defaultCenter, defaultZoom])
 
   const typeLabels: Record<string, string> = {
     CASA: "Casa",
@@ -235,7 +189,13 @@ export function PropertiesMap({
             <div className="flex gap-4">
               {selectedProperty.images[0] && (
                 <img
-                  src={selectedProperty.images[0].url || "/placeholder.svg"}
+                  src={(() => {
+                    console.log("[v0] Selected property images:", selectedProperty.images)
+                    console.log("[v0] First image:", selectedProperty.images[0])
+                    const imageUrl = normalizeImageUrl(selectedProperty.images[0])
+                    console.log("[v0] Normalized image URL:", imageUrl)
+                    return imageUrl || "/placeholder.svg?height=400&width=600"
+                  })()}
                   alt={selectedProperty.title}
                   className="h-24 w-24 rounded-lg object-cover"
                 />
@@ -266,5 +226,3 @@ export function PropertiesMap({
     </div>
   )
 }
-
-export { PropertiesMap as PropertyMap }

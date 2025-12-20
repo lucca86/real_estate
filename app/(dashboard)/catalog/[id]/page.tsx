@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator"
 import { Building2, MapPin, Bed, Bath, Car, Maximize, Calendar, ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { ImageGallery } from "@/components/image-gallery"
-import { PropertyMap } from "@/components/property-map"
+import { PropertiesMap } from "@/components/property-map"
 import { getPropertyById } from "@/lib/actions/properties"
 import { PropertyContactCard } from "@/components/property-contact-card"
 
@@ -193,7 +193,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                           </div>
                         </div>
                       </div>
-                      <PropertyMap
+                      <PropertiesMap
                         properties={[
                           {
                             id: property.id,

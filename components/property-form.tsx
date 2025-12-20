@@ -301,24 +301,8 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
     rentalPrice: editProperty?.rentalPrice ?? undefined,
     virtualTour: editProperty?.virtualTour,
     propertyLabel: editProperty?.propertyLabel || "NONE",
-    syncToWordPress: (() => {
-      const value = (editProperty as any)?.sync_to_wordpress ?? true
-      console.log("[v0] syncToWordPress init:", {
-        raw: (editProperty as any)?.sync_to_wordpress,
-        final: value,
-        editProperty: editProperty ? "exists" : "null",
-      })
-      return value
-    })(),
-    published: (() => {
-      const value = editProperty?.published ?? true
-      console.log("[v0] published init:", {
-        raw: editProperty?.published,
-        final: value,
-        editProperty: editProperty ? "exists" : "null",
-      })
-      return value
-    })(),
+    syncToWordPress: (editProperty as any)?.sync_to_wordpress ?? true,
+    published: editProperty?.published ?? true,
     adrema: editProperty?.adrema,
     videos: editProperty?.videos, // Initialize videos
     // Properties from the update section

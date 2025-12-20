@@ -25,7 +25,6 @@ export function normalizeImageUrl(image: string | PropertyImage | any): string {
       // Recursively process the parsed object
       return normalizeImageUrl(parsed)
     } catch {
-      // Not JSON, return placeholder
       return ""
     }
   }
@@ -65,7 +64,6 @@ export function normalizeImageUrl(image: string | PropertyImage | any): string {
     }
   }
 
-  // Fallback
   return ""
 }
 
