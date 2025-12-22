@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Plus, Building2, Edit } from "lucide-react"
 import { getCurrentUser } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -15,7 +15,7 @@ export default async function PropertyTypesPage() {
     redirect("/login")
   }
 
-  const supabase = await createServerClient()
+  const supabase = await createAdminClient()
   const { data: propertyTypes, error } = await supabase
     .from("property_types")
     .select("*")
@@ -74,7 +74,7 @@ export default async function PropertyTypesPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {propertyTypes.map((type) => (
+                {propertyTypes.map((type: any) => (
                   <TableRow key={type.id}>
                     <TableCell className="font-medium">{type.name}</TableCell>
                     <TableCell>{type.description || "-"}</TableCell>

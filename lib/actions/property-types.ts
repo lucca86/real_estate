@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { z } from "zod"
 
 const propertyTypeSchema = z.object({
@@ -12,7 +12,7 @@ const propertyTypeSchema = z.object({
 
 export async function getPropertyTypes() {
   try {
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
 
     const { data: propertyTypes, error } = await supabase
       .from("property_types")
@@ -30,7 +30,7 @@ export async function getPropertyTypes() {
 
 export async function getActivePropertyTypes() {
   try {
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
 
     const { data, error } = await supabase
       .from("property_types")
@@ -48,7 +48,7 @@ export async function getActivePropertyTypes() {
 
 export async function getPropertyTypeById(id: string) {
   try {
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
 
     const { data, error } = await supabase.from("property_types").select("*").eq("id", id).single()
 
@@ -71,7 +71,7 @@ export async function createPropertyType(formData: FormData) {
 
     const validated = propertyTypeSchema.parse(data)
 
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
 
     const { data: propertyType, error } = await supabase.from("property_types").insert(validated).select().single()
 
@@ -99,7 +99,7 @@ export async function updatePropertyType(id: string, formData: FormData) {
     }
 
     const validated = propertyTypeSchema.parse(data)
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
 
     const { data: propertyType, error } = await supabase
       .from("property_types")
@@ -124,7 +124,7 @@ export async function updatePropertyType(id: string, formData: FormData) {
 
 export async function deletePropertyType(id: string) {
   try {
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
 
     const { data: propertyType } = await supabase.from("property_types").select("*").eq("id", id).single()
 
@@ -136,7 +136,6 @@ export async function deletePropertyType(id: string) {
 
     if (error) {
       if (error.code === "23503") {
-        // Instead of deleting, mark as inactive
         const { error: updateError } = await supabase.from("property_types").update({ is_active: false }).eq("id", id)
 
         if (updateError) throw updateError
