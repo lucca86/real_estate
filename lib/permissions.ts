@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { getCurrentUser } from "@/lib/auth"
 import { PERMISSION_GROUPS, ALL_PERMISSIONS, type Permission } from "./permissions-config"
 
@@ -18,7 +18,7 @@ export async function checkPermission(permission: Permission): Promise<boolean> 
     return true
   }
 
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   const { data, error } = await supabase
     .from("role_permissions")
@@ -47,7 +47,7 @@ export async function checkPermissions(permissions: Permission[]): Promise<Recor
     return permissions.reduce((acc, p) => ({ ...acc, [p]: true }), {})
   }
 
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   const { data, error } = await supabase
     .from("role_permissions")
@@ -79,7 +79,7 @@ export async function checkPermissions(permissions: Permission[]): Promise<Recor
 
 // Get all permissions for a role
 export async function getRolePermissions(role: string): Promise<Record<Permission, boolean>> {
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   const { data, error } = await supabase.from("role_permissions").select("permission, enabled").eq("role", role)
 
@@ -98,7 +98,7 @@ export async function getRolePermissions(role: string): Promise<Record<Permissio
 
 // Get all permissions for a user by their ID
 export async function getUserPermissions(userId: string): Promise<Record<string, boolean>> {
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   // Get user role
   const { data: userData, error: userError } = await supabase.from("users").select("role").eq("id", userId).single()

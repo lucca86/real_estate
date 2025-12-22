@@ -1,10 +1,10 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
 export async function getAllServices() {
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   const { data, error } = await supabase.from("Service").select("*").order("name", { ascending: true })
 
@@ -17,7 +17,7 @@ export async function getAllServices() {
 }
 
 export async function getServiceById(id: string) {
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   const { data, error } = await supabase.from("Service").select("*").eq("id", id).single()
 
@@ -30,7 +30,7 @@ export async function getServiceById(id: string) {
 }
 
 export async function createService(formData: FormData) {
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   const name = formData.get("name") as string
   const description = formData.get("description") as string
@@ -59,7 +59,7 @@ export async function createService(formData: FormData) {
 }
 
 export async function updateService(id: string, formData: FormData) {
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   const name = formData.get("name") as string
   const description = formData.get("description") as string
@@ -86,16 +86,14 @@ export async function updateService(id: string, formData: FormData) {
 }
 
 export async function deleteService(id: string) {
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   const { error } = await supabase.from("Service").delete().eq("id", id)
 
   if (error) {
     console.error("Error deleting service:", error)
 
-    // Check if it's a foreign key constraint violation
     if (error.code === "23503") {
-      // Instead of deleting, mark as inactive
       const { error: updateError } = await supabase
         .from("Service")
         .update({ isActive: false, updatedAt: new Date().toISOString() })

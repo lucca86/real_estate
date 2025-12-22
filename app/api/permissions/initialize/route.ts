@@ -1,4 +1,4 @@
-import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
 // Definición de permisos por defecto para cada rol
@@ -66,7 +66,7 @@ const DEFAULT_PERMISSIONS = {
 
 export async function POST() {
   try {
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
 
     // Verificar que el usuario sea ADMIN
     const {

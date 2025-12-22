@@ -1,6 +1,6 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { getCurrentUser } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 
@@ -17,7 +17,7 @@ export async function updatePermissions(updates: PermissionUpdate[]) {
     return { error: "No autorizado" }
   }
 
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   try {
     for (const update of updates) {
@@ -69,7 +69,7 @@ export async function resetRolePermissions(role: string) {
     return { error: "No se pueden resetear los permisos de ADMIN" }
   }
 
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   try {
     const defaults: Record<string, Record<string, boolean>> = {
@@ -170,7 +170,7 @@ export async function getPermissionsAudit(limit = 50) {
     return { error: "No autorizado" }
   }
 
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   const { data, error } = await supabase
     .from("permissions_audit")

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getCurrentUser } from "@/lib/auth"
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 
 export async function GET() {
   const user = await getCurrentUser()
@@ -9,7 +9,7 @@ export async function GET() {
     return NextResponse.json({ error: "No autorizado" }, { status: 403 })
   }
 
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   try {
     const { data, error } = await supabase
@@ -17,9 +17,6 @@ export async function GET() {
       .select("role, permission, enabled")
       .order("role")
       .order("permission")
-
-    console.log("[v0] Raw permissions data from DB:", data)
-    console.log("[v0] Total records:", data?.length || 0)
 
     if (error) {
       console.error("Error fetching permissions:", error)
@@ -35,11 +32,6 @@ export async function GET() {
       }
       permissions[item.role][item.permission] = item.enabled
     }
-
-    console.log("[v0] Transformed permissions:", JSON.stringify(permissions, null, 2))
-    console.log("[v0] ADMIN permissions count:", Object.keys(permissions.ADMIN || {}).length)
-    console.log("[v0] SUPERVISOR permissions count:", Object.keys(permissions.SUPERVISOR || {}).length)
-    console.log("[v0] VENDEDOR permissions count:", Object.keys(permissions.VENDEDOR || {}).length)
 
     return NextResponse.json({ permissions })
   } catch (error) {
