@@ -57,10 +57,10 @@ function expandAbbreviations(text: string): string {
  * Geocode an address using Nominatim (OpenStreetMap)
  * Free service, no API key required
  */
-export async function geocodeAddress(address: string): Promise<GeocodingResult | null> {
+export async function geocodeAddress(address: string, city?: string, state?: string): Promise<GeocodingResult | null> {
   try {
     const encodedAddress = encodeURIComponent(address)
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=20&countrycodes=ar&addressdetails=1&bounded=1&viewbox=-58.9,-27.3,-58.7,-27.6`
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=20&countrycodes=ar&addressdetails=1`
 
     const response = await fetch(url, {
       headers: {
@@ -84,33 +84,41 @@ export async function geocodeAddress(address: string): Promise<GeocodingResult |
       const addressDetails = result.address || {}
       let score = 0
 
-      const isCorrientsesCapital =
-        (addressDetails.city === "Corrientes" ||
-          addressDetails.town === "Corrientes" ||
-          addressDetails.municipality === "Corrientes") &&
-        (addressDetails.state === "Corrientes" || addressDetails.state === "Provincia de Corrientes")
+      if (city && state) {
+        const normalizedCity = city === "Ciudad Autónoma de Buenos Aires" || city === "Capital" ? "Buenos Aires" : city
+        const resultCity = addressDetails.city || addressDetails.town || addressDetails.municipality || ""
+        const resultState = addressDetails.state || ""
 
-      if (isCorrientsesCapital) {
-        score += 100
+        // Boost score if city matches
+        if (
+          resultCity.toLowerCase().includes(normalizedCity.toLowerCase()) ||
+          displayName.includes(normalizedCity.toLowerCase())
+        ) {
+          score += 100
+        }
+
+        // Boost score if state matches
+        if (resultState.toLowerCase().includes(state.toLowerCase()) || displayName.includes(state.toLowerCase())) {
+          score += 50
+        }
       }
 
-      const excludedLocations = ["paso de la patria", "santa ana", "riachuelo", "empedrado", "san luis del palmar"]
-      if (excludedLocations.some((location) => displayName.includes(location))) {
-        score -= 200
-      }
-
+      // Prefer results with house numbers
       if (addressDetails.house_number) {
         score += 50
       }
 
+      // Prefer results with road/street names
       if (addressDetails.road) {
         score += 30
       }
 
+      // Use OSM importance score
       if (result.importance) {
         score += result.importance * 10
       }
 
+      // Prefer building/residential results
       if (result.type === "house" || result.type === "building" || result.type === "residential") {
         score += 40
       }
@@ -144,7 +152,7 @@ export async function geocodeProperty(
   country = "Argentina",
   neighborhood?: string,
 ): Promise<GeocodingResult | null> {
-  const normalizedCity = city === "Capital" ? "Corrientes" : city
+  const normalizedCity = city === "Ciudad Autónoma de Buenos Aires" ? "Buenos Aires" : city
 
   const correctedAddress = correctStreetName(address)
   const expandedAddress = expandAbbreviations(correctedAddress)
@@ -162,7 +170,7 @@ export async function geocodeProperty(
   for (let i = 0; i < strategies.length; i++) {
     const strategyAddress = strategies[i]
 
-    const result = await geocodeAddress(strategyAddress)
+    const result = await geocodeAddress(strategyAddress, normalizedCity, state)
     if (result) {
       return result
     }

@@ -185,7 +185,7 @@ function PropertyCard({ property, currentUser }: { property: Property; currentUs
         <div className="flex items-center justify-between border-t border-border pt-3">
           <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
             {property.owner?.name && <span>Propietario: {property.owner.name}</span>}
-            {property.wordpress_id && property.wordpress_synced_at && (
+            {property.wordpress_synced_at && property.wordpress_id && property.wordpress_id > 0 ? (
               <span className="text-green-600">
                 Sincronizada:{" "}
                 {new Date(property.wordpress_synced_at).toLocaleString("es-AR", {
@@ -196,7 +196,9 @@ function PropertyCard({ property, currentUser }: { property: Property; currentUs
                   minute: "2-digit",
                 })}
               </span>
-            )}
+            ) : property.wordpress_synced_at && (!property.wordpress_id || property.wordpress_id === 0) ? (
+              <span className="text-orange-600 font-medium">Sincronización: Pendiente (falló)</span>
+            ) : null}
           </div>
           <div className="flex gap-1">
             <Button variant="ghost" size="icon" asChild>

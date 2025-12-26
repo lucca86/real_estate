@@ -287,8 +287,8 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
     parkingSpaces: editProperty?.parkingSpaces,
     area: editProperty?.area,
     lotSize: editProperty?.lotSize ?? undefined,
-    frontSize: editProperty?.frontSize ?? undefined,
-    depthSize: editProperty?.depthSize ?? undefined,
+    frontSize: editProperty?.frontSize ?? undefined, // Keep frontSize for existing data
+    depthSize: editProperty?.depthSize ?? undefined, // Keep depthSize for existing data
     yearBuilt: editProperty?.yearBuilt,
     price: editProperty?.price,
     currency: editProperty?.currency || "USD",
@@ -313,8 +313,8 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
     floors: editProperty?.floors ?? undefined,
     constructionYear: editProperty?.constructionYear,
     orientation: editProperty?.orientation,
-    frontMeters: editProperty?.frontMeters,
-    backMeters: editProperty?.backMeters,
+    frontMeters: editProperty?.frontMeters ?? editProperty?.frontSize ?? undefined,
+    backMeters: editProperty?.backMeters ?? editProperty?.depthSize ?? undefined,
     mainImage: editProperty?.mainImage,
     ownerName: editProperty?.ownerName,
     ownerEmail: editProperty?.ownerEmail,
@@ -408,6 +408,13 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
     }
   }, [neighborhoods, formData.neighborhoodId, selectedNeighborhoodName])
 
+  useEffect(() => {
+    if (formData.frontMeters && formData.backMeters && (!formData.lotSize || formData.lotSize === 0)) {
+      const calculated = formData.frontMeters * formData.backMeters
+      setFormData((prev) => ({ ...prev, lotSize: calculated }))
+    }
+  }, [formData.frontMeters, formData.backMeters, formData.lotSize])
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
@@ -435,6 +442,10 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
       validationErrors.push("El precio es requerido")
     }
     if (!formData.currency) validationErrors.push("Debe seleccionar una moneda")
+
+    if (!formData.lotSize || formData.lotSize <= 0) {
+      validationErrors.push("El tamaño del lote es requerido y debe ser mayor a 0")
+    }
 
     if (validationErrors.length > 0) {
       const errorMessage = validationErrors.join(", ")
@@ -1252,19 +1263,23 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="lotSize">Tamaño del Lote (m²)</Label>
+              {/* Made lot size required with red asterisk */}
+              <Label htmlFor="lotSize">
+                Tamaño del Lote (m²) <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="lotSize"
                 name="lotSize"
                 type="number"
                 step="0.01"
-                min="0"
+                min="0.01"
                 value={formData.lotSize ?? ""}
                 onChange={(e) => {
                   const val = e.target.value
                   setFormData((prev) => ({ ...prev, lotSize: val === "" ? undefined : Number(val) }))
                 }}
                 disabled={isSubmitting}
+                required
               />
             </div>
           </div>
@@ -1305,64 +1320,6 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
                 placeholder="Metros de fondo"
               />
             </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="garages">Estacionamientos (Garages)</Label>
-              <Input
-                id="garages"
-                name="garages"
-                type="number"
-                min="0"
-                value={formData.garages ?? ""}
-                onChange={(e) => {
-                  const val = e.target.value
-                  setFormData((prev) => ({ ...prev, garages: val === "" ? undefined : Number(val) }))
-                }}
-                disabled={isSubmitting}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="floors">Pisos</Label>
-              <Input
-                id="floors"
-                name="floors"
-                type="number"
-                min="0"
-                value={formData.floors ?? ""}
-                onChange={(e) => {
-                  const val = e.target.value
-                  setFormData((prev) => ({ ...prev, floors: val === "" ? undefined : Number(val) }))
-                }}
-                disabled={isSubmitting}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="orientation">Orientación</Label>
-            <Select
-              name="orientation"
-              value={formData.orientation || ""}
-              onValueChange={(value) => setFormData((prev) => ({ ...prev, orientation: value }))}
-              disabled={isSubmitting}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccione una orientación" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="NORTE">Norte</SelectItem>
-                <SelectItem value="SUR">Sur</SelectItem>
-                <SelectItem value="ESTE">Este</SelectItem>
-                <SelectItem value="OESTE">Oeste</SelectItem>
-                <SelectItem value="NORESTE">Noreste</SelectItem>
-                <SelectItem value="NOROESTE">Noroeste</SelectItem>
-                <SelectItem value="SURESTE">Sureste</SelectItem>
-                <SelectItem value="SUROESTE">Suroeste</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </CardContent>
       </Card>

@@ -1,7 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { createServerClient } from "@/lib/supabase/server"
-import { Building2, MapPin } from 'lucide-react'
+import { createAdminClient } from "@/lib/supabase/server"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
@@ -40,15 +38,19 @@ export async function getRecentProperties() {
   try {
     console.log("[v0] RecentProperties: Starting to fetch properties")
 
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
 
     const { data: properties, error } = await supabase
-      .from('Property')
+      .from("properties")
       .select(`
-        *,
-        createdBy:User!createdById(name)
+        id,
+        title,
+        price,
+        created_at,
+        property_types(name),
+        cities(name)
       `)
-      .order('createdAt', { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(5)
 
     if (error || !properties) {
@@ -57,11 +59,11 @@ export async function getRecentProperties() {
 
     console.log("[v0] RecentProperties: Successfully fetched", properties.length, "properties")
 
-    return properties.map(property => ({
+    return properties.map((property) => ({
       id: property.id,
       title: property.title,
       price: property.price,
-      created_at: property.createdAt,
+      created_at: property.created_at,
       property_types: property.property_types,
       cities: property.cities,
     }))
@@ -103,10 +105,7 @@ export function RecentProperties({ properties }: RecentPropertiesProps) {
                 className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
               >
                 <div className="space-y-1">
-                  <Link
-                    href={`/properties/${property.id}`}
-                    className="font-medium hover:underline"
-                  >
+                  <Link href={`/properties/${property.id}`} className="font-medium hover:underline">
                     {property.title}
                   </Link>
                   <div className="flex gap-2 text-sm text-muted-foreground">

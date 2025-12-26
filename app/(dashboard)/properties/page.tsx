@@ -5,7 +5,7 @@ import { PropertiesFilters } from "@/components/properties-filters"
 import { Button } from "@/components/ui/button"
 import { Plus, FileText } from "lucide-react"
 import Link from "next/link"
-import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { getUserPermissions } from "@/lib/permissions"
 
 export default async function PropertiesPage({
@@ -36,7 +36,7 @@ export default async function PropertiesPage({
   const bathrooms = params.bathrooms as string
   const activeOnly = params.activeOnly !== "false"
 
-  const supabase = await createServerClient()
+  const supabase = await createAdminClient()
 
   let query = supabase
     .from("properties")

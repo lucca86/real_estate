@@ -1,6 +1,6 @@
 "use server"
 
-import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { getCurrentUser, hasPermission } from "@/lib/auth"
 import { wordpressAPI } from "@/lib/wordpress"
 import { revalidatePath } from "next/cache"
@@ -12,7 +12,7 @@ export async function syncPropertyToWordPress(propertyId: string) {
     throw new Error("No tienes permisos para sincronizar propiedades")
   }
 
-  const supabase = await createServerClient()
+  const supabase = await createAdminClient()
   const { data: property } = await supabase
     .from("properties")
     .select(`
@@ -35,19 +35,11 @@ export async function syncPropertyToWordPress(propertyId: string) {
     throw new Error("La propiedad debe tener al menos una imagen para sincronizar con WordPress")
   }
 
-  console.log("[v0] Syncing property from sync button:", {
-    id: property.id,
-    title: property.title,
-    propertyLabel: property.property_label,
-    hasPropertyLabel: !!property.property_label,
-    propertyLabelType: typeof property.property_label,
-    allFields: {
-      status: property.status,
-      transactionType: property.transaction_type,
-      published: property.published,
-      syncToWordPress: property.sync_to_wordpress,
-    },
-  })
+  if (!property.lot_size || Number.parseFloat(property.lot_size) === 0) {
+    throw new Error(
+      "El tamaño del lote debe ser mayor a 0 para sincronizar con WordPress. Por favor actualiza el campo 'Tamaño del Lote (m²)'.",
+    )
+  }
 
   try {
     const wordpressId = await wordpressAPI.syncProperty({
@@ -85,7 +77,7 @@ export async function syncPropertyToWordPress(propertyId: string) {
       .from("properties")
       .update({
         wordpress_id: wordpressId,
-        synced_at: new Date().toISOString(),
+        wordpress_synced_at: new Date().toISOString(),
       })
       .eq("id", propertyId)
 
@@ -106,7 +98,7 @@ export async function syncAllPropertiesToWordPress() {
     throw new Error("Solo los administradores pueden sincronizar todas las propiedades")
   }
 
-  const supabase = await createServerClient()
+  const supabase = await createAdminClient()
   const { data: properties } = await supabase
     .from("properties")
     .select(`
@@ -130,6 +122,12 @@ export async function syncAllPropertiesToWordPress() {
     try {
       if (!property.images || property.images.length === 0) {
         throw new Error("La propiedad debe tener al menos una imagen para sincronizar con WordPress")
+      }
+
+      if (!property.lot_size || Number.parseFloat(property.lot_size) === 0) {
+        throw new Error(
+          "El tamaño del lote debe ser mayor a 0 para sincronizar con WordPress. Por favor actualiza el campo 'Tamaño del Lote (m²)'.",
+        )
       }
 
       const wordpressId = await wordpressAPI.syncProperty({
@@ -167,7 +165,7 @@ export async function syncAllPropertiesToWordPress() {
         .from("properties")
         .update({
           wordpress_id: wordpressId,
-          synced_at: new Date().toISOString(),
+          wordpress_synced_at: new Date().toISOString(),
         })
         .eq("id", property.id)
 
@@ -191,7 +189,7 @@ export async function deletePropertyFromWordPress(propertyId: string) {
     throw new Error("No tienes permisos para eliminar propiedades de WordPress")
   }
 
-  const supabase = await createServerClient()
+  const supabase = await createAdminClient()
   const { data: property } = await supabase.from("properties").select("id, wordpress_id").eq("id", propertyId).single()
 
   if (!property || !property.wordpress_id) {
@@ -205,7 +203,7 @@ export async function deletePropertyFromWordPress(propertyId: string) {
       .from("properties")
       .update({
         wordpress_id: null,
-        synced_at: null,
+        wordpress_synced_at: null,
       })
       .eq("id", propertyId)
 

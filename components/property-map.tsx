@@ -37,9 +37,17 @@ interface PropertiesMapProps {
   properties: Property[]
   defaultCenter?: [number, number]
   defaultZoom?: number
+  draggable?: boolean
+  onMarkerDrag?: (lat: number, lng: number) => void
 }
 
-export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, defaultZoom = 13 }: PropertiesMapProps) {
+export function PropertiesMap({
+  properties,
+  defaultCenter = CORRIENTES_CENTER,
+  defaultZoom = 13,
+  draggable = false,
+  onMarkerDrag,
+}: PropertiesMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<any[]>([])
@@ -120,12 +128,21 @@ export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, d
           const lat = property.latitude!
           const lng = property.longitude!
 
-          const marker = L.marker([lat, lng])
+          const marker = L.marker([lat, lng], {
+            draggable: draggable,
+          })
 
           marker.on("click", () => {
             setSelectedProperty(property)
             map.setView([lat, lng], 16, { animate: true })
           })
+
+          if (draggable && onMarkerDrag) {
+            marker.on("dragend", () => {
+              const position = marker.getLatLng()
+              onMarkerDrag(position.lat, position.lng)
+            })
+          }
 
           marker.addTo(map)
           markersRef.current.push(marker)
@@ -151,7 +168,7 @@ export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, d
         mapInstanceRef.current = null
       }
     }
-  }, [properties, validProperties, defaultCenter, defaultZoom])
+  }, [properties, validProperties, defaultCenter, defaultZoom, draggable, onMarkerDrag])
 
   const typeLabels: Record<string, string> = {
     CASA: "Casa",
@@ -189,13 +206,7 @@ export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, d
             <div className="flex gap-4">
               {selectedProperty.images[0] && (
                 <img
-                  src={(() => {
-                    console.log("[v0] Selected property images:", selectedProperty.images)
-                    console.log("[v0] First image:", selectedProperty.images[0])
-                    const imageUrl = normalizeImageUrl(selectedProperty.images[0])
-                    console.log("[v0] Normalized image URL:", imageUrl)
-                    return imageUrl || "/placeholder.svg?height=400&width=600"
-                  })()}
+                  src={normalizeImageUrl(selectedProperty.images[0]) || "/placeholder.svg"}
                   alt={selectedProperty.title}
                   className="h-24 w-24 rounded-lg object-cover"
                 />

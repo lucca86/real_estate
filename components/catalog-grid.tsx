@@ -1,4 +1,4 @@
-import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { CatalogPropertyCard } from "./catalog-property-card"
 import { Card, CardContent } from "@/components/ui/card"
 import { Building2 } from "lucide-react"
@@ -18,7 +18,7 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
   const bedrooms = searchParams.bedrooms as string
   const bathrooms = searchParams.bathrooms as string
 
-  const supabase = await createServerClient()
+  const supabase = await createAdminClient()
 
   let query = supabase
     .from("properties")

@@ -1,9 +1,9 @@
 import { getCurrentUser } from "@/lib/auth"
-import { redirect, notFound } from 'next/navigation'
+import { redirect, notFound } from "next/navigation"
 import { PropertyForm } from "@/components/property-form"
 import { WordPressSyncButton } from "@/components/wordpress-sync-button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { getPropertyById } from "@/lib/actions/properties"
@@ -54,6 +54,9 @@ export default async function EditPropertyPage({
     bathrooms: propertyData.bathrooms,
     parkingSpaces: propertyData.parking_spaces,
     area: propertyData.area,
+    lotSize: propertyData.lot_size,
+    frontSize: propertyData.frontSize,
+    depthSize: propertyData.depthSize,
     yearBuilt: propertyData.year_built,
     price: propertyData.price,
     currency: propertyData.currency,
@@ -70,7 +73,6 @@ export default async function EditPropertyPage({
     transactionType: (propertyData.transaction_type || "VENTA") as TransactionType,
     rentalPeriod: (propertyData.rental_period as any) || null,
     zipCode: propertyData.zip_code || null,
-    lotSize: propertyData.lot_size || null,
     pricePerM2: propertyData.price_per_m2 || null,
     rentalPrice: propertyData.rental_price || null,
     virtualTour: propertyData.virtual_tour || null,

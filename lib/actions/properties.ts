@@ -1,10 +1,10 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { getCurrentUser } from "@/lib/auth"
-import { revalidatePath } from "next/cache"
-import { wordpressAPI } from "@/lib/wordpress"
+import { syncPropertyToWordPress } from "./wordpress"
 import crypto from "crypto"
+import { revalidatePath } from "next/cache"
 import type { PropertyWithDetails } from "@/types"
 import type { ActionResult } from "@/types/action-result"
 
@@ -58,8 +58,8 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
     const virtualTour = formData.get("virtualTour") as string
     const published = formData.get("published") === "true"
     const syncToWordPress = formData.get("syncToWordPress") === "true"
-    const frontSize = formData.get("frontSize") ? Number.parseFloat(formData.get("frontSize") as string) : null
-    const depthSize = formData.get("depthSize") ? Number.parseFloat(formData.get("depthSize") as string) : null
+    const frontMeters = formData.get("frontMeters") ? Number.parseFloat(formData.get("frontMeters") as string) : null
+    const backMeters = formData.get("backMeters") ? Number.parseFloat(formData.get("backMeters") as string) : null
     const adrema = formData.get("adrema") as string
 
     console.log("[v0] Form data extracted:", { title, ownerId, propertyTypeId, status, cityId })
@@ -122,8 +122,8 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
         parking_spaces: parsedParkingSpaces,
         area: parsedArea,
         lot_size: parsedLotSize,
-        frontSize: frontSize,
-        depthSize: depthSize,
+        frontSize: frontMeters,
+        depthSize: backMeters,
         year_built: parsedYearBuilt,
         transaction_type: transactionType,
         rental_period: rentalPeriod || null,
@@ -137,7 +137,7 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
         property_label: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
         adrema: adrema || null,
         features: parseArrayField(features),
-        videos: videos ? videos.split(",").map((v) => v.trim()) : [],
+        videos: videos ? JSON.parse(videos) : [],
         virtual_tour: virtualTour || null,
         published,
         sync_to_wordpress: syncToWordPress,
@@ -155,36 +155,15 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
 
     console.log("[v0] Property created successfully:", newProperty?.id)
 
-    if (syncToWordPress) {
+    if (syncToWordPress && newProperty) {
       try {
         const imagesToSync = sortedImages
           .filter((img: any) => img.syncToWordPress)
           .map((img: any) => img.sizes?.large || img.url)
 
         if (imagesToSync.length > 0) {
-          const { data: propertyWithRelations } = await supabase
-            .from("properties")
-            .select(`
-              *,
-              propertyType:property_types!property_type_id(name),
-              city:cities!city_id(name),
-              province:provinces!province_id(name),
-              country:countries!country_id(name),
-              neighborhood:neighborhoods!neighborhood_id(name)
-            `)
-            .eq("id", newProperty.id)
-            .single()
-
-          if (propertyWithRelations) {
-            const syncPromise = wordpressAPI.syncProperty(propertyWithRelations as any)
-            const timeoutPromise = new Promise((_, reject) =>
-              setTimeout(() => reject(new Error("WordPress sync timeout")), 30000),
-            )
-
-            await Promise.race([syncPromise, timeoutPromise]).catch((wpError) => {
-              console.error("Error syncing to WordPress:", wpError)
-            })
-          }
+          // Call the WordPress sync action which will handle updating wordpress_synced_at
+          await syncPropertyToWordPress(newProperty.id)
         } else {
           console.log("Skipping WordPress sync: No images marked for sync")
         }
@@ -252,8 +231,8 @@ export async function updateProperty(propertyId: string, formData: FormData) {
   const virtualTour = formData.get("virtualTour") as string
   const published = formData.get("published") === "true"
   const syncToWordPress = formData.get("syncToWordPress") === "true"
-  const frontSize = formData.get("frontSize") ? Number.parseFloat(formData.get("frontSize") as string) : null
-  const depthSize = formData.get("depthSize") ? Number.parseFloat(formData.get("depthSize") as string) : null
+  const frontMeters = formData.get("frontMeters") ? Number.parseFloat(formData.get("frontMeters") as string) : null
+  const backMeters = formData.get("backMeters") ? Number.parseFloat(formData.get("backMeters") as string) : null
   const latitude = formData.get("latitude") as string
   const longitude = formData.get("longitude") as string
   const bedrooms = formData.get("bedrooms") as string
@@ -312,8 +291,8 @@ export async function updateProperty(propertyId: string, formData: FormData) {
       parking_spaces: parsedParkingSpaces,
       area: parsedArea,
       lot_size: parsedLotSize,
-      frontSize: frontSize,
-      depthSize: depthSize,
+      frontSize: frontMeters,
+      depthSize: backMeters,
       year_built: parsedYearBuilt,
       transaction_type: transactionType,
       rental_period: rentalPeriod || null,
@@ -327,7 +306,7 @@ export async function updateProperty(propertyId: string, formData: FormData) {
       property_label: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
       adrema: adrema || null,
       features: parseArrayField(features),
-      videos: videos ? videos.split(",").map((v) => v.trim()) : [],
+      videos: videos ? JSON.parse(videos) : [],
       virtual_tour: virtualTour || null,
       published,
       sync_to_wordpress: syncToWordPress,
@@ -338,22 +317,22 @@ export async function updateProperty(propertyId: string, formData: FormData) {
     .single()
 
   if (updateError) {
-    console.error("Error updating property:", updateError)
-    throw new Error(`Error updating property: ${updateError.message}`)
+    throw new Error(updateError.message)
   }
 
-  let wordpressSyncResult: { success: boolean; wordpressId?: number; error?: string } = { success: false }
+  if (!updatedProperty) {
+    throw new Error("Error al actualizar la propiedad")
+  }
 
-  if (syncToWordPress) {
-    try {
-      console.log("[v0] Syncing updated property to WordPress:", updatedProperty.id)
-
+  try {
+    if (syncToWordPress) {
       const imagesToSync = sortedImages
         .filter((img: any) => img.syncToWordPress)
         .map((img: any) => img.sizes?.large || img.url)
 
       if (imagesToSync.length > 0) {
-        const { data: propertyWithRelations } = await supabase
+        const adminClient = await createAdminClient()
+        const { data: propertyWithRelations } = await adminClient
           .from("properties")
           .select(`
             *,
@@ -367,50 +346,19 @@ export async function updateProperty(propertyId: string, formData: FormData) {
           .single()
 
         if (propertyWithRelations) {
-          const propertyForSync = {
-            ...propertyWithRelations,
-            wordpressId: propertyWithRelations.wordpress_id || null,
-          }
-
-          console.log("[v0] Existing WordPress ID:", propertyForSync.wordpressId)
-
-          const syncResult = await wordpressAPI.syncProperty(propertyForSync as any)
-          wordpressSyncResult = {
-            success: true,
-            wordpressId: syncResult,
-          }
-          console.log("[v0] WordPress sync successful, ID:", syncResult)
-
-          await supabase
-            .from("properties")
-            .update({
-              wordpress_id: syncResult,
-              wordpress_synced_at: new Date().toISOString(),
-            })
-            .eq("id", updatedProperty.id)
+          await syncPropertyToWordPress(updatedProperty.id)
         }
-      } else {
-        console.log("[v0] Skipping WordPress sync: No images marked for sync")
-        wordpressSyncResult = { success: false, error: "No hay imágenes marcadas para sincronizar" }
-      }
-    } catch (wpError: any) {
-      console.error("[v0] Error in WordPress sync process:", wpError)
-      wordpressSyncResult = {
-        success: false,
-        error: wpError.message || "Error desconocido al sincronizar con WordPress",
       }
     }
+  } catch (syncError) {
+    console.error("[v0] WordPress sync failed:", syncError)
   }
 
-  revalidatePath("/")
   revalidatePath("/properties")
-  revalidatePath(`/properties/${propertyId}`)
+  revalidatePath("/catalog")
   revalidatePath(`/properties/${propertyId}/edit`)
 
-  return {
-    property: updatedProperty,
-    wordpressSync: wordpressSyncResult,
-  }
+  return updatedProperty
 }
 
 export async function deleteProperty(propertyId: string) {
