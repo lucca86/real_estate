@@ -64,6 +64,7 @@ export async function syncPropertyToWordPress(propertyId: string) {
       lotSize: property.lot_size,
       yearBuilt: property.year_built,
       price: property.price,
+      currency: property.currency, // Added currency field
       pricePerM2: property.price_per_m2,
       features: property.features,
       amenities: property.amenities,
@@ -152,6 +153,7 @@ export async function syncAllPropertiesToWordPress() {
         lotSize: property.lot_size,
         yearBuilt: property.year_built,
         price: property.price,
+        currency: property.currency, // Added currency field
         pricePerM2: property.price_per_m2,
         features: property.features,
         amenities: property.amenities,
