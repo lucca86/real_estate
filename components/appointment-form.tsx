@@ -57,6 +57,9 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
   const [propertySearch, setPropertySearch] = useState("")
   const [showPropertyResults, setShowPropertyResults] = useState(false)
 
+  const now = new Date()
+  const minDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+
   const initialProperty = appointment?.property_id
     ? properties.find((p) => p.id === appointment.property_id) ||
       (appointment.property
@@ -123,8 +126,6 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
 
   const onSubmit = async (data: AppointmentFormData) => {
     console.log("[v0] Form submitted with data:", data)
-    console.log("[v0] Validation errors:", errors)
-
     setIsSubmitting(true)
 
     try {
@@ -279,6 +280,7 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
               <Input
                 id="scheduledAt"
                 type="datetime-local"
+                min={minDateTime}
                 {...register("scheduledAt")}
                 className={errors.scheduledAt ? "border-destructive" : ""}
               />

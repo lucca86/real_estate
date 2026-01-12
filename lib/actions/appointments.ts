@@ -182,6 +182,13 @@ export async function createAppointment(data: AppointmentInput) {
     console.log("[v0] ========== CREATING APPOINTMENT ==========")
     console.log("[v0] Raw data received:", JSON.stringify(data, null, 2))
 
+    const currentUser = await getCurrentUser()
+    if (!currentUser) {
+      console.log("[v0] ✗ User not authenticated")
+      return { success: false, error: "Usuario no autenticado" }
+    }
+    console.log("[v0] ✓ Current user:", currentUser.id, currentUser.email)
+
     const validatedData = appointmentSchema.parse(data)
     console.log("[v0] ✓ Validation passed")
 
@@ -253,6 +260,20 @@ export async function createAppointment(data: AppointmentInput) {
 
     const appointmentId = randomUUID()
 
+    console.log("[v0] Attempting INSERT with data:", {
+      id: appointmentId,
+      property_id: validatedData.propertyId || null,
+      other_location: validatedData.otherLocation || null,
+      client_id: validatedData.clientId || null,
+      contact_name: validatedData.contactName || null,
+      agent_id: validatedData.agentId,
+      scheduled_date: scheduledDate.toISOString(),
+      duration: validatedData.duration,
+      status: validatedData.status,
+      notes: validatedData.notes || null,
+      created_by: currentUser.id, // Added created_by field
+    })
+
     const { data: appointment, error: insertError } = await supabase
       .from("appointments")
       .insert({
@@ -266,11 +287,28 @@ export async function createAppointment(data: AppointmentInput) {
         duration: validatedData.duration,
         status: validatedData.status,
         notes: validatedData.notes || null,
+        created_by: currentUser.id, // Added created_by field
       })
       .select()
       .single()
 
-    if (insertError) throw insertError
+    console.log("[v0] INSERT result:", {
+      success: !insertError,
+      error: insertError,
+      appointment,
+    })
+
+    if (insertError) {
+      console.error("[v0] ✗ INSERT FAILED:", {
+        message: insertError.message,
+        details: insertError.details,
+        hint: insertError.hint,
+        code: insertError.code,
+      })
+      throw insertError
+    }
+
+    console.log("[v0] ✓ INSERT successful")
 
     let clientName = validatedData.contactName || "Cliente no especificado"
     let clientEmail = ""
@@ -318,6 +356,7 @@ export async function createAppointment(data: AppointmentInput) {
     return { success: true, data: appointment }
   } catch (error) {
     console.error("[v0] Error creating appointment:", error)
+    console.error("[v0] Full error details:", JSON.stringify(error, null, 2))
     if (error instanceof z.ZodError) {
       return {
         success: false,
