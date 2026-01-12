@@ -166,9 +166,13 @@ async function checkScheduleConflict(
         hour: "2-digit",
         minute: "2-digit",
       })
+
+      const clientName = existing.client?.name || existing.contact_name || "un cliente"
+      const propertyTitle = existing.property?.title || existing.other_location || "una propiedad"
+
       return {
         hasConflict: true,
-        message: `El agente ya tiene una cita con ${existing.client.name} para ver "${existing.property.title}" a las ${timeStr}`,
+        message: `El agente ya tiene una cita con ${clientName} para ver "${propertyTitle}" a las ${timeStr}`,
       }
     }
   }
