@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Clock, MapPin, User, Calendar, Edit, X, Check, Building2 } from "lucide-react"
+import { Clock, MapPin, User, Calendar, Edit, Building2 } from "lucide-react"
 import Link from "next/link"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { getArgentinaTime } from "@/lib/timezone-utils"
+import { DeleteAppointmentButton } from "@/components/delete-appointment-button"
 
 interface Appointment {
   id: string
@@ -431,18 +432,13 @@ export default function AppointmentsDayView({ appointments, selectedDate }: Appo
                       Editar
                     </Button>
                   </Link>
-                  {selectedAppointment.status !== "COMPLETADA" && (
-                    <Button variant="outline" className="flex-1 bg-transparent">
-                      <Check className="mr-2 h-4 w-4" />
-                      Completar
-                    </Button>
-                  )}
-                  {selectedAppointment.status !== "CANCELADA" && (
-                    <Button variant="outline" className="flex-1 bg-transparent">
-                      <X className="mr-2 h-4 w-4" />
-                      Cancelar
-                    </Button>
-                  )}
+                  <DeleteAppointmentButton
+                    appointmentId={selectedAppointment.id}
+                    clientName={selectedAppointment.contactName || selectedAppointment.client?.name || "Cliente"}
+                    propertyTitle={selectedAppointment.property?.title}
+                    variant="destructive"
+                    size="default"
+                  />
                 </div>
               </div>
             </>

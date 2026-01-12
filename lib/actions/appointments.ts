@@ -5,6 +5,8 @@ import { z } from "zod"
 import { createServerClient } from "@/lib/supabase/server"
 import { sendAppointmentNotifications } from "@/lib/email-notifications"
 import { randomUUID } from "crypto"
+import { getCurrentUser } from "@/lib/auth"
+import { checkPermission, type Permission } from "@/lib/permissions"
 
 // Esquema de validación para citas
 const appointmentSchema = z
@@ -592,7 +594,34 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
 // Eliminar una cita
 export async function deleteAppointment(id: string) {
   try {
+    // Check permissions
+    const user = await getCurrentUser()
+    if (!user) {
+      return { success: false, error: "No autenticado" }
+    }
+
     const supabase = await createServerClient()
+
+    // Get the appointment to check ownership
+    const { data: appointment } = await supabase
+      .from("appointments")
+      .select("agent_id, created_by")
+      .eq("id", id)
+      .single()
+
+    if (!appointment) {
+      return { success: false, error: "Cita no encontrada" }
+    }
+
+    // Check if user has permission to delete
+    // Users can delete their own appointments, or if they have appointments.manage permission
+    const hasPermission = await checkPermission("appointments.manage" as Permission)
+    const isOwner = appointment.agent_id === user.id || appointment.created_by === user.id
+
+    if (!hasPermission && !isOwner && user.role !== "ADMIN") {
+      return { success: false, error: "No tienes permisos para eliminar esta cita" }
+    }
+
     const { error } = await supabase.from("appointments").delete().eq("id", id)
 
     if (error) {
