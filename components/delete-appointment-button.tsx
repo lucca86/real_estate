@@ -24,6 +24,7 @@ interface DeleteAppointmentButtonProps {
   propertyTitle?: string
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
   size?: "default" | "sm" | "lg" | "icon"
+  canDelete?: boolean
 }
 
 export function DeleteAppointmentButton({
@@ -32,6 +33,7 @@ export function DeleteAppointmentButton({
   propertyTitle,
   variant = "destructive",
   size = "icon",
+  canDelete = false, // Default to false
 }: DeleteAppointmentButtonProps) {
   const router = useRouter()
   const { toast } = useToast()
@@ -66,6 +68,10 @@ export function DeleteAppointmentButton({
     } finally {
       setIsDeleting(false)
     }
+  }
+
+  if (!canDelete) {
+    return null
   }
 
   return (

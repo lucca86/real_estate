@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin, User } from "lucide-react"
+import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin, User, Edit } from "lucide-react"
 import Link from "next/link"
 import {
   format,
@@ -22,6 +22,7 @@ import {
 import { es } from "date-fns/locale"
 import { getArgentinaTime, formatArgentinaDate } from "@/lib/timezone-utils"
 import AppointmentsDayView from "./appointments-day-view" // Import day view component
+import { DeleteAppointmentButton } from "@/components/delete-appointment-button"
 
 interface Appointment {
   id: string
@@ -58,12 +59,13 @@ interface Appointment {
 
 interface AppointmentsCalendarProps {
   appointments: Appointment[]
+  canDelete?: boolean
 }
 
-export function AppointmentsCalendar({ appointments }: AppointmentsCalendarProps) {
+export function AppointmentsCalendar({ appointments, canDelete = false }: AppointmentsCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [view, setView] = useState<"month" | "day">("month") // Added day view option
-  const [selectedDay, setSelectedDay] = useState<Date | null>(null) // Track selected day for day view
+  const [view, setView] = useState<"month" | "day">("month")
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null)
 
   const monthStart = startOfMonth(currentDate)
   const monthEnd = endOfMonth(currentDate)
@@ -236,8 +238,11 @@ export function AppointmentsCalendar({ appointments }: AppointmentsCalendarProps
                               {dayAppointments.length === 1 ? "cita" : "citas"}
                             </p>
                             {dayAppointments.map((apt) => (
-                              <Link key={apt.id} href={`/appointments/${apt.id}/edit`} className="block">
-                                <div className="text-xs space-y-1.5 pb-3 border-b border-gray-300 dark:border-gray-700 last:border-0 last:pb-0 hover:bg-gray-100 dark:hover:bg-gray-800 -mx-2 px-2 py-2 rounded transition-colors cursor-pointer">
+                              <div
+                                key={apt.id}
+                                className="text-xs space-y-1.5 pb-3 border-b border-gray-300 dark:border-gray-700 last:border-0 last:pb-0"
+                              >
+                                <div className="space-y-1.5">
                                   <div className="flex items-center gap-2">
                                     <Clock className="h-3 w-3 text-gray-700 dark:text-gray-300" />
                                     <span className="font-medium text-gray-900 dark:text-gray-100">
@@ -264,7 +269,23 @@ export function AppointmentsCalendar({ appointments }: AppointmentsCalendarProps
                                     <div className="text-gray-700 dark:text-gray-300">Notas: {apt.notes}</div>
                                   )}
                                 </div>
-                              </Link>
+                                <div className="flex gap-1 mt-2 pt-2 border-t border-gray-300 dark:border-gray-700">
+                                  <Link href={`/appointments/${apt.id}/edit`} className="flex-1">
+                                    <Button variant="outline" size="sm" className="w-full h-7 text-xs bg-transparent">
+                                      <Edit className="h-3 w-3 mr-1" />
+                                      Editar
+                                    </Button>
+                                  </Link>
+                                  <DeleteAppointmentButton
+                                    appointmentId={apt.id}
+                                    clientName={apt.contactName || apt.client?.name || "Cliente"}
+                                    propertyTitle={apt.property?.title}
+                                    variant="destructive"
+                                    size="sm"
+                                    canDelete={canDelete}
+                                  />
+                                </div>
+                              </div>
                             ))}
                           </div>
                         </TooltipContent>
@@ -277,7 +298,7 @@ export function AppointmentsCalendar({ appointments }: AppointmentsCalendarProps
           )}
 
           {view === "day" && selectedDay && (
-            <AppointmentsDayView appointments={appointments} selectedDate={selectedDay} />
+            <AppointmentsDayView appointments={appointments} selectedDate={selectedDay} canDelete={canDelete} />
           )}
         </CardContent>
       </Card>

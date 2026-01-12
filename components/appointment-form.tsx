@@ -143,6 +143,10 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
         ? await updateAppointment(appointment.id, appointmentData)
         : await createAppointment(appointmentData)
 
+      console.log("[v0] Server response received:", result)
+      console.log("[v0] Success:", result.success)
+      console.log("[v0] Error message:", result.error)
+
       if (result.success) {
         toast({
           title: appointment ? "Cita actualizada" : "Cita creada",
@@ -153,17 +157,22 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
         router.push("/appointments")
         router.refresh()
       } else {
+        console.log("[v0] Showing error toast with message:", result.error)
         toast({
-          title: "Error",
-          description: result.error || "Ocurrió un error",
+          title: "❌ No se pudo crear la cita",
+          description: result.error || "Ocurrió un error al crear la cita",
           variant: "destructive",
+          duration: 8000,
         })
+        console.log("[v0] Error toast triggered")
       }
     } catch (error) {
+      console.error("[v0] Exception caught:", error)
       toast({
-        title: "Error",
-        description: "Ocurrió un error inesperado",
+        title: "❌ Error inesperado",
+        description: "Ocurrió un error inesperado al procesar la solicitud",
         variant: "destructive",
+        duration: 8000,
       })
     } finally {
       setIsSubmitting(false)

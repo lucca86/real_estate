@@ -6,6 +6,7 @@ import { AppointmentsCalendar } from "@/components/appointments-calendar"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import Link from "next/link"
+import { checkPermission } from "@/lib/permissions"
 
 export default async function AppointmentsPage() {
   const user = await getCurrentUser()
@@ -13,6 +14,8 @@ export default async function AppointmentsPage() {
   if (!user) {
     redirect("/login")
   }
+
+  const canDelete = await checkPermission("appointments.delete")
 
   const result = await getAppointments()
 
@@ -48,7 +51,7 @@ export default async function AppointmentsPage() {
       </div>
 
       <Suspense fallback={<div>Cargando calendario...</div>}>
-        <AppointmentsCalendar appointments={result.data} />
+        <AppointmentsCalendar appointments={result.data} canDelete={canDelete} />
       </Suspense>
     </>
   )

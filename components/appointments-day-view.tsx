@@ -46,19 +46,56 @@ interface Appointment {
   contactName?: string
 }
 
-interface AppointmentsDayViewProps {
-  appointments: Appointment[]
-  selectedDate: Date
-}
-
-interface PositionedAppointment extends Appointment {
+interface PositionedAppointment {
+  id: string
+  scheduledAt: string
+  duration: number
+  status: string
+  notes?: string
+  property?:
+    | {
+        id: string
+        title: string
+        address: string
+        price: number
+        city: string
+        images: string[]
+      }
+    | null
+    | undefined
+  otherLocation?: string
+  client:
+    | {
+        name: string
+      }
+    | null
+    | undefined
+  agent:
+    | {
+        name: string
+      }
+    | null
+    | undefined
+  contactName?: string
   top: number
   height: number
   column: number
   totalColumns: number
+  startTime: number
+  endTime: number
 }
 
-export default function AppointmentsDayView({ appointments, selectedDate }: AppointmentsDayViewProps) {
+interface AppointmentsDayViewProps {
+  appointments: Appointment[]
+  selectedDate: Date
+  canDelete?: boolean // Added canDelete prop
+}
+
+export default function AppointmentsDayView({
+  appointments,
+  selectedDate,
+  canDelete = false,
+}: AppointmentsDayViewProps) {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
 
   // Filtrar citas del día seleccionado
@@ -113,7 +150,6 @@ export default function AppointmentsDayView({ appointments, selectedDate }: Appo
     const hoursSince7AM = hour - 7
     const top = hoursSince7AM * 120 + (minutes / 60) * 120 // 120px por hora
 
-    // Calcular altura según duración
     const height = (appointment.duration / 60) * 120 // 120px por hora
 
     return { top, height }
@@ -138,53 +174,103 @@ export default function AppointmentsDayView({ appointments, selectedDate }: Appo
   }
 
   const calculateAppointmentColumns = (appointments: Appointment[]): PositionedAppointment[] => {
-    const positioned: PositionedAppointment[] = []
+    if (appointments.length === 0) return []
 
-    // Sort appointments by start time
+    // Ordenar por hora de inicio, luego por duración (más largas primero)
     const sorted = [...appointments].sort((a, b) => {
-      return new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
+      const timeA = new Date(a.scheduledAt).getTime()
+      const timeB = new Date(b.scheduledAt).getTime()
+      if (timeA !== timeB) return timeA - timeB
+      return b.duration - a.duration // Más largas primero
     })
 
-    sorted.forEach((apt) => {
-      const { top, height } = getAppointmentPosition(apt)
+    console.log("[v0] Calculating columns for", sorted.length, "appointments")
 
-      // Find all overlapping appointments already positioned
-      const overlapping = positioned.filter((other) => doAppointmentsOverlap(apt, other))
+    // Calcular posiciones y tiempos
+    const positioned: PositionedAppointment[] = sorted.map((apt) => ({
+      ...apt,
+      ...getAppointmentPosition(apt),
+      startTime: new Date(apt.scheduledAt).getTime(),
+      endTime: new Date(apt.scheduledAt).getTime() + apt.duration * 60000,
+      column: 0,
+      totalColumns: 1,
+    }))
 
-      if (overlapping.length === 0) {
-        // No overlap, use full width
-        positioned.push({
-          ...apt,
-          top,
-          height,
-          column: 0,
-          totalColumns: 1,
+    // Asignar columnas
+    for (let i = 0; i < positioned.length; i++) {
+      const current = positioned[i]
+      const currentTime = format(new Date(current.scheduledAt), "HH:mm")
+
+      console.log(`[v0] Processing appointment ${i} at ${currentTime}`)
+
+      // Encontrar todas las citas previas que se solapan o son adyacentes
+      const overlappingColumns: number[] = []
+      for (let j = 0; j < i; j++) {
+        const other = positioned[j]
+        const otherTime = format(new Date(other.scheduledAt), "HH:mm")
+
+        const overlaps = current.startTime <= other.endTime && other.startTime <= current.endTime
+
+        console.log(`  Checking against ${j} at ${otherTime}:`, {
+          currentStart: format(new Date(current.startTime), "HH:mm:ss"),
+          currentEnd: format(new Date(current.endTime), "HH:mm:ss"),
+          otherStart: format(new Date(other.startTime), "HH:mm:ss"),
+          otherEnd: format(new Date(other.endTime), "HH:mm:ss"),
+          "current.startTime <= other.endTime": current.startTime <= other.endTime,
+          "other.startTime <= current.endTime": other.startTime <= current.endTime,
+          overlaps,
         })
-      } else {
-        // Find available column
-        const usedColumns = overlapping.map((o) => o.column)
-        let column = 0
-        while (usedColumns.includes(column)) {
-          column++
+
+        if (overlaps) {
+          overlappingColumns.push(other.column)
+          console.log(`    → OVERLAP DETECTED! Other is in column ${other.column}`)
         }
-
-        // Calculate total columns needed for this group
-        const maxColumn = Math.max(column, ...overlapping.map((o) => o.column))
-        const totalColumns = maxColumn + 1
-
-        // Update total columns for all overlapping appointments
-        overlapping.forEach((other) => {
-          other.totalColumns = Math.max(other.totalColumns, totalColumns)
-        })
-
-        positioned.push({
-          ...apt,
-          top,
-          height,
-          column,
-          totalColumns,
-        })
       }
+
+      // Asignar a la primera columna disponible
+      if (overlappingColumns.length === 0) {
+        current.column = 0
+        console.log(`  → Assigned to column 0 (no overlaps)`)
+      } else {
+        overlappingColumns.sort((a, b) => a - b)
+        let targetColumn = 0
+        for (const col of overlappingColumns) {
+          if (col === targetColumn) {
+            targetColumn++
+          } else {
+            break
+          }
+        }
+        current.column = targetColumn
+        console.log(`  → Assigned to column ${targetColumn} (overlapping columns: ${overlappingColumns.join(", ")})`)
+      }
+    }
+
+    // Calcular totalColumns para cada grupo de solapamiento
+    for (let i = 0; i < positioned.length; i++) {
+      const current = positioned[i]
+      let maxColumn = current.column
+
+      // Buscar todas las citas que se solapan o son adyacentes
+      for (let j = 0; j < positioned.length; j++) {
+        if (i !== j) {
+          const other = positioned[j]
+          if (current.startTime <= other.endTime && other.startTime <= current.endTime) {
+            maxColumn = Math.max(maxColumn, other.column)
+          }
+        }
+      }
+
+      current.totalColumns = maxColumn + 1
+    }
+
+    positioned.forEach((apt) => {
+      console.log(`[v0] Appointment at ${format(new Date(apt.scheduledAt), "HH:mm")}:`, {
+        column: apt.column,
+        totalColumns: apt.totalColumns,
+        duration: apt.duration,
+        contactName: apt.contactName,
+      })
     })
 
     return positioned
@@ -220,25 +306,35 @@ export default function AppointmentsDayView({ appointments, selectedDate }: Appo
                 const aptDate = new Date(apt.scheduledAt)
                 const endTime = new Date(aptDate.getTime() + apt.duration * 60000)
 
-                // Calculate width and left position based on columns
                 const widthPercent = 100 / apt.totalColumns
                 const leftPercent = apt.column * widthPercent
+                // Spacing between columns
+                const gap = 2
+
+                console.log(`[v0] Rendering appointment at ${format(aptDate, "HH:mm")}:`, {
+                  column: apt.column,
+                  totalColumns: apt.totalColumns,
+                  leftPercent,
+                  widthPercent,
+                  left: `calc(${leftPercent}% + ${gap}px)`,
+                  width: `calc(${widthPercent}% - ${gap * 2}px)`,
+                })
 
                 return (
                   <button
                     key={apt.id}
                     onClick={() => setSelectedAppointment(apt)}
-                    className={`absolute rounded-lg border-l-4 p-3 transition-all hover:shadow-md cursor-pointer ${getStatusBgColor(
+                    className={`absolute rounded-lg border-l-4 transition-all hover:shadow-md hover:z-10 cursor-pointer ${getStatusBgColor(
                       apt.status,
                     )}`}
                     style={{
                       top: `${apt.top}px`,
-                      height: `${Math.max(apt.height, 60)}px`,
-                      left: `calc(${leftPercent}% + 12px)`,
-                      width: `calc(${widthPercent}% - 24px)`,
+                      height: `${Math.max(apt.height, 50)}px`,
+                      left: `calc(${leftPercent}% + ${gap}px)`,
+                      width: `calc(${widthPercent}% - ${gap * 2}px)`,
                     }}
                   >
-                    <div className="flex flex-col h-full text-left gap-0.5 overflow-hidden">
+                    <div className="flex flex-col h-full text-left gap-0.5 overflow-hidden p-2">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0 overflow-hidden">
                           <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
@@ -405,7 +501,7 @@ export default function AppointmentsDayView({ appointments, selectedDate }: Appo
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <User className="h-4 w-4" />
-                      <span className="font-medium">Agente Asignado</span>
+                      <span className="font-medium">Agente asignado</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10">
@@ -438,6 +534,7 @@ export default function AppointmentsDayView({ appointments, selectedDate }: Appo
                     propertyTitle={selectedAppointment.property?.title}
                     variant="destructive"
                     size="default"
+                    canDelete={canDelete}
                   />
                 </div>
               </div>

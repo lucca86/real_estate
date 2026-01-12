@@ -82,7 +82,9 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     label: "Citas",
     permissions: [
       { key: "appointments.view", label: "Ver", description: "Ver agenda de citas" },
-      { key: "appointments.manage", label: "Gestionar", description: "Crear, editar y eliminar citas" },
+      { key: "appointments.create", label: "Crear", description: "Crear nuevas citas" },
+      { key: "appointments.edit", label: "Editar", description: "Editar citas existentes" },
+      { key: "appointments.delete", label: "Eliminar", description: "Eliminar citas (solo administradores)" },
     ],
   },
   {

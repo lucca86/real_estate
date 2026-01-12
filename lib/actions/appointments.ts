@@ -7,6 +7,7 @@ import { sendAppointmentNotifications } from "@/lib/email-notifications"
 import { randomUUID } from "crypto"
 import { getCurrentUser } from "@/lib/auth"
 import { checkPermission, type Permission } from "@/lib/permissions"
+import { createAdminClient } from "@/lib/supabase/admin" // Import admin client for conflict checks to bypass RLS
 
 // Esquema de validación para citas
 const appointmentSchema = z
@@ -36,6 +37,13 @@ const appointmentSchema = z
 
 type AppointmentInput = z.infer<typeof appointmentSchema>
 type AppointmentStatus = "PENDIENTE" | "CONFIRMADA" | "COMPLETADA" | "CANCELADA" | "NO_ASISTIO"
+type AppointmentFormData = AppointmentInput
+type AppointmentResult = {
+  success: boolean
+  data?: any
+  error?: string
+  conflictMessage?: string
+}
 
 // Horarios de trabajo
 const WORK_HOURS = {
@@ -110,7 +118,7 @@ function isWithinWorkHours(date: Date): { valid: boolean; message?: string } {
 
   return {
     valid: false,
-    message: "Horario de atención: Lunes a Viernes 7:30-12:30 y 16:30-20:30",
+    message: "Horario de atención: Lunes a Viernes 7:30-12:30 y 16:30-20:30, Sábados 9:00-12:00",
   }
 }
 
@@ -135,7 +143,7 @@ async function checkScheduleConflict(
   const dayEnd = new Date(scheduledAt)
   dayEnd.setHours(23, 59, 59, 999)
 
-  const supabase = await createServerClient()
+  const supabase = createAdminClient()
   let query = supabase
     .from("appointments")
     .select(`
@@ -181,7 +189,7 @@ async function checkScheduleConflict(
 }
 
 // Crear una nueva cita
-export async function createAppointment(data: AppointmentInput) {
+export async function createAppointment(data: AppointmentFormData): Promise<AppointmentResult> {
   try {
     console.log("[v0] ========== CREATING APPOINTMENT ==========")
     console.log("[v0] Raw data received:", JSON.stringify(data, null, 2))
@@ -192,6 +200,13 @@ export async function createAppointment(data: AppointmentInput) {
       return { success: false, error: "Usuario no autenticado" }
     }
     console.log("[v0] ✓ Current user:", currentUser.id, currentUser.email)
+
+    const hasPermission = await checkPermission("appointments.create")
+    if (!hasPermission) {
+      console.log("[v0] ✗ User does not have permission to create appointments")
+      return { success: false, error: "No tienes permisos para crear citas" }
+    }
+    console.log("[v0] ✓ User has permission to create appointments")
 
     const validatedData = appointmentSchema.parse(data)
     console.log("[v0] ✓ Validation passed")
@@ -210,28 +225,41 @@ export async function createAppointment(data: AppointmentInput) {
     }
     console.log("[v0] ✓ Date is in the future")
 
-    const workHoursCheck = isWithinWorkHours(scheduledDate)
-    if (!workHoursCheck.valid) {
-      console.log("[v0] ✗ Work hours check failed:", workHoursCheck.message)
-      return { success: false, error: workHoursCheck.message || "Horario no válido" }
-    }
-    console.log("[v0] ✓ Work hours check passed")
+    const isAdmin = currentUser.role === "ADMIN"
+    console.log("[v0] User role:", currentUser.role, "- Is admin:", isAdmin)
 
-    const endTime = new Date(scheduledDate.getTime() + validatedData.duration * 60000)
-    const endTimeCheck = isWithinWorkHours(endTime)
-    if (!endTimeCheck.valid) {
-      console.log("[v0] ✗ End time check failed")
-      return {
-        success: false,
-        error: "La cita se extiende fuera del horario de trabajo. Reduzca la duración o cambie la hora.",
+    if (!isAdmin) {
+      const workHoursCheck = isWithinWorkHours(scheduledDate)
+      if (!workHoursCheck.valid) {
+        console.log("[v0] ✗ Work hours check failed:", workHoursCheck.message)
+        return {
+          success: false,
+          error: workHoursCheck.message || "Horario no disponible",
+        }
       }
+      console.log("[v0] ✓ Work hours check passed")
+
+      const endTime = new Date(scheduledDate.getTime() + validatedData.duration * 60000)
+      const endTimeCheck = isWithinWorkHours(endTime)
+      if (!endTimeCheck.valid) {
+        console.log("[v0] ✗ End time check failed:", endTimeCheck.message)
+        return {
+          success: false,
+          error: `La cita terminaría fuera del horario de atención (${endTimeCheck.message})`,
+        }
+      }
+      console.log("[v0] ✓ End time check passed")
+    } else {
+      console.log("[v0] ⚠ Admin user - skipping work hours validation")
     }
-    console.log("[v0] ✓ End time check passed")
 
     const conflictCheck = await checkScheduleConflict(validatedData.agentId, scheduledDate, validatedData.duration)
     if (conflictCheck.hasConflict) {
-      console.log("[v0] ✗ Conflict found:", conflictCheck.message)
-      return { success: false, error: conflictCheck.message || "Conflicto de horario" }
+      console.log("[v0] ✗ Conflict detected - blocking creation:", conflictCheck.message)
+      return {
+        success: false,
+        error: conflictCheck.message || "El agente ya tiene una cita en ese horario",
+      }
     }
     console.log("[v0] ✓ No conflicts found")
 
@@ -637,32 +665,24 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
 // Eliminar una cita
 export async function deleteAppointment(id: string) {
   try {
-    // Check permissions
     const user = await getCurrentUser()
     if (!user) {
       return { success: false, error: "No autenticado" }
     }
 
+    // Check if user has the delete permission (only ADMIN should have this)
+    const hasDeletePermission = await checkPermission("appointments.delete" as Permission)
+    if (!hasDeletePermission) {
+      return { success: false, error: "Solo los administradores pueden eliminar citas" }
+    }
+
     const supabase = await createServerClient()
 
-    // Get the appointment to check ownership
-    const { data: appointment } = await supabase
-      .from("appointments")
-      .select("agent_id, created_by")
-      .eq("id", id)
-      .single()
+    // Verify appointment exists
+    const { data: appointment } = await supabase.from("appointments").select("id").eq("id", id).single()
 
     if (!appointment) {
       return { success: false, error: "Cita no encontrada" }
-    }
-
-    // Check if user has permission to delete
-    // Users can delete their own appointments, or if they have appointments.manage permission
-    const hasPermission = await checkPermission("appointments.manage" as Permission)
-    const isOwner = appointment.agent_id === user.id || appointment.created_by === user.id
-
-    if (!hasPermission && !isOwner && user.role !== "ADMIN") {
-      return { success: false, error: "No tienes permisos para eliminar esta cita" }
     }
 
     const { error } = await supabase.from("appointments").delete().eq("id", id)
