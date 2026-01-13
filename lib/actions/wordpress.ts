@@ -1,14 +1,20 @@
 "use server"
 
 import { createAdminClient } from "@/lib/supabase/server"
-import { getCurrentUser, hasPermission } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/auth"
+import { hasUserPermission } from "@/lib/permissions"
 import { wordpressAPI } from "@/lib/wordpress"
 import { revalidatePath } from "next/cache"
 
 export async function syncPropertyToWordPress(propertyId: string) {
   const currentUser = await getCurrentUser()
 
-  if (!currentUser || !hasPermission(currentUser, "SUPERVISOR")) {
+  if (!currentUser) {
+    throw new Error("No estás autenticado")
+  }
+
+  const canEdit = await hasUserPermission(currentUser.id, "properties.edit")
+  if (!canEdit) {
     throw new Error("No tienes permisos para sincronizar propiedades")
   }
 
@@ -187,7 +193,12 @@ export async function syncAllPropertiesToWordPress() {
 export async function deletePropertyFromWordPress(propertyId: string) {
   const currentUser = await getCurrentUser()
 
-  if (!currentUser || !hasPermission(currentUser, "SUPERVISOR")) {
+  if (!currentUser) {
+    throw new Error("No estás autenticado")
+  }
+
+  const canDelete = await hasUserPermission(currentUser.id, "properties.delete")
+  if (!canDelete) {
     throw new Error("No tienes permisos para eliminar propiedades de WordPress")
   }
 

@@ -346,19 +346,39 @@ export async function updateProperty(propertyId: string, formData: FormData) {
           .single()
 
         if (propertyWithRelations) {
-          await syncPropertyToWordPress(updatedProperty.id)
+          try {
+            await syncPropertyToWordPress(updatedProperty.id)
+          } catch (syncError) {
+            console.error("[v0] WordPress sync failed:", syncError)
+            revalidatePath("/properties")
+            revalidatePath("/catalog")
+            revalidatePath(`/properties/${propertyId}/edit`)
+            return {
+              success: true,
+              data: updatedProperty,
+              warning: syncError instanceof Error ? syncError.message : "Error al sincronizar con WordPress",
+            }
+          }
         }
       }
     }
   } catch (syncError) {
     console.error("[v0] WordPress sync failed:", syncError)
+    revalidatePath("/properties")
+    revalidatePath("/catalog")
+    revalidatePath(`/properties/${propertyId}/edit`)
+    return {
+      success: true,
+      data: updatedProperty,
+      warning: syncError instanceof Error ? syncError.message : "Error al sincronizar con WordPress",
+    }
   }
 
   revalidatePath("/properties")
   revalidatePath("/catalog")
   revalidatePath(`/properties/${propertyId}/edit`)
 
-  return updatedProperty
+  return { success: true, data: updatedProperty }
 }
 
 export async function deleteProperty(propertyId: string) {

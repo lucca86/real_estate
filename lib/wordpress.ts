@@ -45,6 +45,8 @@ interface WordPressProperty {
     es_property_longitude?: string
     es_property_address_components?: string
     es_property_keywords?: string
+    es_property_feature_list?: any[]
+    es_property_amenity_list?: any[]
   }
 }
 
@@ -199,10 +201,15 @@ export class WordPressAPI {
     if (property.features && Array.isArray(property.features) && property.features.length > 0) {
       const cleanFeatures = property.features.filter((f: any) => f && String(f).trim() !== "")
       if (cleanFeatures.length > 0) {
+        // As taxonomy (for filtering/search)
         payload.taxonomies.es_feature = cleanFeatures.map((f: any) => String(f).trim())
+        // As meta field (for theme display)
         payload.meta.es_property_features = cleanFeatures.join(", ")
-        console.log("[v0] 🏷️ Added es_feature (array):", payload.taxonomies.es_feature)
-        console.log("[v0] 📝 Added es_property_features meta:", payload.meta.es_property_features)
+        // Also add as a serialized array meta (some themes expect this)
+        payload.meta.es_property_feature_list = cleanFeatures
+        console.log("[v0] 🏷️ Added es_feature taxonomy (array):", payload.taxonomies.es_feature)
+        console.log("[v0] 📝 Added es_property_features meta (string):", payload.meta.es_property_features)
+        console.log("[v0] 📋 Added es_property_feature_list meta (array):", payload.meta.es_property_feature_list)
       } else {
         console.log("[v0] ⚠️ No valid features to sync")
       }
@@ -213,10 +220,15 @@ export class WordPressAPI {
     if (property.amenities && Array.isArray(property.amenities) && property.amenities.length > 0) {
       const cleanAmenities = property.amenities.filter((a: any) => a && String(a).trim() !== "")
       if (cleanAmenities.length > 0) {
+        // As taxonomy (for filtering/search)
         payload.taxonomies.es_amenity = cleanAmenities.map((a: any) => String(a).trim())
+        // As meta field (for theme display)
         payload.meta.es_property_amenities = cleanAmenities.join(", ")
-        console.log("[v0] 🏷️ Added es_amenity (array):", payload.taxonomies.es_amenity)
-        console.log("[v0] 📝 Added es_property_amenities meta:", payload.meta.es_property_amenities)
+        // Also add as a serialized array meta (some themes expect this)
+        payload.meta.es_property_amenity_list = cleanAmenities
+        console.log("[v0] 🏷️ Added es_amenity taxonomy (array):", payload.taxonomies.es_amenity)
+        console.log("[v0] 📝 Added es_property_amenities meta (string):", payload.meta.es_property_amenities)
+        console.log("[v0] 📋 Added es_property_amenity_list meta (array):", payload.meta.es_property_amenity_list)
       } else {
         console.log("[v0] ⚠️ No valid amenities to sync")
       }
@@ -337,7 +349,15 @@ export class WordPressAPI {
     if (property.lotSize) payload.meta.es_property_lot_size = String(property.lotSize)
     if (property.floors) payload.meta.es_property_floors = String(property.floors)
     if (property.floorLevel) payload.meta.es_property_floor_level = String(property.floorLevel)
-    if (property.yearBuilt) payload.meta.es_property_year_built = String(property.yearBuilt)
+
+    const isLand = property.propertyType?.toLowerCase().includes("terreno")
+    if (property.yearBuilt && property.yearBuilt > 0) {
+      payload.meta.es_property_year_built = String(property.yearBuilt)
+      console.log(`[v0] Added es_property_year_built: ${property.yearBuilt}`)
+    } else {
+      console.log(`[v0] Skipping es_property_year_built (value: ${property.yearBuilt})`)
+    }
+
     if (property.yearRemodeled) payload.meta.es_property_year_remodeled = String(property.yearRemodeled)
     if (property.parkingSpaces) payload.meta.es_property_parking = String(property.parkingSpaces)
 
@@ -398,63 +418,30 @@ export class WordPressAPI {
       }
     }
 
-    if (latitude) payload.meta.es_property_latitude = String(latitude)
-    if (longitude) payload.meta.es_property_longitude = String(longitude)
+    if (latitude) {
+      payload.meta.es_property_latitude = String(Number(latitude).toFixed(7))
+    }
+    if (longitude) {
+      payload.meta.es_property_longitude = String(Number(longitude).toFixed(7))
+    }
 
-    if (property.address || property.city || property.state || property.country || property.zipCode) {
-      const addressComponents = []
+    const addressComponents = property.address?.components
+      ? property.address.components
+          .filter((c: any) => c.types && c.types.length > 0)
+          .map((c: any) => ({
+            long_name: c.long_name,
+            types: c.types.slice(0, 2), // Only first 2 types to reduce size
+          }))
+      : []
 
-      if (property.address) {
-        addressComponents.push({
-          long_name: property.address,
-          short_name: property.address,
-          types: ["street_address"],
-        })
-      }
+    const addressComponentsJson = JSON.stringify(addressComponents)
+    console.log(`[v0] 📝 Address components JSON length: ${addressComponentsJson.length} chars`)
 
-      if (property.city) {
-        const cityName = extractName(property.city)
-        if (cityName) {
-          addressComponents.push({
-            long_name: cityName,
-            short_name: cityName,
-            types: ["locality", "political"],
-          })
-        }
-      }
-
-      if (property.state) {
-        const stateName = extractName(property.state)
-        if (stateName) {
-          addressComponents.push({
-            long_name: stateName,
-            short_name: stateName,
-            types: ["administrative_area_level_1", "political"],
-          })
-        }
-      }
-
-      if (property.country) {
-        const countryName = extractName(property.country)
-        if (countryName) {
-          addressComponents.push({
-            long_name: countryName,
-            short_name: countryName,
-            types: ["country", "political"],
-          })
-        }
-      }
-
-      if (property.zipCode) {
-        addressComponents.push({
-          long_name: property.zipCode,
-          short_name: property.zipCode,
-          types: ["postal_code"],
-        })
-      }
-
-      payload.meta.es_property_address_components = JSON.stringify(addressComponents)
-      console.log("[v0] 📝 Added es_property_address_components meta:", payload.meta.es_property_address_components)
+    if (addressComponentsJson.length < 500) {
+      payload.meta.es_property_address_components = addressComponentsJson
+      console.log(`[v0] 📝 Added es_property_address_components (${addressComponentsJson.length} chars)`)
+    } else {
+      console.log(`[v0] ⚠️ Skipping es_property_address_components (too long: ${addressComponentsJson.length} chars)`)
     }
 
     const keywords = [property.title]
@@ -483,13 +470,31 @@ export class WordPressAPI {
           console.log("[v0] ✓ New property created with ID:", newId)
           return newId
         }
-        throw error
+        console.error("[v0] WordPress API Error:", error)
+        throw new Error(
+          error instanceof Error && error.message.includes("create_failed")
+            ? `Error de WordPress: ${error.message}. Verifica que todas las taxonomías (tipo, categoría, estado) existan en WordPress.`
+            : error instanceof Error
+              ? error.message
+              : "Error desconocido al sincronizar con WordPress",
+        )
       }
     } else {
       console.log("[v0] ➕ CREATING new WordPress property (no existing ID)")
-      const newId = await this.createProperty(payload)
-      console.log("[v0] ✅ Property CREATED with ID:", newId)
-      return newId
+      try {
+        const newId = await this.createProperty(payload)
+        console.log("[v0] ✅ Property CREATED with ID:", newId)
+        return newId
+      } catch (error) {
+        console.error("[v0] WordPress API Error:", error)
+        throw new Error(
+          error instanceof Error && error.message.includes("create_failed")
+            ? `Error de WordPress: ${error.message}. Verifica que todas las taxonomías (tipo, categoría, estado) existan en WordPress.`
+            : error instanceof Error
+              ? error.message
+              : "Error desconocido al crear la propiedad en WordPress",
+        )
+      }
     }
   }
 

@@ -121,3 +121,34 @@ export async function getUserPermissions(userId: string): Promise<Record<string,
   // Get role permissions
   return getRolePermissions(userData.role)
 }
+
+// Check if a specific user has a permission
+export async function hasUserPermission(userId: string, permission: Permission): Promise<boolean> {
+  const supabase = await createAdminClient()
+
+  // Get user role
+  const { data: userData, error: userError } = await supabase.from("users").select("role").eq("id", userId).single()
+
+  if (userError || !userData) {
+    return false
+  }
+
+  // Admin always has all permissions
+  if (userData.role === "ADMIN") {
+    return true
+  }
+
+  // Check if role has the permission
+  const { data, error } = await supabase
+    .from("role_permissions")
+    .select("enabled")
+    .eq("role", userData.role)
+    .eq("permission", permission)
+    .single()
+
+  if (error || !data) {
+    return false
+  }
+
+  return data.enabled
+}

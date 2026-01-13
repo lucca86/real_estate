@@ -447,6 +447,14 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
       validationErrors.push("El tamaño del lote es requerido y debe ser mayor a 0")
     }
 
+    const selectedPropertyType = propertyTypes.find((pt) => pt.id === formData.propertyTypeId)
+    const isLand = selectedPropertyType?.name?.toLowerCase().includes("terreno")
+
+    // Only validate yearBuilt if it's not a land property
+    if (!isLand && formData.yearBuilt !== undefined && formData.yearBuilt !== null && formData.yearBuilt < 1800) {
+      validationErrors.push("El año de construcción debe ser mayor a 1800 o dejarlo vacío")
+    }
+
     if (validationErrors.length > 0) {
       const errorMessage = validationErrors.join(", ")
       setError(errorMessage)
@@ -503,13 +511,31 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
         if (!editProperty.id) {
           throw new Error("ID de propiedad no válido")
         }
-        await updateProperty(editProperty.id, finalFormData)
+        result = await updateProperty(editProperty.id, finalFormData)
+
+        if (result && result.warning) {
+          toast({
+            title: "Propiedad guardada con advertencia",
+            description: result.warning,
+            variant: "default",
+          })
+        } else {
+          toast({
+            title: "Propiedad actualizada",
+            description: "La propiedad se actualizó correctamente",
+          })
+        }
       } else {
         result = await createProperty(finalFormData)
 
         if (!result.success) {
           throw new Error(result.error || "Error al crear la propiedad")
         }
+
+        toast({
+          title: "Propiedad creada",
+          description: "La propiedad se creó correctamente",
+        })
       }
 
       if (onSuccess) {
@@ -1235,12 +1261,15 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
                 id="yearBuilt"
                 name="yearBuilt"
                 type="number"
-                min="1900"
                 max={new Date().getFullYear()}
                 value={formData.yearBuilt ?? ""}
                 onChange={(e) => setFormData((prev) => ({ ...prev, yearBuilt: Number(e.target.value) }))}
                 disabled={isSubmitting}
+                placeholder="Dejar vacío si no aplica"
               />
+              <p className="text-xs text-muted-foreground">
+                Opcional - Dejar vacío para terrenos o propiedades sin año definido
+              </p>
             </div>
           </div>
 
