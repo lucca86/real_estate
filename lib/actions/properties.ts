@@ -2,7 +2,7 @@
 
 import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { getCurrentUser } from "@/lib/auth"
-import { syncPropertyToWordPress } from "./wordpress"
+import { syncPropertyToWordPress, deletePropertyFromWordPress } from "./wordpress"
 import crypto from "crypto"
 import { revalidatePath } from "next/cache"
 import type { PropertyWithDetails } from "@/types"
@@ -388,7 +388,7 @@ export async function deleteProperty(propertyId: string) {
     return { success: false, error: "No estás autenticado" }
   }
 
-  if (currentUser.role !== "ADMIN") {
+  if (currentUser.role !== "ADMIN" && currentUser.role !== "SUPERVISOR") {
     return { success: false, error: "No tienes permisos para eliminar esta propiedad" }
   }
 
@@ -403,6 +403,15 @@ export async function deleteProperty(propertyId: string) {
 
     if (fetchError || !property) {
       return { success: false, error: "Propiedad no encontrada" }
+    }
+
+    if (property.wordpress_id) {
+      try {
+        await deletePropertyFromWordPress(propertyId)
+      } catch (wpError) {
+        console.error("[v0] Error deleting from WordPress:", wpError)
+        // Continue with local deletion even if WordPress fails
+      }
     }
 
     const { error: deleteError } = await supabase.from("properties").delete().eq("id", propertyId)

@@ -7,6 +7,7 @@ import { Plus, FileText } from "lucide-react"
 import Link from "next/link"
 import { createAdminClient } from "@/lib/supabase/server"
 import { getUserPermissions } from "@/lib/permissions"
+import { PropertiesPagination } from "@/components/properties-pagination"
 
 export default async function PropertiesPage({
   searchParams,
@@ -35,8 +36,65 @@ export default async function PropertiesPage({
   const bedrooms = params.bedrooms as string
   const bathrooms = params.bathrooms as string
   const activeOnly = params.activeOnly !== "false"
+  const syncedOnly = params.syncedOnly === "true"
+
+  const page = params.page ? Number.parseInt(params.page as string) : 1
+  const limit = params.limit ? Number.parseInt(params.limit as string) : 12
+  const offset = (page - 1) * limit
 
   const supabase = await createAdminClient()
+
+  let countQuery = supabase.from("properties").select("*", { count: "exact", head: true })
+
+  if (activeOnly) {
+    countQuery = countQuery.eq("status", "ACTIVO")
+  }
+
+  if (search) {
+    countQuery = countQuery.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
+  }
+
+  if (propertyType) {
+    countQuery = countQuery.eq("property_type_id", propertyType)
+  }
+
+  if (transactionType && transactionType !== "Todas") {
+    countQuery = countQuery.eq("transaction_type", transactionType)
+  }
+
+  if (status && status !== "Todos") {
+    countQuery = countQuery.eq("status", status)
+  }
+
+  if (city) {
+    countQuery = countQuery.eq("city_id", city)
+  }
+
+  if (neighborhood) {
+    countQuery = countQuery.eq("neighborhood_id", neighborhood)
+  }
+
+  if (minPrice) {
+    countQuery = countQuery.gte("price", Number.parseFloat(minPrice))
+  }
+
+  if (maxPrice) {
+    countQuery = countQuery.lte("price", Number.parseFloat(maxPrice))
+  }
+
+  if (bedrooms && bedrooms !== "Cualquiera") {
+    countQuery = countQuery.gte("bedrooms", Number.parseInt(bedrooms))
+  }
+
+  if (bathrooms && bathrooms !== "Cualquiera") {
+    countQuery = countQuery.gte("bathrooms", Number.parseInt(bathrooms))
+  }
+
+  if (syncedOnly) {
+    countQuery = countQuery.not("wordpress_id", "is", null)
+  }
+
+  const { count } = await countQuery
 
   let query = supabase
     .from("properties")
@@ -50,6 +108,7 @@ export default async function PropertiesPage({
       wordpress_synced_at
     `)
     .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1)
 
   if (activeOnly) {
     query = query.eq("status", "ACTIVO")
@@ -59,7 +118,7 @@ export default async function PropertiesPage({
     query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
   }
 
-  if (propertyType && propertyType !== "Todos") {
+  if (propertyType) {
     query = query.eq("property_type_id", propertyType)
   }
 
@@ -95,11 +154,17 @@ export default async function PropertiesPage({
     query = query.gte("bathrooms", Number.parseInt(bathrooms))
   }
 
+  if (syncedOnly) {
+    query = query.not("wordpress_id", "is", null)
+  }
+
   const { data: properties, error } = await query
 
   if (error) {
     console.log("[v0] Error fetching properties:", error)
   }
+
+  const totalPages = count ? Math.ceil(count / limit) : 0
 
   return (
     <div className="space-y-6">
@@ -131,8 +196,18 @@ export default async function PropertiesPage({
           <PropertiesFilters activeOnly={activeOnly} />
         </aside>
 
-        <main>
+        <main className="space-y-4">
           <PropertiesTable properties={properties || []} currentUser={user} />
+
+          {totalPages > 1 && (
+            <PropertiesPagination
+              currentPage={page}
+              totalPages={totalPages}
+              limit={limit}
+              total={count || 0}
+              offset={offset}
+            />
+          )}
         </main>
       </div>
     </div>

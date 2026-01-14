@@ -34,7 +34,7 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
   const searchParams = useSearchParams()
 
   const [search, setSearch] = useState(searchParams.get("search") || "")
-  const [propertyType, setPropertyType] = useState(searchParams.get("propertyType") || "Todos")
+  const [propertyType, setPropertyType] = useState(searchParams.get("propertyType") || "all")
   const [transactionType, setTransactionType] = useState(searchParams.get("transactionType") || "Todas")
   const [status, setStatus] = useState(searchParams.get("status") || "Todos")
   const [city, setCity] = useState(searchParams.get("city") || "all")
@@ -44,6 +44,7 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
   const [bedrooms, setBedrooms] = useState(searchParams.get("bedrooms") || "Cualquiera")
   const [bathrooms, setBathrooms] = useState(searchParams.get("bathrooms") || "Cualquiera")
   const [activeOnly, setActiveOnly] = useState(initialActiveOnly)
+  const [syncedOnly, setSyncedOnly] = useState(searchParams.get("syncedOnly") === "true")
 
   const [cities, setCities] = useState<City[]>([])
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([])
@@ -54,7 +55,7 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
     const loadData = async () => {
       const supabase = createBrowserClient()
 
-      const { data: propertyTypesData } = await supabase
+      const { data: propertyTypesData, error: typesError } = await supabase
         .from("property_types")
         .select("id, name, is_active")
         .eq("is_active", true)
@@ -64,7 +65,9 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
 
       const { data: neighborhoodsData } = await supabase.from("neighborhoods").select("id, name, city_id").order("name")
 
-      if (propertyTypesData) setPropertyTypes(propertyTypesData)
+      if (propertyTypesData) {
+        setPropertyTypes(propertyTypesData)
+      }
       if (citiesData) setCities(citiesData)
       if (neighborhoodsData) setNeighborhoods(neighborhoodsData)
     }
@@ -89,7 +92,7 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
     const params = new URLSearchParams()
 
     if (search) params.set("search", search)
-    if (propertyType !== "Todos") params.set("propertyType", propertyType)
+    if (propertyType && propertyType !== "all") params.set("propertyType", propertyType)
     if (transactionType !== "Todas") params.set("transactionType", transactionType)
     if (status !== "Todos") params.set("status", status)
     if (city && city !== "all") params.set("city", city)
@@ -99,13 +102,14 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
     if (bedrooms !== "Cualquiera") params.set("bedrooms", bedrooms)
     if (bathrooms !== "Cualquiera") params.set("bathrooms", bathrooms)
     if (!activeOnly) params.set("activeOnly", "false")
+    if (syncedOnly) params.set("syncedOnly", "true")
 
     router.push(`/properties?${params.toString()}`)
   }
 
   const clearFilters = () => {
     setSearch("")
-    setPropertyType("Todos")
+    setPropertyType("all")
     setTransactionType("Todas")
     setStatus("Todos")
     setCity("all")
@@ -115,6 +119,7 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
     setBedrooms("Cualquiera")
     setBathrooms("Cualquiera")
     setActiveOnly(true)
+    setSyncedOnly(false)
     router.push("/properties")
   }
 
@@ -150,6 +155,26 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
           />
         </div>
 
+        <div className="flex items-center justify-between space-x-2">
+          <Label htmlFor="synced-only" className="text-sm font-medium">
+            Solo sincronizadas con WordPress
+          </Label>
+          <Switch
+            id="synced-only"
+            checked={syncedOnly}
+            onCheckedChange={(checked) => {
+              setSyncedOnly(checked)
+              const params = new URLSearchParams(searchParams.toString())
+              if (checked) {
+                params.set("syncedOnly", "true")
+              } else {
+                params.delete("syncedOnly")
+              }
+              router.push(`/properties?${params.toString()}`)
+            }}
+          />
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="search">Buscar</Label>
           <Input
@@ -168,7 +193,7 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
               <SelectValue placeholder="Todos" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Todos">Todos</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
               {propertyTypes.map((type) => (
                 <SelectItem key={type.id} value={type.id}>
                   {type.name}
