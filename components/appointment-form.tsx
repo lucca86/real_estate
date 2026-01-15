@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
-import { datetimeLocalToISO, dateToDatetimeLocal } from "@/lib/timezone-utils"
+import { datetimeLocalToISO } from "@/lib/timezone-utils"
 
 const AppointmentStatus = {
   PENDIENTE: "PENDIENTE",
@@ -56,9 +56,11 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [propertySearch, setPropertySearch] = useState("")
   const [showPropertyResults, setShowPropertyResults] = useState(false)
+  const [appointmentDate, setAppointmentDate] = useState("")
+  const [appointmentTime, setAppointmentTime] = useState("")
 
   const now = new Date()
-  const minDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+  const minDate = now.toISOString().split("T")[0] // YYYY-MM-DD format
 
   const initialProperty = appointment?.property_id
     ? properties.find((p) => p.id === appointment.property_id) ||
@@ -83,7 +85,15 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
     if (initialProperty) {
       setPropertySearch(initialProperty.address)
     }
-  }, [initialProperty])
+
+    if (appointment?.scheduled_date) {
+      const date = new Date(appointment.scheduled_date)
+      setAppointmentDate(date.toISOString().split("T")[0])
+      const hours = date.getHours().toString().padStart(2, "0")
+      const minutes = date.getMinutes().toString().padStart(2, "0")
+      setAppointmentTime(`${hours}:${minutes}`)
+    }
+  }, [initialProperty, appointment])
 
   const {
     register,
@@ -99,7 +109,7 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
           otherLocation: appointment.other_location || "",
           contactName: appointment.contact_name || appointment.client?.name || "",
           agentId: appointment.agent_id || "",
-          scheduledAt: dateToDatetimeLocal(appointment.scheduled_date),
+          scheduledAt: "", // Will be computed from date + time
           duration: appointment.duration,
           status: appointment.status,
           notes: appointment.notes || "",
@@ -126,15 +136,35 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
 
   const onSubmit = async (data: AppointmentFormData) => {
     console.log("[v0] Form submitted with data:", data)
+
+    if (!appointmentDate || !appointmentTime) {
+      toast({
+        title: "❌ Fecha y hora requeridas",
+        description: "Por favor selecciona la fecha y hora de la cita",
+        variant: "destructive",
+        duration: 5000,
+      })
+      return
+    }
+
+    const combinedDateTime = `${appointmentDate}T${appointmentTime}:00`
+    console.log("[v0] Combined date/time:", combinedDateTime)
+
     setIsSubmitting(true)
 
     try {
-      const scheduledAtISO = datetimeLocalToISO(data.scheduledAt)
+      const scheduledAtISO = datetimeLocalToISO(combinedDateTime)
       console.log("[v0] Scheduled time converted to ISO:", scheduledAtISO)
 
       const appointmentData = {
-        ...data,
+        propertyId: data.propertyId,
+        otherLocation: data.otherLocation,
+        contactName: data.contactName,
+        agentId: data.agentId,
         scheduledAt: scheduledAtISO,
+        duration: data.duration || 60, // Usar duración del formulario o default 60
+        status: data.status,
+        notes: data.notes,
       }
 
       console.log("[v0] Sending appointment data:", appointmentData)
@@ -142,10 +172,6 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
       const result = appointment
         ? await updateAppointment(appointment.id, appointmentData)
         : await createAppointment(appointmentData)
-
-      console.log("[v0] Server response received:", result)
-      console.log("[v0] Success:", result.success)
-      console.log("[v0] Error message:", result.error)
 
       if (result.success) {
         toast({
@@ -281,20 +307,54 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
             {errors.agentId && <p className="text-sm text-destructive">{errors.agentId.message}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="scheduledAt" className={errors.scheduledAt ? "text-destructive" : ""}>
-                Fecha y Hora *
+              <Label
+                htmlFor="appointmentDate"
+                className={!appointmentDate && errors.scheduledAt ? "text-destructive" : ""}
+              >
+                Fecha *
               </Label>
               <Input
-                id="scheduledAt"
-                type="datetime-local"
-                min={minDateTime}
-                {...register("scheduledAt")}
-                className={errors.scheduledAt ? "border-destructive" : ""}
+                id="appointmentDate"
+                type="date"
+                min={minDate}
+                value={appointmentDate}
+                onChange={(e) => {
+                  setAppointmentDate(e.target.value)
+                  if (e.target.value && appointmentTime) {
+                    setValue("scheduledAt", `${e.target.value}T${appointmentTime}:00`)
+                  }
+                }}
+                className={!appointmentDate && errors.scheduledAt ? "border-destructive" : ""}
+                required
               />
-              {errors.scheduledAt && <p className="text-sm text-destructive">{errors.scheduledAt.message}</p>}
-              <p className="text-xs text-muted-foreground">Horario: Lun-Vie 7:30-12:30 y 16:30-20:30, Sáb 9:00-12:00</p>
+              {!appointmentDate && errors.scheduledAt && (
+                <p className="text-sm text-destructive">Selecciona la fecha</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="appointmentTime"
+                className={!appointmentTime && errors.scheduledAt ? "text-destructive" : ""}
+              >
+                Hora *
+              </Label>
+              <Input
+                id="appointmentTime"
+                type="time"
+                value={appointmentTime}
+                onChange={(e) => {
+                  setAppointmentTime(e.target.value)
+                  if (appointmentDate && e.target.value) {
+                    setValue("scheduledAt", `${appointmentDate}T${e.target.value}:00`)
+                  }
+                }}
+                className={!appointmentTime && errors.scheduledAt ? "border-destructive" : ""}
+                required
+              />
+              {!appointmentTime && errors.scheduledAt && <p className="text-sm text-destructive">Selecciona la hora</p>}
             </div>
 
             <div className="space-y-2">
@@ -308,11 +368,14 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
                 max="480"
                 step="15"
                 {...register("duration", { valueAsNumber: true })}
+                defaultValue={60}
                 className={errors.duration ? "border-destructive" : ""}
               />
               {errors.duration && <p className="text-sm text-destructive">{errors.duration.message}</p>}
             </div>
           </div>
+
+          <p className="text-xs text-muted-foreground">Horario: Lun-Vie 7:30-12:30 y 16:30-20:30, Sáb 9:00-12:00</p>
 
           <div className="space-y-2">
             <Label htmlFor="status">Estado</Label>

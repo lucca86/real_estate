@@ -9,9 +9,19 @@ const ARGENTINA_TIMEZONE = "America/Argentina/Buenos_Aires"
  * Simplemente lo convertimos a ISO string
  */
 export function datetimeLocalToISO(datetimeLocal: string): string {
-  // El datetime-local viene en formato "YYYY-MM-DDTHH:mm"
-  // Simplemente agregamos segundos y convertimos a Date
-  const date = new Date(datetimeLocal + ":00")
+  // El datetime-local viene en formato "YYYY-MM-DDTHH:mm" o "YYYY-MM-DDTHH:mm:ss"
+  const [datePart, timePart] = datetimeLocal.split("T")
+  const [year, month, day] = datePart.split("-").map(Number)
+  const [hours, minutes, seconds = 0] = timePart.split(":").map(Number)
+
+  // Crear Date usando componentes individuales en hora local
+  const date = new Date(year, month - 1, day, hours, minutes, seconds)
+
+  // Verificar si la fecha es válida
+  if (isNaN(date.getTime())) {
+    throw new Error(`Invalid date: ${datetimeLocal}`)
+  }
+
   return date.toISOString()
 }
 
