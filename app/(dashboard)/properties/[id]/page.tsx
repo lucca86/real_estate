@@ -11,6 +11,7 @@ import { PropertiesMap } from "@/components/properties-map"
 import { getPropertyById } from "@/lib/actions/properties"
 import { PropertyContactCard } from "@/components/property-contact-card"
 import { WordPressSyncButton } from "@/components/wordpress-sync-button"
+import { getPropertyFeatureAssignments } from "@/lib/actions/property-features"
 
 export default async function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -25,6 +26,17 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
   if (!property) {
     notFound()
   }
+
+  const featureAssignments = await getPropertyFeatureAssignments(id)
+  const caracteristicas = featureAssignments
+    .filter((a: any) => a.property_features?.type === "CARACTERISTICA")
+    .map((a: any) => a.property_features?.name)
+    .filter(Boolean)
+
+  const amenidades = featureAssignments
+    .filter((a: any) => a.property_features?.type === "AMENIDAD")
+    .map((a: any) => a.property_features?.name)
+    .filter(Boolean)
 
   const statusColors = {
     ACTIVO: "bg-green-500/10 text-green-500 hover:bg-green-500/20",
@@ -74,11 +86,11 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
     const lotSize = property.lot_size || property.lotSize
     allCharacteristics.push({ icon: Ruler, label: "Tamaño del Lote", value: `${lotSize}m²` })
   }
-  if (property.lotfrontage) {
-    allCharacteristics.push({ icon: Ruler, label: "Frente", value: `${property.lotfrontage}m` })
+  if (property.frontSize) {
+    allCharacteristics.push({ icon: Ruler, label: "Frente", value: `${property.frontSize}m` })
   }
-  if (property.lotdepth) {
-    allCharacteristics.push({ icon: Ruler, label: "Fondo", value: `${property.lotdepth}m` })
+  if (property.depthSize) {
+    allCharacteristics.push({ icon: Ruler, label: "Fondo", value: `${property.depthSize}m` })
   }
   if (property.year_built && property.year_built > 0) {
     allCharacteristics.push({ icon: Calendar, label: "Año de Construcción", value: property.year_built })
@@ -159,14 +171,13 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                 </div>
               </div>
 
-              {/* Features */}
-              {property.features && property.features.length > 0 && (
+              {caracteristicas.length > 0 && (
                 <>
                   <Separator />
                   <div>
                     <h3 className="mb-3 font-semibold">Características Adicionales</h3>
                     <div className="flex flex-wrap gap-2">
-                      {property.features.map((feature: string, index: number) => (
+                      {caracteristicas.map((feature: string, index: number) => (
                         <Badge key={index} variant="outline">
                           {feature}
                         </Badge>
@@ -176,14 +187,13 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                 </>
               )}
 
-              {/* Amenidades */}
-              {property.amenities && property.amenities.length > 0 && (
+              {amenidades.length > 0 && (
                 <>
                   <Separator />
                   <div>
                     <h3 className="mb-3 font-semibold">Amenidades</h3>
                     <div className="flex flex-wrap gap-2">
-                      {property.amenities.map((amenity: string, index: number) => (
+                      {amenidades.map((amenity: string, index: number) => (
                         <Badge key={index} variant="outline">
                           {amenity}
                         </Badge>

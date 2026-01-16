@@ -157,18 +157,25 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
 
     if (syncToWordPress && newProperty) {
       try {
-        const imagesToSync = sortedImages
-          .filter((img: any) => img.syncToWordPress)
-          .map((img: any) => img.sizes?.large || img.url)
+        const imagesToSync = sortedImages.filter((img: any) => img.syncToWordPress === true)
 
-        if (imagesToSync.length > 0) {
-          // Call the WordPress sync action which will handle updating wordpress_synced_at
-          await syncPropertyToWordPress(newProperty.id)
-        } else {
-          console.log("Skipping WordPress sync: No images marked for sync")
+        if (imagesToSync.length === 0) {
+          return {
+            success: true,
+            data: newProperty as PropertyWithDetails,
+            warning:
+              "La propiedad se guardó pero no se sincronizó con WordPress. Debe seleccionar al menos una imagen para la portada de WordPress.",
+          }
         }
+
+        await syncPropertyToWordPress(newProperty.id)
       } catch (wpError: any) {
         console.error("Error in WordPress sync process:", wpError)
+        return {
+          success: true,
+          data: newProperty as PropertyWithDetails,
+          warning: wpError.message || "Error al sincronizar con WordPress",
+        }
       }
     }
 
@@ -326,38 +333,46 @@ export async function updateProperty(propertyId: string, formData: FormData) {
 
   try {
     if (syncToWordPress) {
-      const imagesToSync = sortedImages
-        .filter((img: any) => img.syncToWordPress)
-        .map((img: any) => img.sizes?.large || img.url)
+      const imagesToSync = sortedImages.filter((img: any) => img.syncToWordPress === true)
 
-      if (imagesToSync.length > 0) {
-        const adminClient = await createAdminClient()
-        const { data: propertyWithRelations } = await adminClient
-          .from("properties")
-          .select(`
-            *,
-            propertyType:property_types!property_type_id(name),
-            city:cities!city_id(name),
-            province:provinces!province_id(name),
-            country:countries!country_id(name),
-            neighborhood:neighborhoods!neighborhood_id(name)
-          `)
-          .eq("id", updatedProperty.id)
-          .single()
+      if (imagesToSync.length === 0) {
+        revalidatePath("/properties")
+        revalidatePath("/catalog")
+        revalidatePath(`/properties/${propertyId}/edit`)
+        return {
+          success: true,
+          data: updatedProperty,
+          warning:
+            "La propiedad se guardó pero no se sincronizó con WordPress. Debe seleccionar al menos una imagen para la portada de WordPress.",
+        }
+      }
 
-        if (propertyWithRelations) {
-          try {
-            await syncPropertyToWordPress(updatedProperty.id)
-          } catch (syncError) {
-            console.error("[v0] WordPress sync failed:", syncError)
-            revalidatePath("/properties")
-            revalidatePath("/catalog")
-            revalidatePath(`/properties/${propertyId}/edit`)
-            return {
-              success: true,
-              data: updatedProperty,
-              warning: syncError instanceof Error ? syncError.message : "Error al sincronizar con WordPress",
-            }
+      const adminClient = await createAdminClient()
+      const { data: propertyWithRelations } = await adminClient
+        .from("properties")
+        .select(`
+          *,
+          propertyType:property_types!property_type_id(name),
+          city:cities!city_id(name),
+          province:provinces!province_id(name),
+          country:countries!country_id(name),
+          neighborhood:neighborhoods!neighborhood_id(name)
+        `)
+        .eq("id", updatedProperty.id)
+        .single()
+
+      if (propertyWithRelations) {
+        try {
+          await syncPropertyToWordPress(updatedProperty.id)
+        } catch (syncError) {
+          console.error("[v0] WordPress sync failed:", syncError)
+          revalidatePath("/properties")
+          revalidatePath("/catalog")
+          revalidatePath(`/properties/${propertyId}/edit`)
+          return {
+            success: true,
+            data: updatedProperty,
+            warning: syncError instanceof Error ? syncError.message : "Error al sincronizar con WordPress",
           }
         }
       }

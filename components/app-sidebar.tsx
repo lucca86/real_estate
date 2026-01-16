@@ -62,6 +62,12 @@ export function AppSidebar({ user, permissions = {}, onNavigate }: AppSidebarPro
       roles: ["ADMIN", "SUPERVISOR"],
     },
     {
+      name: "Características y Amenidades",
+      href: "/property-features",
+      icon: Tag,
+      roles: ["ADMIN", "SUPERVISOR"],
+    },
+    {
       name: "Catálogo",
       href: "/catalog",
       icon: Search,

@@ -7,19 +7,29 @@ import { wordpressAPI } from "@/lib/wordpress"
 import { revalidatePath } from "next/cache"
 
 export async function syncPropertyToWordPress(propertyId: string) {
+  console.log("[v0] ========================================")
+  console.log("[v0] syncPropertyToWordPress called with ID:", propertyId)
+  console.log("[v0] ========================================")
+
   const currentUser = await getCurrentUser()
 
   if (!currentUser) {
+    console.log("[v0] ERROR: User not authenticated")
     throw new Error("No estás autenticado")
   }
 
+  console.log("[v0] User authenticated:", currentUser.id, currentUser.role)
+
   const canEdit = await hasUserPermission(currentUser.id, "properties.edit")
   if (!canEdit) {
+    console.log("[v0] ERROR: User does not have properties.edit permission")
     throw new Error("No tienes permisos para sincronizar propiedades")
   }
 
+  console.log("[v0] User has permission to edit properties")
+
   const supabase = await createAdminClient()
-  const { data: property } = await supabase
+  const { data: property, error: fetchError } = await supabase
     .from("properties")
     .select(`
       *,
@@ -33,22 +43,42 @@ export async function syncPropertyToWordPress(propertyId: string) {
     .eq("id", propertyId)
     .single()
 
+  if (fetchError) {
+    console.log("[v0] ERROR fetching property:", fetchError)
+    throw new Error(`Error al obtener la propiedad: ${fetchError.message}`)
+  }
+
   if (!property) {
+    console.log("[v0] ERROR: Property not found")
     throw new Error("Propiedad no encontrada")
   }
 
-  if (!property.images || property.images.length === 0) {
-    throw new Error("La propiedad debe tener al menos una imagen para sincronizar con WordPress")
-  }
+  console.log("[v0] Property fetched successfully:", {
+    id: property.id,
+    title: property.title,
+    images: property.images?.length || 0,
+    lot_size: property.lot_size,
+    area: property.area,
+    property_type: property.property_type?.name,
+    transaction_type: property.transaction_type,
+    status: property.status,
+  })
 
-  if (!property.lot_size || Number.parseFloat(property.lot_size) === 0) {
-    throw new Error(
-      "El tamaño del lote debe ser mayor a 0 para sincronizar con WordPress. Por favor actualiza el campo 'Tamaño del Lote (m²)'.",
-    )
+  const allImages = property.images || []
+  const imagesToSync = allImages.filter((img: any) => img.syncToWordPress === true)
+
+  console.log("[v0] Total images:", allImages.length)
+  console.log("[v0] Images marked for WordPress sync:", imagesToSync.length)
+
+  if (imagesToSync.length === 0) {
+    console.log("[v0] ERROR: No images marked for WordPress sync")
+    throw new Error("Debe seleccionar al menos una imagen para sincronizar con WordPress (portada)")
   }
 
   try {
-    const wordpressId = await wordpressAPI.syncProperty({
+    console.log("[v0] Calling wordpressAPI.syncProperty...")
+
+    const syncData = {
       id: property.id,
       wordpressId: property.wordpress_id,
       title: property.title,
@@ -70,17 +100,23 @@ export async function syncPropertyToWordPress(propertyId: string) {
       lotSize: property.lot_size,
       yearBuilt: property.year_built,
       price: property.price,
-      currency: property.currency, // Added currency field
+      currency: property.currency,
       pricePerM2: property.price_per_m2,
       features: property.features,
       amenities: property.amenities,
-      images: property.images,
+      images: imagesToSync,
       virtualTour: property.virtual_tour,
       propertyLabel: property.property_label,
       published: property.published,
-    })
+    }
 
-    await supabase
+    console.log("[v0] Sync data prepared with", imagesToSync.length, "images")
+
+    const wordpressId = await wordpressAPI.syncProperty(syncData)
+
+    console.log("[v0] WordPress sync successful! WordPress ID:", wordpressId)
+
+    const { error: updateError } = await supabase
       .from("properties")
       .update({
         wordpress_id: wordpressId,
@@ -88,12 +124,21 @@ export async function syncPropertyToWordPress(propertyId: string) {
       })
       .eq("id", propertyId)
 
+    if (updateError) {
+      console.log("[v0] ERROR updating property with wordpress_id:", updateError)
+    } else {
+      console.log("[v0] Property updated with WordPress ID")
+    }
+
     revalidatePath("/properties")
     revalidatePath(`/properties/${propertyId}`)
 
     return { success: true, wordpressId }
   } catch (error) {
-    console.error("[v0] WordPress sync error:", error)
+    console.error("[v0] ========================================")
+    console.error("[v0] WordPress sync FAILED!")
+    console.error("[v0] Error:", error)
+    console.error("[v0] ========================================")
     throw new Error(error instanceof Error ? error.message : "Error al sincronizar con WordPress")
   }
 }
@@ -131,12 +176,6 @@ export async function syncAllPropertiesToWordPress() {
         throw new Error("La propiedad debe tener al menos una imagen para sincronizar con WordPress")
       }
 
-      if (!property.lot_size || Number.parseFloat(property.lot_size) === 0) {
-        throw new Error(
-          "El tamaño del lote debe ser mayor a 0 para sincronizar con WordPress. Por favor actualiza el campo 'Tamaño del Lote (m²)'.",
-        )
-      }
-
       const wordpressId = await wordpressAPI.syncProperty({
         id: property.id,
         wordpressId: property.wordpress_id,
@@ -159,7 +198,7 @@ export async function syncAllPropertiesToWordPress() {
         lotSize: property.lot_size,
         yearBuilt: property.year_built,
         price: property.price,
-        currency: property.currency, // Added currency field
+        currency: property.currency,
         pricePerM2: property.price_per_m2,
         features: property.features,
         amenities: property.amenities,

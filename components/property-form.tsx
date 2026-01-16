@@ -28,6 +28,12 @@ import {
 import { PropertyImageUpload } from "./property-image-upload"
 import { normalizeImages } from "@/lib/image-utils" // Fixed import to use normalizeImages from correct file
 import { PropertiesMap } from "@/components/property-map" // Import PropertiesMap
+import { PropertyFeaturesSelector } from "@/components/property-features-selector"
+import {
+  getPropertyFeatures,
+  assignFeaturesToProperty,
+  getPropertyFeatureAssignments,
+} from "@/lib/actions/property-features"
 
 // Define a type for image objects
 interface PropertyImage {
@@ -114,6 +120,9 @@ interface PropertyFormProps {
   onSuccess?: () => void // Added onSuccess prop
   agents?: Array<{ id: string; name: string }> // Added agents prop
   userId?: string // Added userId prop
+  owners?: Array<{ id: string; name: string }> // Added owners prop
+  cities?: Array<{ id: string; name: string }> // Added cities prop
+  propertyTypes?: Array<{ id: string; name: string }> // Added propertyTypes prop
 }
 
 interface PropertyFormData {
@@ -169,15 +178,23 @@ interface PropertyFormData {
   createdBy?: string | undefined
 }
 
-export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: PropertyFormProps) {
+export function PropertyForm({
+  editProperty,
+  onSuccess,
+  agents = [],
+  userId,
+  owners = [],
+  cities = [],
+  propertyTypes = [],
+}: PropertyFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [isGeocoding, setIsGeocoding] = useState(false)
   const [isGeneratingTitle, setIsGeneratingTitle] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [geocodingMessage, setGeocodingMessage] = useState<string | null>(null)
-  const [owners, setOwners] = useState<Array<{ id: string; name: string }>>([])
-  const [propertyTypes, setPropertyTypes] = useState<Array<{ id: string; name: string }>>([])
+  const [propertyOwners, setPropertyOwners] = useState<Array<{ id: string; name: string }>>(owners) // Renamed to avoid conflict
+  const [propertyTypesList, setPropertyTypesList] = useState<Array<{ id: string; name: string }>>(propertyTypes) // Renamed to avoid conflict
   const [mapCoordinates, setMapCoordinates] = useState<{ lat: number; lng: number } | null>(
     editProperty?.latitude && editProperty?.longitude
       ? { lat: editProperty.latitude, lng: editProperty.longitude }
@@ -188,7 +205,7 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
 
   const [countries, setCountries] = useState<Array<{ id: string; name: string }>>([])
   const [provinces, setProvinces] = useState<Array<{ id: string; name: string }>>([])
-  const [cities, setCities] = useState<Array<{ id: string; name: string }>>([])
+  const [propertyCities, setCities] = useState<Array<{ id: string; name: string }>>(cities) // Renamed to avoid conflict
   const [neighborhoods, setNeighborhoods] = useState<Array<{ id: string; name: string }>>([])
 
   const [selectedCountryId, setSelectedCountryId] = useState<string | undefined>(
@@ -225,6 +242,11 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
 
   const isSubmittingRef = useRef(false)
   const [isSubmitting, setIsSubmitting] = useState(false) // Renamed from isLoading for clarity in form context
+
+  const [selectedCaracteristicas, setSelectedCaracteristicas] = useState<string[]>([])
+  const [selectedAmenidades, setSelectedAmenidades] = useState<string[]>([])
+  const [caracteristicasOptions, setCaracteristicasOptions] = useState<any[]>([])
+  const [amenidadesOptions, setAmenidadesOptions] = useState<any[]>([])
 
   const parseArrayField = (field: any): string[] => {
     if (!field) return []
@@ -341,6 +363,38 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
   }, [])
 
   useEffect(() => {
+    const loadFeatures = async () => {
+      try {
+        const [caracteristicas, amenidades] = await Promise.all([
+          getPropertyFeatures("CARACTERISTICA"),
+          getPropertyFeatures("AMENIDAD"),
+        ])
+
+        setCaracteristicasOptions(caracteristicas)
+        setAmenidadesOptions(amenidades)
+
+        // Load existing assignments if editing
+        if (editProperty?.id) {
+          const assignments = await getPropertyFeatureAssignments(editProperty.id)
+          const caracIds = assignments
+            .filter((a: any) => a.property_features?.type === "CARACTERISTICA")
+            .map((a: any) => a.feature_id)
+          const amenIds = assignments
+            .filter((a: any) => a.property_features?.type === "AMENIDAD")
+            .map((a: any) => a.feature_id)
+
+          setSelectedCaracteristicas(caracIds)
+          setSelectedAmenidades(amenIds)
+        }
+      } catch (error) {
+        console.error("[v0] Error loading features:", error)
+      }
+    }
+
+    loadFeatures()
+  }, [editProperty?.id])
+
+  useEffect(() => {
     async function fetchData() {
       try {
         const [ownersResponse, propertyTypesResponse, countriesData] = await Promise.all([
@@ -351,12 +405,12 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
 
         if (ownersResponse.ok) {
           const ownersData = await ownersResponse.json()
-          setOwners(ownersData)
+          setPropertyOwners(ownersData) // Use renamed state
         }
 
         if (propertyTypesResponse.ok) {
           const propertyTypesData = await propertyTypesResponse.json()
-          setPropertyTypes(propertyTypesData)
+          setPropertyTypesList(propertyTypesData) // Use renamed state
         }
 
         setCountries(countriesData)
@@ -368,7 +422,7 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
         }
         if (selectedProvinceId) {
           const citiesData = await getCities(selectedProvinceId)
-          setCities(citiesData)
+          setCities(citiesData) // Use renamed state
         }
         if (selectedCityId) {
           const neighborhoodsData = await getNeighborhoods(selectedCityId)
@@ -391,13 +445,14 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
   }, [provinces, selectedProvinceId, selectedProvinceName])
 
   useEffect(() => {
-    if (cities.length > 0 && selectedCityId && !selectedCityName) {
-      const city = cities.find((c) => c.id === selectedCityId)
+    if (propertyCities.length > 0 && selectedCityId && !selectedCityName) {
+      // Use renamed state
+      const city = propertyCities.find((c) => c.id === selectedCityId)
       if (city) {
         setSelectedCityName(city.name)
       }
     }
-  }, [cities, selectedCityId, selectedCityName])
+  }, [propertyCities, selectedCityId, selectedCityName])
 
   useEffect(() => {
     if (neighborhoods.length > 0 && formData.neighborhoodId && !selectedNeighborhoodName) {
@@ -447,7 +502,7 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
       validationErrors.push("El tamaño del lote es requerido y debe ser mayor a 0")
     }
 
-    const selectedPropertyType = propertyTypes.find((pt) => pt.id === formData.propertyTypeId)
+    const selectedPropertyType = propertyTypesList.find((pt) => pt.id === formData.propertyTypeId) // Use renamed state
     const isLand = selectedPropertyType?.name?.toLowerCase().includes("terreno")
 
     // Only validate yearBuilt if it's not a land property
@@ -507,6 +562,8 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
 
     try {
       let result
+      let propertyId: string | undefined = undefined // Define propertyId
+
       if (editProperty) {
         if (!editProperty.id) {
           throw new Error("ID de propiedad no válido")
@@ -525,6 +582,7 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
             description: "La propiedad se actualizó correctamente",
           })
         }
+        propertyId = editProperty.id // Set propertyId for updates
       } else {
         result = await createProperty(finalFormData)
 
@@ -536,6 +594,15 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
           title: "Propiedad creada",
           description: "La propiedad se creó correctamente",
         })
+        if (result && typeof result === "object" && "id" in result) {
+          // Check if result is an object and has an 'id'
+          propertyId = (result as { id: string }).id
+        }
+      }
+
+      if (propertyId) {
+        const allFeatureIds = [...selectedCaracteristicas, ...selectedAmenidades]
+        await assignFeaturesToProperty(propertyId, allFeatureIds)
       }
 
       if (onSuccess) {
@@ -611,11 +678,11 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
 
     try {
       const propertyTypeId = formData.propertyTypeId
-      const propertyTypeName = propertyTypes.find((t) => t.id === propertyTypeId)?.name || ""
+      const propertyTypeName = propertyTypesList.find((t) => t.id === propertyTypeId)?.name || "" // Use renamed state
 
       const cityId = formData.cityId
       const provinceId = formData.provinceId
-      const cityName = cities.find((c) => c.id === cityId)?.name || ""
+      const cityName = propertyCities.find((c) => c.id === cityId)?.name || "" // Use renamed state
       const provinceName = provinces.find((p) => p.id === provinceId)?.name || ""
 
       const details = {
@@ -661,7 +728,7 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
   }
 
   async function handleOwnerCreated(newOwner: { id: string; name: string }) {
-    setOwners((prev) => [...prev, newOwner])
+    setPropertyOwners((prev) => [...prev, newOwner]) // Use renamed state
     setFormData((prev) => ({ ...prev, ownerId: newOwner.id }))
     toast({
       title: "Propietario creado",
@@ -676,7 +743,7 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
     setSelectedCityId(undefined)
     setSelectedCityName("") // Clear city name
     setProvinces([])
-    setCities([])
+    setCities([]) // Use renamed state
     setNeighborhoods([])
     setFormData((prev) => ({ ...prev, countryId, provinceId: undefined, cityId: undefined, neighborhoodId: undefined }))
 
@@ -707,9 +774,9 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
 
     if (provinceId) {
       const provinceCities = await getCitiesByProvince(provinceId)
-      setCities(provinceCities)
+      setCities(provinceCities) // Use renamed state
     } else {
-      setCities([])
+      setCities([]) // Use renamed state
     }
     setNeighborhoods([])
   }
@@ -721,7 +788,7 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
       neighborhoodId: "",
     }))
 
-    const city = cities.find((c) => c.id === cityId)
+    const city = propertyCities.find((c) => c.id === cityId) // Use renamed state
     setSelectedCityName(city?.name || "")
     setSelectedCityId(cityId || undefined) // Update selectedCityId
 
@@ -846,11 +913,15 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
                   <SelectValue placeholder="Seleccione un propietario" />
                 </SelectTrigger>
                 <SelectContent>
-                  {owners.map((owner) => (
-                    <SelectItem key={owner.id} value={owner.id}>
-                      {owner.name}
-                    </SelectItem>
-                  ))}
+                  {propertyOwners.map(
+                    (
+                      owner, // Use renamed state
+                    ) => (
+                      <SelectItem key={owner.id} value={owner.id}>
+                        {owner.name}
+                      </SelectItem>
+                    ),
+                  )}
                 </SelectContent>
               </Select>
               <Button
@@ -866,7 +937,7 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
-            {owners.length === 0 && (
+            {propertyOwners.length === 0 && ( // Use renamed state
               <p className="text-sm text-muted-foreground">
                 No hay propietarios disponibles. Haz clic en el botón + para crear uno nuevo.
               </p>
@@ -889,14 +960,18 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
                   <SelectValue placeholder="Seleccione un tipo" />
                 </SelectTrigger>
                 <SelectContent>
-                  {propertyTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id}>
-                      {type.name}
-                    </SelectItem>
-                  ))}
+                  {propertyTypesList.map(
+                    (
+                      type, // Use renamed state
+                    ) => (
+                      <SelectItem key={type.id} value={type.id}>
+                        {type.name}
+                      </SelectItem>
+                    ),
+                  )}
                 </SelectContent>
               </Select>
-              {propertyTypes.length === 0 && (
+              {propertyTypesList.length === 0 && ( // Use renamed state
                 <p className="text-sm text-muted-foreground">
                   No hay tipos de propiedad disponibles.{" "}
                   <a href="/property-types/new" className="text-primary hover:underline">
@@ -1052,11 +1127,15 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
                   <SelectValue placeholder="Seleccione una ciudad" />
                 </SelectTrigger>
                 <SelectContent>
-                  {cities.map((city) => (
-                    <SelectItem key={city.id} value={city.id}>
-                      {city.name}
-                    </SelectItem>
-                  ))}
+                  {propertyCities.map(
+                    (
+                      city, // Use renamed state
+                    ) => (
+                      <SelectItem key={city.id} value={city.id}>
+                        {city.name}
+                      </SelectItem>
+                    ),
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -1189,8 +1268,8 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
                     longitude: mapCoordinates.lng,
                     price: formData.price || 0,
                     currency: formData.currency || "USD",
-                    propertyType: propertyTypes.find((t) => t.id === formData.propertyTypeId)?.name || "Sin tipo",
-                    city: cities.find((c) => c.id === formData.cityId)?.name || "Sin ciudad",
+                    propertyType: propertyTypesList.find((t) => t.id === formData.propertyTypeId)?.name || "Sin tipo", // Use renamed state
+                    city: propertyCities.find((c) => c.id === formData.cityId)?.name || "Sin ciudad", // Use renamed state
                     images: images, // Passing PropertyImage objects directly
                     status: formData.status || "ACTIVO",
                   },
@@ -1426,51 +1505,22 @@ export function PropertyForm({ editProperty, onSuccess, agents = [], userId }: P
       <Card>
         <CardHeader>
           <CardTitle>Características Adicionales</CardTitle>
-          <CardDescription>Amenidades y características especiales (separadas por comas)</CardDescription>
+          <CardDescription>Selecciona las características y amenidades de la propiedad</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="features">Características</Label>
-            <Input
-              placeholder="Ej: Jardín, Piscina, etc."
-              value={featuresInput}
-              onChange={(e) => setFeaturesInput(e.target.value)}
-              onBlur={(e) => {
-                const value = e.target.value
-                const featuresArray = value
-                  .split(",")
-                  .map((item) => item.trim())
-                  .filter((item) => item.length > 0)
-                setFormData((prev) => ({ ...prev, features: featuresArray }))
-              }}
-              disabled={isSubmitting}
-            />
-            <p className="text-xs text-muted-foreground">
-              Escribe las características separadas por comas. Ej: Piscina, Jardín, Terraza
-            </p>
-          </div>
+          <PropertyFeaturesSelector
+            label="Características"
+            features={caracteristicasOptions}
+            selectedIds={selectedCaracteristicas}
+            onChange={setSelectedCaracteristicas}
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="amenities">Amenidades</Label>
-            <Textarea
-              placeholder="Ej: Gimnasio, Seguridad 24/7, Área de juegos, etc."
-              value={amenitiesInput}
-              onChange={(e) => setAmenitiesInput(e.target.value)}
-              onBlur={(e) => {
-                const value = e.target.value
-                const amenitiesArray = value
-                  .split(",")
-                  .map((item) => item.trim())
-                  .filter((item) => item.length > 0)
-                setFormData((prev) => ({ ...prev, amenities: amenitiesArray }))
-              }}
-              rows={3}
-              disabled={isSubmitting}
-            />
-            <p className="text-xs text-muted-foreground">
-              Escribe las amenidades separadas por comas. Ej: Gimnasio, Seguridad 24/7, Área de juegos
-            </p>
-          </div>
+          <PropertyFeaturesSelector
+            label="Amenidades"
+            features={amenidadesOptions}
+            selectedIds={selectedAmenidades}
+            onChange={setSelectedAmenidades}
+          />
         </CardContent>
       </Card>
 
