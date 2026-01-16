@@ -15,6 +15,8 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children, user, permissions }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
 
+  const closeSidebar = () => setSidebarOpen(false)
+
   return (
     <div className="relative flex h-screen w-full overflow-hidden bg-background">
       {/* Desktop Sidebar */}
@@ -25,13 +27,9 @@ export function DashboardLayout({ children, user, permissions }: DashboardLayout
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <>
-          <div
-            className="fixed inset-0 z-40 bg-black/80 md:hidden"
-            onClick={() => setSidebarOpen(false)}
-            aria-hidden="true"
-          />
-          <aside className="fixed inset-y-0 left-0 z-50 w-64 md:hidden">
-            <AppSidebar user={user} permissions={permissions} />
+          <div className="fixed inset-0 z-100 bg-black/80 md:hidden" onClick={closeSidebar} aria-hidden="true" />
+          <aside className="fixed inset-y-0 left-0 z-110 w-64 bg-background md:hidden">
+            <AppSidebar user={user} permissions={permissions} onNavigate={closeSidebar} />
           </aside>
         </>
       )}

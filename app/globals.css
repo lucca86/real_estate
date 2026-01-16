@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Tailwind v4 custom variant - suppress CSS linter warning */
 @custom-variant dark (&:is(.dark *));
 
 :root {

@@ -134,7 +134,7 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 p-4 sm:p-6">
         <div className="flex items-center justify-between space-x-2">
           <Label htmlFor="active-only" className="text-sm font-medium">
             Solo propiedades activas

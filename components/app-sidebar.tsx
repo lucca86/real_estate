@@ -30,9 +30,10 @@ import { getRoleLabel } from "@/lib/role-labels"
 interface AppSidebarProps {
   user: SessionUser | null
   permissions?: Record<string, boolean>
+  onNavigate?: () => void
 }
 
-export function AppSidebar({ user, permissions = {} }: AppSidebarProps) {
+export function AppSidebar({ user, permissions = {}, onNavigate }: AppSidebarProps) {
   const pathname = usePathname()
   const { theme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
@@ -182,6 +183,7 @@ export function AppSidebar({ user, permissions = {} }: AppSidebarProps) {
             <Link
               key={item.name}
               href={item.href}
+              onClick={onNavigate}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
                 isActive

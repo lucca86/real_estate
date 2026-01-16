@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { isValidCoordinate, normalizeCoordinate, CORRIENTES_CENTER } from "@/lib/map-utils"
+import { normalizeImageUrl } from "@/lib/image-utils"
 
 interface PropertyImage {
   url: string
@@ -29,16 +30,24 @@ interface Property {
   currency: string
   propertyType: string
   status: string
-  images: PropertyImage[]
+  images: (string | PropertyImage)[]
 }
 
 interface PropertiesMapProps {
   properties: Property[]
   defaultCenter?: [number, number]
   defaultZoom?: number
+  draggable?: boolean
+  onMarkerDrag?: (lat: number, lng: number) => void
 }
 
-export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, defaultZoom = 13 }: PropertiesMapProps) {
+export function PropertiesMap({
+  properties,
+  defaultCenter = CORRIENTES_CENTER,
+  defaultZoom = 13,
+  draggable = false,
+  onMarkerDrag,
+}: PropertiesMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<any[]>([])
@@ -119,12 +128,21 @@ export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, d
           const lat = property.latitude!
           const lng = property.longitude!
 
-          const marker = L.marker([lat, lng])
+          const marker = L.marker([lat, lng], {
+            draggable: draggable,
+          })
 
           marker.on("click", () => {
             setSelectedProperty(property)
             map.setView([lat, lng], 16, { animate: true })
           })
+
+          if (draggable && onMarkerDrag) {
+            marker.on("dragend", () => {
+              const position = marker.getLatLng()
+              onMarkerDrag(position.lat, position.lng)
+            })
+          }
 
           marker.addTo(map)
           markersRef.current.push(marker)
@@ -150,7 +168,7 @@ export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, d
         mapInstanceRef.current = null
       }
     }
-  }, [properties, validProperties, defaultCenter, defaultZoom])
+  }, [properties, validProperties, defaultCenter, defaultZoom, draggable, onMarkerDrag])
 
   const typeLabels: Record<string, string> = {
     CASA: "Casa",
@@ -169,7 +187,7 @@ export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, d
   }
 
   return (
-    <div className="relative h-[600px] w-full">
+    <div className="relative h-[600px] w-full z-0">
       {isLoading && (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-muted/50 rounded-lg">
           <div className="text-sm text-muted-foreground">Cargando mapa...</div>
@@ -183,12 +201,12 @@ export function PropertiesMap({ properties, defaultCenter = CORRIENTES_CENTER, d
       <div ref={mapRef} className="h-full w-full rounded-lg border border-border" />
 
       {selectedProperty && (
-        <Card className="absolute bottom-4 left-4 right-4 z-1000 max-w-md shadow-lg md:left-auto">
+        <Card className="absolute bottom-4 left-4 right-4 z-10 max-w-md shadow-lg md:left-auto">
           <CardContent className="p-4">
             <div className="flex gap-4">
               {selectedProperty.images[0] && (
                 <img
-                  src={selectedProperty.images[0].url || "/placeholder.svg"}
+                  src={normalizeImageUrl(selectedProperty.images[0]) || "/placeholder.svg"}
                   alt={selectedProperty.title}
                   className="h-24 w-24 rounded-lg object-cover"
                 />
