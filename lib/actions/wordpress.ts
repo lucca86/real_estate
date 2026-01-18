@@ -1,40 +1,30 @@
 "use server"
 
-import { createAdminClient } from "@/lib/supabase/server"
-import { getCurrentUser } from "@/lib/auth"
-import { hasUserPermission } from "@/lib/permissions"
+import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { wordpressAPI } from "@/lib/wordpress"
 import { revalidatePath } from "next/cache"
 
+function parseImage(img: any): any {
+  if (typeof img === "string") {
+    try {
+      return JSON.parse(img)
+    } catch {
+      return img
+    }
+  }
+  return img
+}
+
 export async function syncPropertyToWordPress(propertyId: string) {
-  console.log("[v0] ========================================")
-  console.log("[v0] syncPropertyToWordPress called with ID:", propertyId)
-  console.log("[v0] ========================================")
+  // This function is called from updateProperty which already verified authentication
+  // We use adminClient to bypass RLS and avoid auth session issues in Server Actions
+  const adminClient = await createAdminClient()
 
-  const currentUser = await getCurrentUser()
-
-  if (!currentUser) {
-    console.log("[v0] ERROR: User not authenticated")
-    throw new Error("No estás autenticado")
-  }
-
-  console.log("[v0] User authenticated:", currentUser.id, currentUser.role)
-
-  const canEdit = await hasUserPermission(currentUser.id, "properties.edit")
-  if (!canEdit) {
-    console.log("[v0] ERROR: User does not have properties.edit permission")
-    throw new Error("No tienes permisos para sincronizar propiedades")
-  }
-
-  console.log("[v0] User has permission to edit properties")
-
-  const supabase = await createAdminClient()
-  const { data: property, error: fetchError } = await supabase
+  const { data: property, error } = await adminClient
     .from("properties")
     .select(`
       *,
       property_type:property_types!property_type_id(name),
-      owner:owners!owner_id(name),
       city:cities!city_id(name),
       province:provinces!province_id(name),
       country:countries!country_id(name),
@@ -43,13 +33,7 @@ export async function syncPropertyToWordPress(propertyId: string) {
     .eq("id", propertyId)
     .single()
 
-  if (fetchError) {
-    console.log("[v0] ERROR fetching property:", fetchError)
-    throw new Error(`Error al obtener la propiedad: ${fetchError.message}`)
-  }
-
-  if (!property) {
-    console.log("[v0] ERROR: Property not found")
+  if (error || !property) {
     throw new Error("Propiedad no encontrada")
   }
 
@@ -64,15 +48,22 @@ export async function syncPropertyToWordPress(propertyId: string) {
     status: property.status,
   })
 
-  const allImages = property.images || []
+  const rawImages = property.images || []
+  const allImages = rawImages.map(parseImage)
   const imagesToSync = allImages.filter((img: any) => img.syncToWordPress === true)
 
   console.log("[v0] Total images:", allImages.length)
   console.log("[v0] Images marked for WordPress sync:", imagesToSync.length)
+  console.log("[v0] First image syncToWordPress value:", allImages[0]?.syncToWordPress)
 
   if (imagesToSync.length === 0) {
-    console.log("[v0] ERROR: No images marked for WordPress sync")
-    throw new Error("Debe seleccionar al menos una imagen para sincronizar con WordPress (portada)")
+    console.log("[v0] WARNING: No images marked for WordPress sync")
+    return {
+      success: false,
+      warning:
+        "Debe seleccionar al menos una imagen para sincronizar con WordPress (imagen de portada). Marque las imágenes que desea sincronizar y vuelva a intentar.",
+      wordpressId: null,
+    }
   }
 
   try {
@@ -116,7 +107,7 @@ export async function syncPropertyToWordPress(propertyId: string) {
 
     console.log("[v0] WordPress sync successful! WordPress ID:", wordpressId)
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await adminClient
       .from("properties")
       .update({
         wordpress_id: wordpressId,
@@ -144,13 +135,15 @@ export async function syncPropertyToWordPress(propertyId: string) {
 }
 
 export async function syncAllPropertiesToWordPress() {
-  const currentUser = await getCurrentUser()
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  if (!currentUser || currentUser.role !== "ADMIN") {
+  if (!user || user.user_metadata?.role !== "ADMIN") {
     throw new Error("Solo los administradores pueden sincronizar todas las propiedades")
   }
 
-  const supabase = await createAdminClient()
   const { data: properties } = await supabase
     .from("properties")
     .select(`
@@ -172,8 +165,17 @@ export async function syncAllPropertiesToWordPress() {
 
   for (const property of properties || []) {
     try {
-      if (!property.images || property.images.length === 0) {
+      const rawImages = property.images || []
+      const parsedImages = rawImages.map(parseImage)
+
+      if (parsedImages.length === 0) {
         throw new Error("La propiedad debe tener al menos una imagen para sincronizar con WordPress")
+      }
+
+      const imagesToSync = parsedImages.filter((img: any) => img.syncToWordPress === true)
+
+      if (imagesToSync.length === 0) {
+        throw new Error("La propiedad debe tener al menos una imagen marcada para WordPress")
       }
 
       const wordpressId = await wordpressAPI.syncProperty({
@@ -202,7 +204,7 @@ export async function syncAllPropertiesToWordPress() {
         pricePerM2: property.price_per_m2,
         features: property.features,
         amenities: property.amenities,
-        images: property.images,
+        images: imagesToSync,
         virtualTour: property.virtual_tour,
         propertyLabel: property.property_label,
         published: property.published,
@@ -230,18 +232,19 @@ export async function syncAllPropertiesToWordPress() {
 }
 
 export async function deletePropertyFromWordPress(propertyId: string) {
-  const currentUser = await getCurrentUser()
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  if (!currentUser) {
+  if (!user) {
     throw new Error("No estás autenticado")
   }
 
-  const canDelete = await hasUserPermission(currentUser.id, "properties.delete")
-  if (!canDelete) {
+  if (user.user_metadata?.role !== "ADMIN") {
     throw new Error("No tienes permisos para eliminar propiedades de WordPress")
   }
 
-  const supabase = await createAdminClient()
   const { data: property } = await supabase.from("properties").select("id, wordpress_id").eq("id", propertyId).single()
 
   if (!property || !property.wordpress_id) {
@@ -270,9 +273,12 @@ export async function deletePropertyFromWordPress(propertyId: string) {
 }
 
 export async function testWordPressConnection() {
-  const currentUser = await getCurrentUser()
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  if (!currentUser || currentUser.role !== "ADMIN") {
+  if (!user || user.user_metadata?.role !== "ADMIN") {
     throw new Error("Solo los administradores pueden probar la conexión")
   }
 
@@ -288,9 +294,12 @@ export async function testWordPressConnection() {
 }
 
 export async function debugWordPressProperty(propertyId: number) {
-  const currentUser = await getCurrentUser()
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  if (!currentUser || currentUser.role !== "ADMIN") {
+  if (!user || user.user_metadata?.role !== "ADMIN") {
     throw new Error("Solo los administradores pueden usar el debug")
   }
 

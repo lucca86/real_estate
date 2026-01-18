@@ -10,7 +10,7 @@ import { ImageGallery } from "@/components/image-gallery"
 import { PropertiesMap } from "@/components/properties-map"
 import { getPropertyById } from "@/lib/actions/properties"
 import { PropertyContactCard } from "@/components/property-contact-card"
-import { WordPressSyncButton } from "@/components/wordpress-sync-button"
+
 import { getPropertyFeatureAssignments } from "@/lib/actions/property-features"
 
 export default async function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -105,19 +105,12 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
             Volver a propiedades
           </Link>
         </Button>
-        <div className="flex items-center gap-2">
-          <WordPressSyncButton
-            propertyId={property.id}
-            wordpressId={property.wordpress_id}
-            syncedAt={property.synced_at}
-          />
-          <Button variant="outline" asChild>
-            <Link href={`/properties/${property.id}/edit`}>
-              <Edit className="mr-2 h-4 w-4" />
-              Editar
-            </Link>
-          </Button>
-        </div>
+        <Button variant="outline" asChild>
+          <Link href={`/properties/${property.id}/edit`}>
+            <Edit className="mr-2 h-4 w-4" />
+            Editar
+          </Link>
+        </Button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
