@@ -131,7 +131,7 @@ export function AppSidebar({ user, permissions = {}, onNavigate }: AppSidebarPro
       name: "Configuración",
       href: "/settings",
       icon: Settings,
-      roles: ["ADMIN"],
+      roles: ["ADMIN", "SUPERVISOR"],
     },
   ]
 

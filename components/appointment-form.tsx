@@ -15,6 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast"
 import { Loader2 } from "lucide-react"
 import { datetimeLocalToISO } from "@/lib/timezone-utils"
+import { getAppointmentSettings, type AppointmentSetting } from "@/lib/actions/appointment-settings"
 
 const AppointmentStatus = {
   PENDIENTE: "PENDIENTE",
@@ -32,7 +33,7 @@ const appointmentSchema = z
     contactName: z.string().min(1, "Ingresa el nombre del contacto"),
     agentId: z.string().min(1, "Selecciona un agente"),
     scheduledAt: z.string().min(1, "Selecciona fecha y hora"),
-    duration: z.number().min(15).max(480),
+    duration: z.number().min(5).max(480),
     status: z.nativeEnum(AppointmentStatus),
     notes: z.string().optional(),
   })
@@ -58,6 +59,9 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
   const [showPropertyResults, setShowPropertyResults] = useState(false)
   const [appointmentDate, setAppointmentDate] = useState("")
   const [appointmentTime, setAppointmentTime] = useState("")
+  const [settings, setSettings] = useState<AppointmentSetting[]>([])
+  const [currentDaySetting, setCurrentDaySetting] = useState<AppointmentSetting | null>(null)
+  const [durationValue, setDurationValue] = useState<number>(60)
 
   const now = new Date()
   const minDate = now.toISOString().split("T")[0] // YYYY-MM-DD format
@@ -80,20 +84,6 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
     address: string
     city: string
   } | null>(initialProperty)
-
-  useEffect(() => {
-    if (initialProperty) {
-      setPropertySearch(initialProperty.address)
-    }
-
-    if (appointment?.scheduled_date) {
-      const date = new Date(appointment.scheduled_date)
-      setAppointmentDate(date.toISOString().split("T")[0])
-      const hours = date.getHours().toString().padStart(2, "0")
-      const minutes = date.getMinutes().toString().padStart(2, "0")
-      setAppointmentTime(`${hours}:${minutes}`)
-    }
-  }, [initialProperty, appointment])
 
   const {
     register,
@@ -125,6 +115,52 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
           notes: "",
         },
   })
+
+  useEffect(() => {
+    if (initialProperty) {
+      setPropertySearch(initialProperty.address)
+    }
+
+    if (appointment?.scheduled_date) {
+      const date = new Date(appointment.scheduled_date)
+      setAppointmentDate(date.toISOString().split("T")[0])
+      const hours = date.getHours().toString().padStart(2, "0")
+      const minutes = date.getMinutes().toString().padStart(2, "0")
+      setAppointmentTime(`${hours}:${minutes}`)
+      
+      if (appointment.duration) {
+        setDurationValue(appointment.duration)
+      }
+    }
+
+    // Cargar configuración de horarios
+    getAppointmentSettings().then(setSettings)
+  }, [initialProperty, appointment])
+
+  useEffect(() => {
+    if (appointmentDate && settings.length > 0) {
+      const date = new Date(appointmentDate)
+      const dayOfWeek = date.getDay() // 0 = Sunday, 6 = Saturday
+      
+      let dayType: "WEEKDAY" | "SATURDAY" | "HOLIDAY" = "WEEKDAY"
+      if (dayOfWeek === 6) {
+        dayType = "SATURDAY"
+      }
+      // TODO: Implementar detección de feriados si se requiere
+      
+      const daySetting = settings.find(s => s.day_type === dayType)
+      setCurrentDaySetting(daySetting || null)
+      
+      // Actualizar duración por defecto basada en el setting del día
+      if (daySetting && !appointment) {
+        const newDuration = daySetting.min_duration
+        setDurationValue(newDuration)
+        setValue("duration", newDuration)
+      }
+      
+      console.log("[v0] Day setting for", appointmentDate, ":", daySetting)
+    }
+  }, [appointmentDate, settings, appointment])
 
   const filteredProperties = propertySearch.trim()
     ? properties.filter(
@@ -177,8 +213,8 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
         toast({
           title: appointment ? "Cita actualizada" : "Cita creada",
           description: appointment
-            ? "La cita ha sido actualizada exitosamente. Se han enviado notificaciones por email."
-            : "La cita ha sido agendada exitosamente. Se han enviado notificaciones por email.",
+            ? "La cita ha sido actualizada exitosamente"
+            : "La cita ha sido agendada exitosamente",
         })
         router.push("/appointments")
         router.refresh()
@@ -364,18 +400,36 @@ export function AppointmentForm({ appointment, properties, clients, agents }: Ap
               <Input
                 id="duration"
                 type="number"
-                min="15"
-                max="480"
-                step="15"
-                {...register("duration", { valueAsNumber: true })}
-                defaultValue={60}
+                min={currentDaySetting?.min_duration || 5}
+                max={currentDaySetting?.max_duration || 480}
+                step={currentDaySetting?.duration_interval || 5}
+                value={durationValue}
+                onChange={(e) => {
+                  const val = Number.parseInt(e.target.value) || 0
+                  setDurationValue(val)
+                  setValue("duration", val, { shouldValidate: true })
+                }}
                 className={errors.duration ? "border-destructive" : ""}
               />
               {errors.duration && <p className="text-sm text-destructive">{errors.duration.message}</p>}
+              {currentDaySetting && (
+                <p className="text-xs text-muted-foreground">
+                  Mínimo: {currentDaySetting.min_duration} min, Máximo: {currentDaySetting.max_duration} min, Intervalos: {currentDaySetting.duration_interval} min
+                </p>
+              )}
             </div>
           </div>
 
-          <p className="text-xs text-muted-foreground">Horario: Lun-Vie 7:30-12:30 y 16:30-20:30, Sáb 9:00-12:00</p>
+          {currentDaySetting && currentDaySetting.is_open && currentDaySetting.start_time && currentDaySetting.end_time && (
+            <p className="text-xs text-muted-foreground">
+              Horario: {currentDaySetting.start_time} - {currentDaySetting.end_time}
+            </p>
+          )}
+          {currentDaySetting && !currentDaySetting.is_open && (
+            <p className="text-xs text-destructive">
+              ⚠️ Este día está cerrado para citas
+            </p>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="status">Estado</Label>

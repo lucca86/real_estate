@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { WordPressBulkSync } from "@/components/wordpress-bulk-sync"
 import { WordPressTestConnection } from "@/components/wordpress-test-connection"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Info, MapPin, Shield, Activity } from "lucide-react"
+import { Info, MapPin, Shield, Activity, Calendar } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
@@ -31,6 +31,33 @@ export default async function SettingsPage() {
         <h1 className="text-3xl font-bold tracking-tight text-balance">Configuración</h1>
         <p className="text-muted-foreground">Administra la configuración del sistema</p>
       </div>
+
+      {/* Appointments Settings card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Horarios de Citas
+          </CardTitle>
+          <CardDescription>Configura los horarios disponibles y duración de las citas</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-3">
+            <p className="text-sm text-muted-foreground">
+              Define los horarios de atención para días de semana, sábados y feriados. Configura la duración mínima,
+              máxima y los intervalos de tiempo disponibles para las citas.
+            </p>
+            <div>
+              <Button asChild>
+                <Link href="/settings/appointments">
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Configurar Horarios
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Audit card */}
       <Card>

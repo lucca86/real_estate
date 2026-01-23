@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { createServerClient } from "@/lib/supabase/server"
-import { sendAppointmentNotifications } from "@/lib/email-notifications"
 import { randomUUID } from "crypto"
 import { getCurrentUser } from "@/lib/auth"
 import { checkPermission, type Permission } from "@/lib/permissions"
@@ -20,7 +19,7 @@ const appointmentSchema = z
     scheduledAt: z.string().datetime("Fecha y hora inválida"),
     duration: z
       .number()
-      .min(15, "La duración mínima es 15 minutos")
+      .min(5, "La duración mínima es 5 minutos")
       .max(480, "La duración máxima es 8 horas")
       .default(60),
     status: z.enum(["PENDIENTE", "CONFIRMADA", "COMPLETADA", "CANCELADA", "NO_ASISTIO"]).default("PENDIENTE"),
@@ -89,8 +88,8 @@ function getArgentinaDateTime(date: Date): { day: number; hours: number; minutes
   return { day, hours: hour + minute / 60, minutes: minute }
 }
 
-function isWithinWorkHours(date: Date): { valid: boolean; message?: string } {
-  const { day, hours } = getArgentinaDateTime(date)
+async function isWithinWorkHours(date: Date): Promise<{ valid: boolean; message?: string }> {
+  const { day, hours, minutes } = getArgentinaDateTime(date)
 
   console.log("[v0] Validating work hours (Argentina time):", {
     day,
@@ -98,27 +97,67 @@ function isWithinWorkHours(date: Date): { valid: boolean; message?: string } {
     date: date.toISOString(),
   })
 
+  // Domingo siempre cerrado
   if (day === 0) {
     return { valid: false, message: "No se pueden agendar citas los domingos" }
   }
 
+  // Determinar el tipo de día
+  let dayType: "WEEKDAY" | "SATURDAY" | "HOLIDAY" = "WEEKDAY"
   if (day === 6) {
-    if (hours >= WORK_HOURS.saturday.morning.start && hours < WORK_HOURS.saturday.morning.end) {
-      return { valid: true }
-    }
-    return { valid: false, message: "Los sábados solo se atiende de 9:00 a 12:00" }
+    dayType = "SATURDAY"
+  }
+  // TODO: Implementar detección de feriados si se requiere
+  
+  // Obtener configuración desde la base de datos
+  const supabase = await createServerClient()
+  const { data: settings, error } = await supabase
+    .from("appointment_settings")
+    .select("*")
+    .eq("day_type", dayType)
+    .single()
+
+  if (error || !settings) {
+    console.error("[v0] Error fetching appointment settings:", error)
+    return { valid: false, message: "No se pudo verificar el horario de atención" }
   }
 
-  const inMorning = hours >= WORK_HOURS.weekday.morning.start && hours < WORK_HOURS.weekday.morning.end
-  const inAfternoon = hours >= WORK_HOURS.weekday.afternoon.start && hours < WORK_HOURS.weekday.afternoon.end
+  // Si el día está cerrado
+  if (!settings.is_open) {
+    const dayName = dayType === "SATURDAY" ? "Sábados" : "ese día"
+    return { valid: false, message: `${dayName} está cerrado para citas` }
+  }
 
-  if (inMorning || inAfternoon) {
+  // Verificar que tenga horarios configurados
+  if (!settings.start_time || !settings.end_time) {
+    return { valid: false, message: "Horarios no configurados correctamente" }
+  }
+
+  // Convertir hora actual a minutos desde medianoche
+  const currentMinutes = hours * 60 + minutes
+
+  // Parsear horarios de configuración (formato HH:MM)
+  const [startHour, startMin] = settings.start_time.split(":").map(Number)
+  const [endHour, endMin] = settings.end_time.split(":").map(Number)
+  
+  const startMinutes = startHour * 60 + startMin
+  const endMinutes = endHour * 60 + endMin
+
+  console.log("[v0] Work hours check:", {
+    currentMinutes,
+    startMinutes,
+    endMinutes,
+    isWithin: currentMinutes >= startMinutes && currentMinutes < endMinutes
+  })
+
+  if (currentMinutes >= startMinutes && currentMinutes < endMinutes) {
     return { valid: true }
   }
 
+  const dayName = dayType === "SATURDAY" ? "Sábados" : "Lunes a Viernes"
   return {
     valid: false,
-    message: "Horario de atención: Lunes a Viernes 7:30-12:30 y 16:30-20:30, Sábados 9:00-12:00",
+    message: `${dayName}: ${settings.start_time} a ${settings.end_time}`,
   }
 }
 
@@ -225,33 +264,56 @@ export async function createAppointment(data: AppointmentFormData): Promise<Appo
     }
     console.log("[v0] ✓ Date is in the future")
 
-    const isAdmin = currentUser.role === "ADMIN"
-    console.log("[v0] User role:", currentUser.role, "- Is admin:", isAdmin)
-
-    if (!isAdmin) {
-      const workHoursCheck = isWithinWorkHours(scheduledDate)
-      if (!workHoursCheck.valid) {
-        console.log("[v0] ✗ Work hours check failed:", workHoursCheck.message)
-        return {
-          success: false,
-          error: workHoursCheck.message || "Horario no disponible",
-        }
-      }
-      console.log("[v0] ✓ Work hours check passed")
-
-      const endTime = new Date(scheduledDate.getTime() + validatedData.duration * 60000)
-      const endTimeCheck = isWithinWorkHours(endTime)
-      if (!endTimeCheck.valid) {
-        console.log("[v0] ✗ End time check failed:", endTimeCheck.message)
-        return {
-          success: false,
-          error: `La cita terminaría fuera del horario de atención (${endTimeCheck.message})`,
-        }
-      }
-      console.log("[v0] ✓ End time check passed")
-    } else {
-      console.log("[v0] ⚠ Admin user - skipping work hours validation")
+    // Verificar que la duración esté dentro de los límites configurados
+    const { day } = getArgentinaDateTime(scheduledDate)
+    let dayType: "WEEKDAY" | "SATURDAY" | "HOLIDAY" = "WEEKDAY"
+    if (day === 6) {
+      dayType = "SATURDAY"
     }
+    
+    const supabase = await createServerClient()
+    const { data: daySetting } = await supabase
+      .from("appointment_settings")
+      .select("*")
+      .eq("day_type", dayType)
+      .single()
+    
+    if (daySetting) {
+      if (validatedData.duration < daySetting.min_duration) {
+        return {
+          success: false,
+          error: `La duración mínima permitida es de ${daySetting.min_duration} minutos`,
+        }
+      }
+      
+      if (validatedData.duration > daySetting.max_duration) {
+        return {
+          success: false,
+          error: `La duración máxima permitida es de ${daySetting.max_duration} minutos`,
+        }
+      }
+    }
+    
+    const workHoursCheck = await isWithinWorkHours(scheduledDate)
+    if (!workHoursCheck.valid) {
+      console.log("[v0] ✗ Work hours check failed:", workHoursCheck.message)
+      return {
+        success: false,
+        error: workHoursCheck.message || "Horario no disponible",
+      }
+    }
+    console.log("[v0] ✓ Work hours check passed")
+
+    const endTime = new Date(scheduledDate.getTime() + validatedData.duration * 60000)
+    const endTimeCheck = await isWithinWorkHours(endTime)
+    if (!endTimeCheck.valid) {
+      console.log("[v0] ✗ End time check failed:", endTimeCheck.message)
+      return {
+        success: false,
+        error: `La cita terminaría fuera del horario de atención (${endTimeCheck.message})`,
+      }
+    }
+    console.log("[v0] ✓ End time check passed")
 
     const conflictCheck = await checkScheduleConflict(validatedData.agentId, scheduledDate, validatedData.duration)
     if (conflictCheck.hasConflict) {
@@ -262,8 +324,6 @@ export async function createAppointment(data: AppointmentFormData): Promise<Appo
       }
     }
     console.log("[v0] ✓ No conflicts found")
-
-    const supabase = await createServerClient()
 
     const [propertyResult, clientResult, agentResult] = await Promise.all([
       validatedData.propertyId
@@ -342,47 +402,7 @@ export async function createAppointment(data: AppointmentFormData): Promise<Appo
 
     console.log("[v0] ✓ INSERT successful")
 
-    let clientName = validatedData.contactName || "Cliente no especificado"
-    let clientEmail = ""
-    if (validatedData.clientId) {
-      const { data: client } = await supabase
-        .from("clients")
-        .select("name, email")
-        .eq("id", validatedData.clientId)
-        .single()
-
-      if (client) {
-        clientName = client.name
-        clientEmail = client.email || ""
-      }
-    }
-
-    const { data: propertyData } = await supabase
-      .from("properties")
-      .select("title, address")
-      .eq("id", validatedData.propertyId)
-      .single()
-
-    const { data: agentData } = await supabase
-      .from("users")
-      .select("name, email")
-      .eq("id", validatedData.agentId)
-      .single()
-
-    if (propertyData && agentData) {
-      await sendAppointmentNotifications({
-        appointmentId: appointment.id,
-        propertyTitle: property?.title || "Otro lugar",
-        propertyAddress: property?.address || validatedData.otherLocation || "Ubicación por confirmar",
-        clientName: client?.name || validatedData.contactName || "Cliente",
-        clientEmail: client?.email || null,
-        agentName: agentData.name,
-        agentEmail: agentData.email,
-        scheduledAt: scheduledDate,
-        duration: validatedData.duration,
-        status: validatedData.status,
-      })
-    }
+    // TODO: Implementar sistema de notificaciones por email si se requiere
 
     revalidatePath("/appointments")
     return { success: true, data: appointment }
@@ -584,30 +604,59 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
       return { success: false, error: "Cita no encontrada" }
     }
 
-    if (data.scheduledAt || data.duration) {
-      const scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : existing.scheduled_date
-      const duration = data.duration ?? existing.duration
-      const agentId = data.agentId ?? existing.agent_id
+  if (data.scheduledAt || data.duration) {
+    const scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : existing.scheduled_date
+    const duration = data.duration ?? existing.duration
+    const agentId = data.agentId ?? existing.agent_id
 
-      const workHoursCheck = isWithinWorkHours(scheduledAt)
-      if (!workHoursCheck.valid) {
-        return { success: false, error: workHoursCheck.message || "Horario no válido" }
-      }
-
-      const endTime = new Date(scheduledAt.getTime() + duration * 60000)
-      const endTimeCheck = isWithinWorkHours(endTime)
-      if (!endTimeCheck.valid) {
+    // Verificar que la duración esté dentro de los límites configurados
+    const { day } = getArgentinaDateTime(scheduledAt)
+    let dayType: "WEEKDAY" | "SATURDAY" | "HOLIDAY" = "WEEKDAY"
+    if (day === 6) {
+      dayType = "SATURDAY"
+    }
+    
+    const { data: daySetting } = await supabase
+      .from("appointment_settings")
+      .select("*")
+      .eq("day_type", dayType)
+      .single()
+    
+    if (daySetting) {
+      if (duration < daySetting.min_duration) {
         return {
           success: false,
-          error: "La cita se extiende fuera del horario de trabajo",
+          error: `La duración mínima permitida es de ${daySetting.min_duration} minutos`,
         }
       }
-
-      const conflictCheck = await checkScheduleConflict(agentId, scheduledAt, duration, id)
-      if (conflictCheck.hasConflict) {
-        return { success: false, error: conflictCheck.message || "Conflicto de horario" }
+      
+      if (duration > daySetting.max_duration) {
+        return {
+          success: false,
+          error: `La duración máxima permitida es de ${daySetting.max_duration} minutos`,
+        }
       }
     }
+
+    const workHoursCheck = await isWithinWorkHours(scheduledAt)
+    if (!workHoursCheck.valid) {
+      return { success: false, error: workHoursCheck.message || "Horario no válido" }
+    }
+
+    const endTime = new Date(scheduledAt.getTime() + duration * 60000)
+    const endTimeCheck = await isWithinWorkHours(endTime)
+    if (!endTimeCheck.valid) {
+      return {
+        success: false,
+        error: "La cita se extiende fuera del horario de trabajo",
+      }
+    }
+
+    const conflictCheck = await checkScheduleConflict(agentId, scheduledAt, duration, id)
+    if (conflictCheck.hasConflict) {
+      return { success: false, error: conflictCheck.message || "Conflicto de horario" }
+    }
+  }
 
     const updateData: any = {}
     if (data.propertyId !== undefined) updateData.property_id = data.propertyId || null
@@ -639,20 +688,7 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
 
     console.log("[v0] Appointment updated successfully:", updatedAppointment.id)
 
-    if (updatedAppointment.client && updatedAppointment.agent) {
-      await sendAppointmentNotifications({
-        appointmentId: updatedAppointment.id,
-        propertyTitle: updatedAppointment.property.title,
-        propertyAddress: `${updatedAppointment.property.address}, ${updatedAppointment.property.city}`,
-        clientName: updatedAppointment.client.name,
-        clientEmail: updatedAppointment.client.email,
-        agentName: updatedAppointment.agent.name,
-        agentEmail: updatedAppointment.agent.email,
-        scheduledAt: updatedAppointment.scheduled_date,
-        duration: updatedAppointment.duration,
-        notes: updatedAppointment.notes || undefined,
-      })
-    }
+    // TODO: Implementar sistema de notificaciones por email si se requiere
 
     revalidatePath("/appointments")
     return { success: true, data: updatedAppointment }

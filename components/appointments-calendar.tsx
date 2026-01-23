@@ -66,6 +66,7 @@ export function AppointmentsCalendar({ appointments, canDelete = false }: Appoin
   const [currentDate, setCurrentDate] = useState(new Date())
   const [view, setView] = useState<"month" | "day">("month")
   const [selectedDay, setSelectedDay] = useState<Date | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   const monthStart = startOfMonth(currentDate)
   const monthEnd = endOfMonth(currentDate)
@@ -192,7 +193,7 @@ export function AppointmentsCalendar({ appointments, canDelete = false }: Appoin
                   const isToday = isSameDay(day, new Date())
 
                   return (
-                    <Tooltip key={day.toISOString()}>
+                    <Tooltip key={day.toISOString()} open={isDeleteDialogOpen ? false : undefined}>
                       <TooltipTrigger asChild>
                         <div
                           onClick={() => {
@@ -283,6 +284,7 @@ export function AppointmentsCalendar({ appointments, canDelete = false }: Appoin
                                     variant="destructive"
                                     size="sm"
                                     canDelete={canDelete}
+                                    onDeleteDialogChange={setIsDeleteDialogOpen}
                                   />
                                 </div>
                               </div>

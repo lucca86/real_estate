@@ -97,6 +97,7 @@ export default function AppointmentsDayView({
   canDelete = false,
 }: AppointmentsDayViewProps) {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   // Filtrar citas del día seleccionado
   const dayAppointments = appointments.filter((apt) => {
@@ -405,7 +406,7 @@ export default function AppointmentsDayView({
       </Card>
 
       {/* Panel lateral con detalles */}
-      <Sheet open={!!selectedAppointment} onOpenChange={(open) => !open && setSelectedAppointment(null)}>
+      <Sheet open={!!selectedAppointment} onOpenChange={(open) => !open && !isDeleteDialogOpen && setSelectedAppointment(null)}>
         <SheetContent className="sm:max-w-lg overflow-y-auto">
           {selectedAppointment && (
             <>
@@ -529,13 +530,15 @@ export default function AppointmentsDayView({
                     </Button>
                   </Link>
                   <DeleteAppointmentButton
-                    appointmentId={selectedAppointment.id}
-                    clientName={selectedAppointment.contactName || selectedAppointment.client?.name || "Cliente"}
-                    propertyTitle={selectedAppointment.property?.title}
-                    variant="destructive"
-                    size="default"
-                    canDelete={canDelete}
-                  />
+                      appointmentId={selectedAppointment.id}
+                      clientName={selectedAppointment.contactName || selectedAppointment.client?.name || "Cliente"}
+                      propertyTitle={selectedAppointment.property?.title}
+                      variant="destructive"
+                      size="default"
+                      canDelete={canDelete}
+                      onDeleteDialogChange={setIsDeleteDialogOpen}
+                      onDeleted={() => setSelectedAppointment(null)}
+                    />
                 </div>
               </div>
             </>

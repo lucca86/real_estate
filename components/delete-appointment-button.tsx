@@ -25,6 +25,8 @@ interface DeleteAppointmentButtonProps {
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
   size?: "default" | "sm" | "lg" | "icon"
   canDelete?: boolean
+  onDeleteDialogChange?: (isOpen: boolean) => void
+  onDeleted?: () => void
 }
 
 export function DeleteAppointmentButton({
@@ -33,12 +35,19 @@ export function DeleteAppointmentButton({
   propertyTitle,
   variant = "destructive",
   size = "icon",
-  canDelete = false, // Default to false
+  canDelete = false,
+  onDeleteDialogChange,
+  onDeleted,
 }: DeleteAppointmentButtonProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [isDeleting, setIsDeleting] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
+  
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open)
+    onDeleteDialogChange?.(open)
+  }
 
   async function handleDelete() {
     setIsDeleting(true)
@@ -51,6 +60,7 @@ export function DeleteAppointmentButton({
           description: "La cita ha sido eliminada exitosamente",
         })
         setIsOpen(false)
+        onDeleted?.()
         router.refresh()
       } else {
         toast({
@@ -75,34 +85,40 @@ export function DeleteAppointmentButton({
   }
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-      <AlertDialogTrigger asChild>
-        <Button variant={variant} size={size} disabled={isDeleting}>
-          {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-          {size !== "icon" && <span className="ml-2">Eliminar</span>}
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Esta acción no se puede deshacer. Se eliminará permanentemente la cita con <strong>{clientName}</strong>
-            {propertyTitle && (
-              <>
-                {" "}
-                para ver <strong>{propertyTitle}</strong>
-              </>
-            )}
-            .
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
-            {isDeleting ? "Eliminando..." : "Eliminar"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <div onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+      <AlertDialog open={isOpen} onOpenChange={handleOpenChange}>
+        <AlertDialogTrigger asChild>
+          <Button variant={variant} size={size} disabled={isDeleting}>
+            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+            {size !== "icon" && <span className="ml-2">Eliminar</span>}
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminará permanentemente la cita con <strong>{clientName}</strong>
+              {propertyTitle && (
+                <>
+                  {" "}
+                  para ver <strong>{propertyTitle}</strong>
+                </>
+              )}
+              .
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <Button 
+              variant="destructive" 
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Eliminando..." : "Eliminar"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   )
 }
