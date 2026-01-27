@@ -41,6 +41,123 @@ interface PropertiesMapProps {
   onMarkerDrag?: (lat: number, lng: number) => void
 }
 
+// Single property map component
+interface PropertyMapProps {
+  latitude: number | null
+  longitude: number | null
+  title?: string
+  address?: string
+  draggable?: boolean
+  onMarkerDrag?: (lat: number, lng: number) => void
+}
+
+export function PropertyMap({
+  latitude,
+  longitude,
+  title,
+  address,
+  draggable = false,
+  onMarkerDrag,
+}: PropertyMapProps) {
+  const mapRef = useRef<HTMLDivElement>(null)
+  const mapInstanceRef = useRef<any>(null)
+  const markerRef = useRef<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!mapRef.current || mapInstanceRef.current) return
+
+    const initTimeout = setTimeout(async () => {
+      try {
+        if (!latitude || !longitude || !isValidCoordinate(latitude, longitude)) {
+          setError("Coordenadas inválidas o no disponibles")
+          setIsLoading(false)
+          return
+        }
+
+        const L = await import("leaflet")
+
+        if (!mapRef.current) {
+          setError("Map container not found")
+          return
+        }
+
+        const map = L.map(mapRef.current, {
+          center: [latitude, longitude],
+          zoom: 15,
+          scrollWheelZoom: true,
+          zoomControl: true,
+          preferCanvas: false,
+        })
+
+        mapInstanceRef.current = map
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 19,
+          minZoom: 1,
+        }).addTo(map)
+
+        const marker = L.marker([latitude, longitude], {
+          draggable: draggable,
+        })
+
+        if (title) {
+          marker.bindPopup(title)
+        }
+
+        if (draggable && onMarkerDrag) {
+          marker.on("dragend", () => {
+            const position = marker.getLatLng()
+            onMarkerDrag(position.lat, position.lng)
+          })
+        }
+
+        marker.addTo(map)
+        markerRef.current = marker
+
+        setTimeout(() => {
+          map.invalidateSize()
+          setIsLoading(false)
+        }, 300)
+      } catch (err) {
+        setError("Error initializing map")
+        setIsLoading(false)
+      }
+    }, 200)
+
+    return () => {
+      clearTimeout(initTimeout)
+      if (markerRef.current) {
+        markerRef.current.remove()
+        markerRef.current = null
+      }
+
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove()
+        mapInstanceRef.current = null
+      }
+    }
+  }, [latitude, longitude, title, draggable, onMarkerDrag])
+
+  return (
+    <div className="relative h-[400px] w-full">
+      {isLoading && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-muted/50 rounded-lg">
+          <div className="text-sm text-muted-foreground">Cargando mapa...</div>
+        </div>
+      )}
+      {error && (
+        <div className="absolute top-4 left-1/2 z-10 -translate-x-1/2 rounded-lg bg-destructive/10 px-4 py-2">
+          <div className="text-sm text-destructive">{error}</div>
+        </div>
+      )}
+      <div ref={mapRef} className="h-full w-full rounded-lg border border-border" />
+    </div>
+  )
+}
+
 export function PropertiesMap({
   properties,
   defaultCenter = CORRIENTES_CENTER,
