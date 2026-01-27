@@ -44,9 +44,9 @@ const ownerSchema = z.object({
   phone: z.string().min(1, "El teléfono es requerido"),
   secondaryPhone: z.string().optional(),
   address: z.string().optional(),
-  cityId: z.string().optional(),
-  provinceId: z.string().optional(),
-  countryId: z.string().optional(),
+  cityId: z.string().min(1, "La ciudad es requerida"),
+  provinceId: z.string().min(1, "La provincia es requerida"),
+  countryId: z.string().min(1, "El país es requerido"),
   idNumber: z.string().optional(),
   taxId: z.string().optional(),
   notes: z.string().optional(),
@@ -369,7 +369,9 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
 
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <Label htmlFor="countryId">País</Label>
+              <Label htmlFor="countryId">
+                País <span className="text-destructive">*</span>
+              </Label>
               <Select value={selectedCountryId} onValueChange={handleCountryChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar país" />
@@ -386,7 +388,9 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="provinceId">Provincia/Estado</Label>
+              <Label htmlFor="provinceId">
+                Provincia/Estado <span className="text-destructive">*</span>
+              </Label>
               <Select value={selectedProvinceId} onValueChange={handleProvinceChange} disabled={!selectedCountryId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar provincia..." />
@@ -404,10 +408,13 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
                   ))}
                 </SelectContent>
               </Select>
+              {errors.provinceId && <p className="text-sm text-destructive">{errors.provinceId.message}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cityId">Ciudad</Label>
+              <Label htmlFor="cityId">
+                Ciudad <span className="text-destructive">*</span>
+              </Label>
               <Select value={cityId} onValueChange={handleCityChange} disabled={!selectedProvinceId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar ciudad..." />
@@ -425,6 +432,7 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
                   ))}
                 </SelectContent>
               </Select>
+              {errors.cityId && <p className="text-sm text-destructive">{errors.cityId.message}</p>}
             </div>
           </div>
 
