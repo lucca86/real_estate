@@ -7,6 +7,7 @@ interface Property {
   id: string
   title: string
   price: number
+  currency: string
   created_at: string
   property_types: { name: string } | null
   cities: { name: string } | null
@@ -74,10 +75,18 @@ export async function getRecentProperties() {
 }
 
 export function RecentProperties({ properties }: RecentPropertiesProps) {
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number, currency: string) => {
+    const currencyMap: Record<string, string> = {
+      USD: "USD",
+      ARS: "ARS",
+      EUR: "EUR",
+    }
+    
+    const currencyCode = currencyMap[currency] || "USD"
+    
     return new Intl.NumberFormat("es-AR", {
       style: "currency",
-      currency: "ARS",
+      currency: currencyCode,
       minimumFractionDigits: 0,
     }).format(price)
   }
@@ -117,7 +126,7 @@ export function RecentProperties({ properties }: RecentPropertiesProps) {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-semibold">{formatPrice(property.price)}</div>
+                  <div className="font-semibold">{formatPrice(property.price, property.currency)}</div>
                   <Button variant="ghost" size="sm" asChild>
                     <Link href={`/properties/${property.id}`}>Ver detalles</Link>
                   </Button>
