@@ -144,16 +144,16 @@ export function PropertyMap({
   return (
     <div className="relative h-[400px] w-full">
       {isLoading && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-muted/50 rounded-lg">
+        <div className="absolute inset-0 z-[1000] flex items-center justify-center bg-muted/50 rounded-lg">
           <div className="text-sm text-muted-foreground">Cargando mapa...</div>
         </div>
       )}
       {error && (
-        <div className="absolute top-4 left-1/2 z-10 -translate-x-1/2 rounded-lg bg-destructive/10 px-4 py-2">
+        <div className="absolute top-4 left-1/2 z-[1000] -translate-x-1/2 rounded-lg bg-destructive/10 px-4 py-2">
           <div className="text-sm text-destructive">{error}</div>
         </div>
       )}
-      <div ref={mapRef} className="h-full w-full rounded-lg border border-border" />
+      <div ref={mapRef} className="h-full w-full rounded-lg border border-border [&_.leaflet-popup]:z-[1000] [&_.leaflet-tooltip]:z-[1000]" />
     </div>
   )
 }
