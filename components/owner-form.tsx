@@ -91,9 +91,16 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const defaultCountryId = "5627a007-5ebf-4044-a337-da2a33ba5d0c" // Argentina
-  const defaultProvinceId = "f54e20b7-d5f8-4ae1-81f9-a09b2e2ee8f3" // Corrientes province
-  const defaultCityId = "d4e9f123-a5b6-4c7d-8e9f-0a1b2c3d4e5f" // Corrientes city
+  // Find Argentina ID dynamically from the countries list
+  const argentinaCountry = countries.find((c) => c.name === "Argentina")
+  const defaultCountryId = argentinaCountry?.id || ""
+  
+  // Find default province (Corrientes) and city
+  const defaultProvince = provinces.find((p) => p.name === "Corrientes" && p.country_id === defaultCountryId)
+  const defaultProvinceId = defaultProvince?.id || ""
+  
+  const defaultCity = cities.find((c) => c.name === "Corrientes" && c.province_id === defaultProvinceId)
+  const defaultCityId = defaultCity?.id || ""
 
   const [selectedCountryId, setSelectedCountryId] = useState(owner?.country_id || defaultCountryId)
   const [selectedProvinceId, setSelectedProvinceId] = useState(owner?.province_id || defaultProvinceId)
@@ -115,9 +122,9 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
       phone: owner?.phone || "",
       secondaryPhone: owner?.secondary_phone || "",
       address: owner?.address || "",
-      cityId: owner?.city_id || defaultCityId,
-      provinceId: owner?.province_id || defaultProvinceId,
-      countryId: owner?.country_id || defaultCountryId,
+      cityId: owner?.city_id || "",
+      provinceId: owner?.province_id || "",
+      countryId: owner?.country_id || "",
       idNumber: owner?.id_number || "",
       taxId: owner?.tax_id || "",
       notes: owner?.notes || "",
@@ -126,15 +133,21 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
   })
 
   useEffect(() => {
-    if (!owner && countries.length > 0) {
+    if (!owner && defaultCountryId) {
       // For new owners, ensure default values are set
       setValue("countryId", defaultCountryId)
-      setValue("provinceId", defaultProvinceId)
-      setValue("cityId", defaultCityId)
       setSelectedCountryId(defaultCountryId)
-      setSelectedProvinceId(defaultProvinceId)
+      
+      if (defaultProvinceId) {
+        setValue("provinceId", defaultProvinceId)
+        setSelectedProvinceId(defaultProvinceId)
+      }
+      
+      if (defaultCityId) {
+        setValue("cityId", defaultCityId)
+      }
     }
-  }, [countries.length, owner, setValue])
+  }, [defaultCountryId, defaultProvinceId, defaultCityId, owner, setValue])
 
   const isActive = watch("isActive")
   const cityId = watch("cityId")
