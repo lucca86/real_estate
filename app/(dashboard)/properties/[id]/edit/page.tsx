@@ -36,18 +36,8 @@ export default async function EditPropertyPage({
     id: propertyData.id,
     title: propertyData.title,
     description: propertyData.description,
-    ownerId: propertyData.owner_id,
-    owner: propertyData.owner ? { id: propertyData.owner.id, name: propertyData.owner.name } : undefined,
-    propertyTypeId: propertyData.property_type_id,
     status: propertyData.status,
     address: propertyData.address,
-    city: propertyData.city?.name || "",
-    country: propertyData.country?.name || "",
-    state: propertyData.province?.name || "",
-    countryId: propertyData.country_id,
-    provinceId: propertyData.province_id,
-    cityId: propertyData.city_id,
-    neighborhoodId: propertyData.neighborhood_id,
     latitude: propertyData.latitude,
     longitude: propertyData.longitude,
     bedrooms: propertyData.bedrooms,
@@ -84,6 +74,9 @@ export default async function EditPropertyPage({
     updatedAt: new Date(propertyData.updated_at),
   }
 
+  const imagesToSync = (propertyData.images || []).filter((img: any) => img.syncToWordPress === true)
+  const hasImagesToSync = imagesToSync.length > 0
+
   return (
     <div className="space-y-6">
       <div>
@@ -106,6 +99,7 @@ export default async function EditPropertyPage({
             propertyId={property.id}
             wordpressId={property.wordpressId}
             syncedAt={property.syncedAt}
+            hasImagesToSync={hasImagesToSync}
           />
         </CardContent>
       </Card>

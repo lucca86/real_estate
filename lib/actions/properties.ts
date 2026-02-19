@@ -343,7 +343,7 @@ export async function updateProperty(propertyId: string, formData: FormData) {
           success: true,
           data: updatedProperty,
           warning:
-            "La propiedad se guardó pero no se sincronizó con WordPress. Debe seleccionar al menos una imagen para la portada de WordPress.",
+            "La propiedad se guardó correctamente, pero NO se sincronizó con WordPress porque no hay imágenes seleccionadas para la portada. Marque al menos una imagen para sincronizar.",
         }
       }
 

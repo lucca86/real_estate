@@ -2,6 +2,19 @@
 
 Sistema completo de gestión de negocios inmobiliarios con Next.js, TypeScript y PostgreSQL (Neon).
 
+## 🚨 ¿Problemas de Conexión? Lee Esto Primero
+
+Si ves errores como:
+- "Can't reach database server at `ep-xxxxx.neon.tech:5432`"
+- "Connection timeout"
+- "Timed out fetching a new connection from the connection pool"
+
+👉 **[LEE URGENTE-FIX-CONEXION.md](./URGENTE-FIX-CONEXION.md)** 👈
+
+**Solución rápida:** El problema más común es el parámetro `channel_binding=require` en tu URL de Neon. Ábrelo en tu archivo `.env` y elimina `&channel_binding=require` de la URL, dejando solo `?sslmode=require`.
+
+---
+
 ## ✨ Características
 
 - Autenticación robusta con 2FA
@@ -19,7 +32,7 @@ Sistema completo de gestión de negocios inmobiliarios con Next.js, TypeScript y
 
 **Opción A: Configuración Asistida (Recomendado para Primera Vez)**
 
-\`\`\`bash
+```bash
 # 1. Instalar dependencias
 npm install
 
@@ -39,11 +52,11 @@ npm run db:seed
 
 # 6. Iniciar servidor de desarrollo
 npm run dev
-\`\`\`
+```
 
 **Opción B: Configuración Automática (Si ya tienes Vercel configurado)**
 
-\`\`\`bash
+```bash
 # 1. Instalar dependencias
 npm install
 
@@ -52,7 +65,7 @@ npm run setup:local
 
 # 3. Iniciar servidor de desarrollo
 npm run dev
-\`\`\`
+```
 
 Visita [http://localhost:3000](http://localhost:3000)
 
@@ -61,15 +74,15 @@ Visita [http://localhost:3000](http://localhost:3000)
 ## 🛠️ Comandos Principales
 
 ### Desarrollo
-\`\`\`bash
+```bash
 npm run dev              # Iniciar servidor de desarrollo
 npm run build            # Construir para producción
 npm start                # Iniciar servidor de producción
 npm run lint             # Ejecutar linter
-\`\`\`
+```
 
 ### Base de Datos
-\`\`\`bash
+```bash
 npm run db:status        # Ver estado de la base de datos
 npm run db:setup         # Inicializar base de datos completa
 npm run db:push          # Sincronizar schema (desarrollo)
@@ -78,27 +91,27 @@ npm run db:studio        # Abrir editor visual de Prisma
 npm run db:seed          # Poblar con datos de prueba
 npm run db:init          # Inicializar DB con datos básicos
 npm run db:reset         # Resetear base de datos (⚠️ elimina todos los datos)
-\`\`\`
+```
 
 ### Administración de Usuarios
-\`\`\`bash
+```bash
 npm run admin:create     # Crear usuario administrador (interactivo)
 npm run admin:quick      # Crear admin con credenciales por defecto
-\`\`\`
+```
 
 ### Configuración
-\`\`\`bash
+```bash
 npm run setup:env        # Configurar .env (interactivo, recomendado)
 npm run setup:local      # Configurar entorno local interactivo
 npm run verify:env       # Verificar variables de entorno
 npm run env:check        # Verificar configuración de entorno
-\`\`\`
+```
 
 ### Datos Iniciales
-\`\`\`bash
+```bash
 npm run seed:property-types  # Seed de tipos de propiedad
 npm run seed:locations       # Seed de ubicaciones (países, provincias, ciudades)
-\`\`\`
+```
 
 ## Integración con WordPress
 
@@ -149,11 +162,11 @@ El plugin personalizado "Estatik REST API Bridge" permite sincronizar todos los 
 
 Agrega las siguientes variables a tu archivo `.env`:
 
-\`\`\`env
+```env
 WORDPRESS_API_URL="https://tusitio.com/wp-json"
 WORDPRESS_USERNAME="tu-usuario-wordpress"
 WORDPRESS_APP_PASSWORD="xxxx xxxx xxxx xxxx xxxx xxxx"
-\`\`\`
+```
 
 ### 5. Probar la Conexión
 
@@ -201,7 +214,7 @@ Para más detalles, consulta:
 
 ## 📦 Estructura del Proyecto
 
-\`\`\`
+```
 real-estate-management/
 ├── app/                    # Rutas de Next.js (App Router)
 │   ├── (auth)/            # Rutas de autenticación
@@ -223,12 +236,12 @@ real-estate-management/
 ├── public/               # Archivos estáticos
 └── wordpress-setup/      # Plugin de WordPress
     └── estatik-rest-api-bridge/  # Plugin personalizado
-\`\`\`
+```
 
 ## 🔐 Variables de Entorno
 
 ### Desarrollo Local (.env.local)
-\`\`\`env
+```env
 # Base de datos Neon
 DATABASE_URL="postgresql://..."
 DATABASE_URL_UNPOOLED="postgresql://..."
@@ -240,14 +253,106 @@ JWT_SECRET="tu-secreto-jwt"
 WORDPRESS_API_URL="https://tusitio.com/wp-json"
 WORDPRESS_USERNAME="usuario"
 WORDPRESS_APP_PASSWORD="xxxx xxxx xxxx xxxx xxxx xxxx"
-\`\`\`
+```
 
 **Obtener variables automáticamente:**
-\`\`\`bash
+```bash
 npm run setup:local  # Asistente interactivo
 # o
 vercel env pull .env.local  # Descargar de Vercel
-\`\`\`
+```
+
+## 🚢 Despliegue en Producción
+
+El proyecto se despliega automáticamente en Vercel cuando haces push a la rama main.
+
+### ⚠️ IMPORTANTE: Configurar Variables de Entorno en Vercel
+
+**Antes de hacer deploy, DEBES configurar las variables de entorno en Vercel Dashboard:**
+
+#### Paso 1: Obtener URL de Neon
+
+1. Ve a [console.neon.tech](https://console.neon.tech)
+2. Selecciona tu proyecto
+3. Ve a **Connection Details**
+4. Copia la **Connection String** completa
+
+Ejemplo: `postgresql://usuario:password@ep-xxxxx.us-east-2.aws.neon.tech/neondb`
+
+#### Paso 2: Configurar en Vercel
+
+1. Ve a tu proyecto en [Vercel Dashboard](https://vercel.com/dashboard)
+2. Selecciona tu proyecto
+3. Ve a **Settings → Environment Variables**
+4. Agrega las siguientes variables:
+
+```env
+# Base de Datos (REQUERIDO)
+DATABASE_URL=postgresql://usuario:password@ep-xxxxx.us-east-2.aws.neon.tech/neondb?sslmode=require
+
+# Autenticación (REQUERIDO)
+JWT_SECRET=tu-secreto-jwt-muy-seguro-aqui-minimo-32-caracteres
+
+# WordPress (Opcional - solo si usas sincronización)
+WORDPRESS_API_URL=https://tu-wordpress.com/wp-json
+WORDPRESS_USERNAME=tu-usuario
+WORDPRESS_APP_PASSWORD=xxxx xxxx xxxx xxxx xxxx xxxx
+```
+
+**⚠️ IMPORTANTE:**
+- La URL de Neon DEBE incluir `?sslmode=require` al final
+- El `JWT_SECRET` debe ser diferente al de desarrollo y muy seguro
+- Sin estas variables, el deploy fallará con error de conexión a base de datos
+
+#### Paso 3: Deploy
+
+```bash
+git push origin main  # Deploy automático
+```
+
+Vercel detecta automáticamente el push y hace deploy.
+
+#### Paso 4: Verificar Deploy
+
+1. Ve a **Deployments** en Vercel
+2. Haz clic en el último deployment
+3. Ve a **Build Logs**
+4. Busca el mensaje: `[v0] Database connected successfully in production`
+
+Si ves este mensaje, ¡todo funciona correctamente! 🎉
+
+### Solución de Problemas en Producción
+
+#### Error: "Can't reach database server at localhost:5432"
+
+**Causa:** Las variables de entorno NO están configuradas en Vercel.
+
+**Solución:** 
+1. Configura `DATABASE_URL` en Vercel Settings → Environment Variables
+2. Redeploy desde Vercel Dashboard
+
+#### Error: "P1001: Can't reach database server"
+
+**Causas posibles:**
+- URL de Neon incorrecta
+- Falta `?sslmode=require` al final de la URL
+- Proyecto de Neon pausado o eliminado
+
+**Solución:**
+1. Verifica que la URL sea correcta
+2. Asegúrate de agregar `?sslmode=require`
+3. Verifica que tu proyecto de Neon esté activo en console.neon.tech
+
+**📖 Guía completa de deployment en producción**: Ver [VERCEL-ENV-SETUP.md](./VERCEL-ENV-SETUP.md)
+
+### Configuración Rápida (Resumen)
+
+1. **Conectar repositorio a Vercel** ✓
+2. **Configurar variables en Vercel Dashboard** (ver arriba)
+3. **Push a GitHub**:
+   ```bash
+   git push origin main  # Deploy automático
+   ```
 
 ## 📚 Documentación
 
@@ -257,76 +362,61 @@ vercel env pull .env.local  # Descargar de Vercel
 - **[NEON-SETUP.md](./NEON-SETUP.md)** → Configuración específica de Neon
 - **[wordpress-setup/README.md](./wordpress-setup/README.md)** → Guía de integración con WordPress
 
-## 🚢 Despliegue en Producción
-
-El proyecto se despliega automáticamente en Vercel cuando haces push a la rama main.
-
-### Configuración Rápida
-
-1. **Conectar repositorio a Vercel**
-2. **Configurar variables de entorno en Vercel Dashboard**
-3. **Push a GitHub**:
-\`\`\`bash
-git push origin main  # Deploy automático
-\`\`\`
-
-**📖 Guía completa de deployment**: Ver [DEPLOYMENT.md](./DEPLOYMENT.md)
-
 ## 🔄 Flujo de Trabajo
 
 ### Desarrollo Diario
 
 1. **Actualizar código**
-   \`\`\`bash
+   ```bash
    git pull origin main
    npm install  # Si hay nuevas dependencias
-   \`\`\`
+   ```
 
 2. **Aplicar migraciones** (si hay nuevas)
-   \`\`\`bash
+   ```bash
    npm run db:migrate:deploy
    npx prisma generate
-   \`\`\`
+   ```
 
 3. **Iniciar desarrollo**
-   \`\`\`bash
+   ```bash
    npm run dev
-   \`\`\`
+   ```
 
 ### Cambios en el Schema
 
 1. Modificar `prisma/schema.prisma`
 2. Crear migración:
-   \`\`\`bash
+   ```bash
    npm run db:migrate
-   \`\`\`
+   ```
 3. Commitear cambios:
-   \`\`\`bash
+   ```bash
    git add prisma/
    git commit -m "feat: agregar campo X"
    git push
-   \`\`\`
+   ```
 
 ## 🐛 Solución de Problemas
 
 ### Error: "Can't reach database server at host:5432"
 Tu archivo `.env` no está configurado o tiene valores placeholder. Ejecuta:
-\`\`\`bash
+```bash
 npm run setup:env           # Configurar interactivamente
-\`\`\`
+```
 O consulta [ENV-SETUP-GUIDE.md](./ENV-SETUP-GUIDE.md) para configuración manual.
 
 ### Error: "Datasource block is missing in schema.prisma"
 Tu archivo `prisma/schema.prisma` está desactualizado. Ejecuta:
-\`\`\`bash
+```bash
 git pull origin main        # Actualizar desde GitHub
-\`\`\`
+```
 
 ### Error: "Environment variables not found"
-\`\`\`bash
+```bash
 npm run verify:env          # Verificar configuración
 npm run setup:env           # Reconfigurar archivo .env
-\`\`\`
+```
 
 ## 👥 Credenciales por Defecto
 

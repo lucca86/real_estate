@@ -14,20 +14,20 @@ export default async function NewAppointmentPage() {
 
   const [propertiesResult, clientsResult, agentsResult] = await Promise.all([
     supabase
-      .from("properties")
-      .select("id, title, address, cities!city_id(name)")
+      .from("Property")
+      .select("id, title, address, city:City!cityId(name)")
       .eq("status", "ACTIVO")
       .order("title", { ascending: true }),
     supabase
-      .from("clients")
+      .from("Client")
       .select("id, name, email, phone")
-      .eq("is_active", true)
+      .eq("isActive", true)
       .order("name", { ascending: true }),
     supabase
-      .from("users")
+      .from("User")
       .select("id, name, email")
       .in("role", ["ADMIN", "SUPERVISOR", "VENDEDOR"])
-      .eq("is_active", true)
+      .eq("isActive", true)
       .order("name", { ascending: true }),
   ])
 
@@ -35,7 +35,7 @@ export default async function NewAppointmentPage() {
     id: p.id,
     title: p.title,
     address: p.address,
-    city: p.cities?.[0]?.name || "Sin ciudad",
+    city: p.city?.name || "Sin ciudad",
   }))
 
   const clients = clientsResult.data || []

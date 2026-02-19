@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js'
 console.log('🔍 Verificando schema de Supabase...\n')
 
 // Usar las variables de entorno del proyecto
-const supabaseUrl = "https://qigyrivsmnmgignwluda.supabase.co"
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFpZ3lyaXZzbW5tZ2lnbndsdWRhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MzEwNTI2MiwiZXhwIjoyMDc4NjgxMjYyfQ.1mFsgphrsDLE9ejjZ05U2o0BFXO39N1pXtmAZPHM0_Y"
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('❌ No se encontraron credenciales de Supabase')

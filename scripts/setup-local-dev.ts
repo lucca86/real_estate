@@ -215,7 +215,6 @@ async function verifyConnection() {
     console.log("\nPróximos pasos:")
     console.log("  1. npm run dev          → Iniciar servidor de desarrollo")
     console.log("  2. npm run db:status    → Ver estado de la base de datos")
-    console.log("  3. npx prisma studio    → Abrir editor visual de base de datos")
   } catch (error) {
     console.log("\n❌ Error al conectar con Neon")
     console.log("Error:", error)

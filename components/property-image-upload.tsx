@@ -384,7 +384,7 @@ export function PropertyImageUpload({ images, onChange, maxImages = 12 }: Proper
                             />
                           </div>
 
-                          <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-black/40 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/40 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none">
                             <div className="absolute inset-0 flex items-center justify-center gap-2 pointer-events-auto">
                               <Button
                                 type="button"
