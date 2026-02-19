@@ -1427,66 +1427,6 @@ export function PropertyForm({
               />
             </div>
           </div>
-
-            <div className="space-y-2">
-              {/* Made lot size required with red asterisk */}
-              <Label htmlFor="lotSize">
-                Tamaño del Lote (m²) <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="lotSize"
-                name="lotSize"
-                type="number"
-                step="0.01"
-                min="0.01"
-                value={formData.lotSize ?? ""}
-                onChange={(e) => {
-                  const val = e.target.value
-                  setFormData((prev) => ({ ...prev, lotSize: val === "" ? undefined : Number(val) }))
-                }}
-                disabled={isSubmitting}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="frontMeters">Frente (m)</Label>
-              <Input
-                id="frontMeters"
-                name="frontMeters"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.frontMeters ?? ""}
-                onChange={(e) => {
-                  const val = e.target.value
-                  setFormData((prev) => ({ ...prev, frontMeters: val === "" ? undefined : Number(val) }))
-                }}
-                disabled={isSubmitting}
-                placeholder="Metros de frente"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="backMeters">Fondo (m)</Label>
-              <Input
-                id="backMeters"
-                name="backMeters"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.backMeters ?? ""}
-                onChange={(e) => {
-                  const val = e.target.value
-                  setFormData((prev) => ({ ...prev, backMeters: val === "" ? undefined : Number(val) }))
-                }}
-                disabled={isSubmitting}
-                placeholder="Metros de fondo"
-              />
-            </div>
-          </div>
         </CardContent>
       </Card>
 
