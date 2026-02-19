@@ -137,14 +137,15 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
         property_label: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
         adrema: adrema || null,
         features: parseArrayField(features),
-        videos: videos ? JSON.parse(videos) : [],
-        virtual_tour: virtualTour || null,
-        published,
-        sync_to_wordpress: syncToWordPress,
-        is_featured: isFeatured,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
+      videos: videos ? JSON.parse(videos) : [],
+      virtual_tour: virtualTour || null,
+      published,
+      sync_to_wordpress: syncToWordPress,
+      is_featured: isFeatured,
+      internal_notes: formData.get("internalNotes") as string | null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
       .select()
       .single()
 
@@ -313,13 +314,14 @@ export async function updateProperty(propertyId: string, formData: FormData) {
       property_label: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
       adrema: adrema || null,
       features: parseArrayField(features),
-      videos: videos ? JSON.parse(videos) : [],
-      virtual_tour: virtualTour || null,
-      published,
-      sync_to_wordpress: syncToWordPress,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", propertyId)
+    videos: videos ? JSON.parse(videos) : [],
+    virtual_tour: virtualTour || null,
+    published,
+    sync_to_wordpress: syncToWordPress,
+    internal_notes: formData.get("internalNotes") as string | null,
+    updated_at: new Date().toISOString(),
+  })
+  .eq("id", propertyId)
     .select()
     .single()
 
