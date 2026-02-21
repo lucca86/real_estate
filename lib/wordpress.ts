@@ -456,8 +456,15 @@ export class WordPressAPI {
 
     console.log("[v0] Final payload:", JSON.stringify(payload, null, 2))
 
-    if (property.wordpressId || property.wordpress_id) {
-      const existingId = property.wordpressId || property.wordpress_id
+    // Check for existing WordPress ID (try both property names for compatibility)
+    const existingId = property.wordpress_id || property.wordpressId
+    console.log("[v0] 🔍 Checking for existing WordPress ID...")
+    console.log("[v0]   - property.wordpress_id:", property.wordpress_id)
+    console.log("[v0]   - property.wordpressId:", property.wordpressId)
+    console.log("[v0]   - existingId resolved to:", existingId)
+    console.log("[v0]   - Will UPDATE?:", !!(existingId && Number(existingId) > 0))
+    
+    if (existingId && Number(existingId) > 0) {
       console.log("[v0] 🔄 UPDATING existing WordPress property:", existingId)
       try {
         await this.updateProperty(existingId, payload)

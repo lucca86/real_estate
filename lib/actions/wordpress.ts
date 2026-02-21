@@ -68,10 +68,13 @@ export async function syncPropertyToWordPress(propertyId: string) {
 
   try {
     console.log("[v0] Calling wordpressAPI.syncProperty...")
+    console.log("[v0] Property wordpress_id from database:", property.wordpress_id)
+    console.log("[v0] Property wordpress_url from database:", property.wordpress_url)
 
     const syncData = {
       id: property.id,
       wordpressId: property.wordpress_id,
+      wordpress_id: property.wordpress_id, // Also pass as wordpress_id for compatibility
       title: property.title,
       description: property.description,
       propertyType: property.property_type?.name,
