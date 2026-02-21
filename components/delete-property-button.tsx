@@ -49,18 +49,20 @@ export function DeletePropertyButton({ propertyId, propertyTitle }: DeleteProper
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle className="text-destructive">⚠️ Eliminar Propiedad Definitivamente</AlertDialogTitle>
-          <AlertDialogDescription className="space-y-3">
-            <p className="font-semibold text-foreground">
-              Esta acción eliminará permanentemente la propiedad <strong className="text-destructive">"{propertyTitle}"</strong> de:
-            </p>
-            <ul className="list-disc list-inside space-y-1 text-sm">
-              <li>Sistema de gestión local</li>
-              <li>WordPress (si está sincronizada)</li>
-              <li>Todas las imágenes asociadas</li>
-            </ul>
-            <p className="font-bold text-destructive bg-destructive/10 p-3 rounded-md">
-              NO HAY FORMA DE RECUPERAR ESTA PROPIEDAD una vez eliminada.
-            </p>
+          <AlertDialogDescription asChild>
+            <div className="space-y-3">
+              <div className="font-semibold text-foreground">
+                Esta acción eliminará permanentemente la propiedad <strong className="text-destructive">"{propertyTitle}"</strong> de:
+              </div>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                <li>Sistema de gestión local</li>
+                <li>WordPress (si está sincronizada)</li>
+                <li>Todas las imágenes asociadas</li>
+              </ul>
+              <div className="font-bold text-destructive bg-destructive/10 p-3 rounded-md">
+                NO HAY FORMA DE RECUPERAR ESTA PROPIEDAD una vez eliminada.
+              </div>
+            </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
