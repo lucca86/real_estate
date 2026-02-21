@@ -471,11 +471,11 @@ export function PropertyForm({
     if (formData.frontMeters && formData.backMeters && formData.frontMeters > 0 && formData.backMeters > 0) {
       const calculated = Number((formData.frontMeters * formData.backMeters).toFixed(2))
       
-      // Only auto-update if lotSize is empty, zero, or matches previous calculation
-      // This allows manual override while still auto-calculating for new entries
-      if (!formData.lotSize || formData.lotSize === 0) {
-        setFormData((prev) => ({ ...prev, lotSize: calculated }))
-      }
+      // Always update the calculated value when front or back meters change
+      setFormData((prev) => ({ ...prev, lotSize: calculated }))
+    } else if ((!formData.frontMeters || formData.frontMeters === 0) || (!formData.backMeters || formData.backMeters === 0)) {
+      // Clear lot size if either measurement is removed
+      setFormData((prev) => ({ ...prev, lotSize: undefined }))
     }
   }, [formData.frontMeters, formData.backMeters])
 
