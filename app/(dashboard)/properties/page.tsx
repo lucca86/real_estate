@@ -105,6 +105,7 @@ export default async function PropertiesPage({
       city:cities!city_id(name),
       province:provinces!province_id(name),
       wordpress_id,
+      wordpress_url,
       wordpress_synced_at
     `)
     .order("created_at", { ascending: false })

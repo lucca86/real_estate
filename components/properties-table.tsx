@@ -29,6 +29,7 @@ interface Property {
   propertyType: { name: string } | null
   owner: { name: string } | null
   wordpress_id: number | null
+  wordpress_url: string | null
   wordpress_synced_at: string | null
 }
 
@@ -197,15 +198,19 @@ function PropertyCard({ property, currentUser }: { property: Property; currentUs
                     minute: "2-digit",
                   })}
                 </span>
-                <a
-                  href={`${process.env.NEXT_PUBLIC_WORDPRESS_API_URL?.replace('/wp-json', '')}/propiedades/${property.wordpress_id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  WP ID: {property.wordpress_id} →
-                </a>
+                {property.wordpress_url ? (
+                  <a
+                    href={property.wordpress_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    WP ID: {property.wordpress_id} →
+                  </a>
+                ) : (
+                  <span className="text-muted-foreground">WP ID: {property.wordpress_id}</span>
+                )}
               </div>
             ) : property.wordpress_synced_at && (!property.wordpress_id || property.wordpress_id === 0) ? (
               <span className="text-orange-600 font-medium">Sincronización: Pendiente (falló)</span>
