@@ -29,6 +29,7 @@ interface Property {
   propertyType: { name: string } | null
   owner: { name: string } | null
   wordpress_id: number | null
+  wordpress_url: string | null
   wordpress_synced_at: string | null
 }
 
@@ -183,19 +184,34 @@ function PropertyCard({ property, currentUser }: { property: Property; currentUs
         </div>
 
         <div className="flex items-center justify-between border-t border-border pt-3">
-          <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
-            {property.owner?.name && <span>Propietario: {property.owner.name}</span>}
+          <div className="flex flex-col gap-0.5 text-xs">
+            {property.owner?.name && <span className="text-muted-foreground">Propietario: {property.owner.name}</span>}
             {property.wordpress_synced_at && property.wordpress_id && property.wordpress_id > 0 ? (
-              <span className="text-green-600">
-                Sincronizada:{" "}
-                {new Date(property.wordpress_synced_at).toLocaleString("es-AR", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-green-600">
+                  Sincronizada:{" "}
+                  {new Date(property.wordpress_synced_at).toLocaleString("es-AR", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+                {property.wordpress_url ? (
+                  <a
+                    href={property.wordpress_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    WP ID: {property.wordpress_id} →
+                  </a>
+                ) : (
+                  <span className="text-muted-foreground">WP ID: {property.wordpress_id}</span>
+                )}
+              </div>
             ) : property.wordpress_synced_at && (!property.wordpress_id || property.wordpress_id === 0) ? (
               <span className="text-orange-600 font-medium">Sincronización: Pendiente (falló)</span>
             ) : null}

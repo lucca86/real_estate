@@ -3,6 +3,7 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { getCurrentUser } from "@/lib/auth"
 import { syncPropertyToWordPress, deletePropertyFromWordPress } from "./wordpress"
+import { wordpressAPI } from "@/lib/wordpress"
 import crypto from "crypto"
 import { revalidatePath } from "next/cache"
 import type { PropertyWithDetails } from "@/types"
@@ -410,9 +411,9 @@ export async function deleteProperty(propertyId: string) {
   }
 
   try {
-    const supabase = await createClient()
+    const supabase = await createAdminClient()
 
-    const { data: property, error: fetchError } = await supabase
+    const { data: property, error: fetchError} = await supabase
       .from("properties")
       .select("*")
       .eq("id", propertyId)
@@ -422,9 +423,10 @@ export async function deleteProperty(propertyId: string) {
       return { success: false, error: "Propiedad no encontrada" }
     }
 
-    if (property.wordpress_id) {
+    // Delete from WordPress first if synced
+    if (property.wordpress_id && property.wordpress_id > 0) {
       try {
-        await deletePropertyFromWordPress(propertyId)
+        await wordpressAPI.deleteProperty(property.wordpress_id)
       } catch (wpError) {
         console.error("[v0] Error deleting from WordPress:", wpError)
         // Continue with local deletion even if WordPress fails

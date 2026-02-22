@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Building2, MapPin, Bed, Bath, Car, Maximize, Calendar, ChevronLeft, Edit, Ruler } from "lucide-react"
+import { Building2, MapPin, Bed, Bath, Car, Maximize, Calendar, ChevronLeft, Edit, Ruler, StickyNote } from "lucide-react"
 import Link from "next/link"
 import { ImageGallery } from "@/components/image-gallery"
 import { PropertiesMap } from "@/components/properties-map"
@@ -279,6 +279,23 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
               </div>
             </CardContent>
           </Card>
+
+          {/* Internal Notes */}
+          {property.internal_notes && (
+            <Card className="border-l-4 border-l-amber-500/50 bg-amber-50/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <StickyNote className="h-4 w-4 text-amber-600" />
+                  Notas Internas
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+                  {property.internal_notes}
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
