@@ -120,7 +120,21 @@ export class WordPressAPI {
       body: JSON.stringify(property),
     })
 
-    return { id: data.post_id, url: data.link || "" }
+    console.log("[v0] Create response:", data)
+
+    // If link is not in response, fetch it from the post endpoint
+    let url = data.link || ""
+    if (!url && data.post_id) {
+      try {
+        const postData = await this.request(`/wp/v2/properties/${data.post_id}`)
+        url = postData.link || ""
+        console.log("[v0] Fetched URL from post endpoint:", url)
+      } catch (error) {
+        console.error("[v0] Could not fetch post URL:", error)
+      }
+    }
+
+    return { id: data.post_id, url }
   }
 
   async updateProperty(wordpressId: number, property: any): Promise<void> {
@@ -472,7 +486,9 @@ export class WordPressAPI {
         
         // Get the post URL after update
         const postData = await this.request(`/wp/v2/properties/${existingId}`)
-        return { id: existingId, url: postData.link || "" }
+        const url = postData.link || ""
+        console.log("[v0] Fetched URL after update:", url)
+        return { id: existingId, url }
       } catch (error) {
         if (error instanceof Error && error.message === "PROPERTY_NOT_FOUND") {
           console.log("[v0] ⚠ Property not found in WordPress (404), creating new one...")
