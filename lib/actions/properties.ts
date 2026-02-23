@@ -515,6 +515,35 @@ export async function getPropertyById(id: string) {
   }
 
   if (!property) {
+    return null
+  }
+
+  // Load created and updated by user data
+  let createdBy = null
+  let updatedBy = null
+
+  if (property.created_by_id) {
+    const { data: creator } = await supabase
+      .from("users")
+      .select("id, name, email")
+      .eq("id", property.created_by_id)
+      .single()
+    createdBy = creator
+  }
+
+  if (property.updated_by_id) {
+    const { data: updater } = await supabase
+      .from("users")
+      .select("id, name, email")
+      .eq("id", property.updated_by_id)
+      .single()
+    updatedBy = updater
+  }
+
+  return { ...property, createdBy, updatedBy }
+}
+
+  if (!property) {
     console.error("Property not found with id:", id)
     return null
   }

@@ -82,7 +82,23 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
     )
   }
 
-  if (properties.length === 0) {
+  // Load owner and updated by user data for each property
+  const propertiesWithUsers = await Promise.all(
+    properties.map(async (property: any) => {
+      let updatedBy = null
+      if (property.updated_by_id) {
+        const { data: user } = await supabase
+          .from("users")
+          .select("name")
+          .eq("id", property.updated_by_id)
+          .single()
+        updatedBy = user
+      }
+      return { ...property, updatedBy }
+    })
+  )
+
+  if (propertiesWithUsers.length === 0) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12 text-center">
@@ -98,8 +114,13 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {properties.length} {properties.length === 1 ? "propiedad encontrada" : "propiedades encontradas"}
+          {propertiesWithUsers.length} {propertiesWithUsers.length === 1 ? "propiedad encontrada" : "propiedades encontradas"}
         </p>
+      </div>
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {propertiesWithUsers.map((property: any) => (
+          <CatalogPropertyCard key={property.id} property={property} />
+        ))}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">

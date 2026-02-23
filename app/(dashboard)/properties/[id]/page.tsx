@@ -269,13 +269,29 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
               <CardTitle>Estadísticas</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Publicada</span>
-                <span className="font-medium">{new Date(property.created_at).toLocaleDateString("es-AR")}</span>
+              <div className="flex flex-col gap-1">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Publicada</span>
+                  <span className="font-medium">{new Date(property.created_at).toLocaleDateString("es-AR")}</span>
+                </div>
+                {property.createdBy && (
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Creada por</span>
+                    <span className="font-medium">{property.createdBy.name}</span>
+                  </div>
+                )}
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Actualizada</span>
-                <span className="font-medium">{new Date(property.updated_at).toLocaleDateString("es-AR")}</span>
+              <div className="flex flex-col gap-1">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Actualizada</span>
+                  <span className="font-medium">{new Date(property.updated_at).toLocaleDateString("es-AR")}</span>
+                </div>
+                {property.updatedBy && (
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Modificada por</span>
+                    <span className="font-medium">{property.updatedBy.name}</span>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
