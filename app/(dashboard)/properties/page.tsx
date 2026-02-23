@@ -104,7 +104,6 @@ export default async function PropertiesPage({
       propertyType:property_types!property_type_id(name),
       city:cities!city_id(name),
       province:provinces!province_id(name),
-      updatedBy:users!updated_by_id(name),
       wordpress_id,
       wordpress_url,
       wordpress_synced_at
@@ -163,8 +162,25 @@ export default async function PropertiesPage({
   const { data: properties, error } = await query
 
   if (error) {
-    console.log("[v0] Error fetching properties:", error)
+    console.error("[v0] Error fetching properties:", error)
+    return <div>Error al cargar propiedades</div>
   }
+
+  // Load updated_by user data for each property
+  const propertiesWithUsers = await Promise.all(
+    (properties || []).map(async (property) => {
+      if (property.updated_by_id) {
+        const { data: user } = await supabase
+          .from("users")
+          .select("name")
+          .eq("id", property.updated_by_id)
+          .single()
+        
+        return { ...property, updatedBy: user }
+      }
+      return { ...property, updatedBy: null }
+    })
+  )
 
   const totalPages = count ? Math.ceil(count / limit) : 0
 
@@ -199,7 +215,7 @@ export default async function PropertiesPage({
         </aside>
 
         <main className="flex-1 space-y-4 min-w-0">
-          <PropertiesTable properties={properties || []} currentUser={user} />
+          <PropertiesTable properties={propertiesWithUsers || []} currentUser={user} />
 
           {totalPages > 1 && (
             <PropertiesPagination
