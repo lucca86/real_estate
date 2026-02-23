@@ -144,6 +144,8 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
       sync_to_wordpress: syncToWordPress,
       is_featured: isFeatured,
       internal_notes: formData.get("internalNotes") as string | null,
+      created_by_id: currentUser.id,
+      updated_by_id: currentUser.id,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
@@ -320,6 +322,7 @@ export async function updateProperty(propertyId: string, formData: FormData) {
     published,
     sync_to_wordpress: syncToWordPress,
     internal_notes: formData.get("internalNotes") as string | null,
+    updated_by_id: currentUser.id,
     updated_at: new Date().toISOString(),
   })
   .eq("id", propertyId)

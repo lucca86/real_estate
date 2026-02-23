@@ -31,6 +31,8 @@ interface Property {
   wordpress_id: number | null
   wordpress_url: string | null
   wordpress_synced_at: string | null
+  updated_at: string | null
+  updatedBy: { name: string } | null
 }
 
 interface PropertiesTableProps {
@@ -186,6 +188,17 @@ function PropertyCard({ property, currentUser }: { property: Property; currentUs
         <div className="flex items-center justify-between border-t border-border pt-3">
           <div className="flex flex-col gap-0.5 text-xs">
             {property.owner?.name && <span className="text-muted-foreground">Propietario: {property.owner.name}</span>}
+            {property.updated_at && property.updatedBy?.name && (
+              <span className="text-muted-foreground">
+                Actualizada: {new Date(property.updated_at).toLocaleString("es-AR", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })} por {property.updatedBy.name}
+              </span>
+            )}
             {property.wordpress_synced_at && property.wordpress_id && property.wordpress_id > 0 ? (
               <div className="flex flex-col gap-0.5">
                 <span className="text-green-600">

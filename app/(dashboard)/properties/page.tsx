@@ -104,6 +104,7 @@ export default async function PropertiesPage({
       propertyType:property_types!property_type_id(name),
       city:cities!city_id(name),
       province:provinces!province_id(name),
+      updatedBy:users!updated_by_id(name),
       wordpress_id,
       wordpress_url,
       wordpress_synced_at
