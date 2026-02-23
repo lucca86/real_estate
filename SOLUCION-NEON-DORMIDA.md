@@ -13,14 +13,14 @@ Las bases de datos Neon en el plan gratuito se suspenden automáticamente despu�
 La aplicación ahora despierta la base de datos automáticamente cuando cargas el dashboard. Solo necesitas:
 
 1. **Ejecuta el servidor:**
-   ```bash
+   \`\`\`bash
    npm run dev
-   ```
+   \`\`\`
 
 2. **Ve al dashboard:**
-   ```
+   \`\`\`
    http://localhost:3000/dashboard
-   ```
+   \`\`\`
 
 3. **Espera 10-20 segundos** la primera vez. La base de datos se despertará automáticamente.
 
@@ -28,7 +28,7 @@ La aplicación ahora despierta la base de datos automáticamente cuando cargas e
 
 Si prefieres despertar la base de datos antes de iniciar la aplicación:
 
-```bash
+\`\`\`bash
 # 1. Despierta la base de datos
 npm run db:wake
 
@@ -36,21 +36,21 @@ npm run db:wake
 
 # 3. Ahora inicia tu aplicación
 npm run dev
-```
+\`\`\`
 
 ## 🔍 Verificar Estado de la Conexión
 
 Para verificar si la base de datos está despierta:
 
-```bash
+\`\`\`bash
 npm run db:wake
-```
+\`\`\`
 
 Verás algo como:
-```
+\`\`\`
 ✅ ¡Base de datos Neon despierta y funcionando!
 📊 Información del servidor: { now: '2024-01-15T10:30:00.000Z', version: 'PostgreSQL 15.3...' }
-```
+\`\`\`
 
 ## 🎯 ¿Por Qué Pasa Esto?
 
@@ -76,20 +76,20 @@ Una vez que la base de datos esté despierta:
 ## 🆘 Si Sigue Sin Funcionar
 
 1. **Verifica las credenciales:**
-   ```bash
+   \`\`\`bash
    npm run env:check
-   ```
+   \`\`\`
 
 2. **Regenera Prisma Client:**
-   ```bash
+   \`\`\`bash
    npx prisma generate
-   ```
+   \`\`\`
 
 3. **Reinicia el servidor completamente:**
-   ```bash
+   \`\`\`bash
    # Cierra el servidor actual (Ctrl+C)
    npm run dev
-   ```
+   \`\`\`
 
 4. **Verifica en Neon Console:**
    - Ve a https://console.neon.tech

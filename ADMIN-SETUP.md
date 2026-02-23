@@ -14,9 +14,9 @@ Antes de crear el usuario administrador, asegúrate de:
 
 Este método te permite ingresar tus propias credenciales de forma interactiva:
 
-```bash
+\`\`\`bash
 npm run admin:create
-```
+\`\`\`
 
 El script te pedirá:
 - **Email**: Email del administrador (ej: admin@mahler.com)
@@ -26,7 +26,7 @@ El script te pedirá:
 
 ### Ejemplo de Ejecución:
 
-```
+\`\`\`
 🔐 Creando Usuario Administrador
 
 Email del administrador (admin@mahler.com): admin@mahler.com
@@ -46,15 +46,15 @@ Teléfono (+54 9 379 1234567): +54 9 379 4556789
 
 ⚠️  IMPORTANTE: Guarda estas credenciales en un lugar seguro
    y cambia la contraseña después del primer inicio de sesión.
-```
+\`\`\`
 
 ## Opción 2: Crear Administrador con Credenciales por Defecto (Rápido)
 
 Este método crea un administrador con credenciales predefinidas:
 
-```bash
+\`\`\`bash
 npm run admin:quick
-```
+\`\`\`
 
 **Credenciales por Defecto:**
 - Email: `admin@mahler.com`
@@ -73,14 +73,14 @@ Si prefieres ejecutar SQL directamente en Neon:
 2. Selecciona tu proyecto y base de datos
 3. Genera el hash de tu contraseña:
 
-```bash
+\`\`\`bash
 # En Node.js o en tu terminal con Node instalado
 node -e "const bcrypt = require('bcryptjs'); console.log(bcrypt.hashSync('TuContraseña', 10))"
-```
+\`\`\`
 
 4. Ejecuta el siguiente SQL (reemplaza los valores):
 
-```sql
+\`\`\`sql
 INSERT INTO "User" (
   id,
   email,
@@ -110,21 +110,21 @@ DO UPDATE SET
   role = 'ADMIN',
   "isActive" = true,
   "updatedAt" = NOW();
-```
+\`\`\`
 
 ## Verificar el Usuario Creado
 
 Después de crear el usuario, verifica que se haya creado correctamente:
 
-```bash
+\`\`\`bash
 npm run db:status
-```
+\`\`\`
 
 O inicia sesión en la aplicación:
 
-```bash
+\`\`\`bash
 npm run dev
-```
+\`\`\`
 
 Abre http://localhost:3000/login e inicia sesión con las credenciales del administrador.
 
@@ -142,9 +142,9 @@ La aplicación tiene tres roles:
 
 Asegúrate de que tu archivo `.env` tenga la variable `DATABASE_URL` configurada:
 
-```env
+\`\`\`env
 DATABASE_URL="postgresql://usuario:password@host.neon.tech/database?sslmode=require"
-```
+\`\`\`
 
 ### Error: "Email already exists"
 

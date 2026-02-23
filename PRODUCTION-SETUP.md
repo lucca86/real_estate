@@ -8,36 +8,36 @@ Para que el login funcione correctamente en producción, asegúrate de configura
 
 Ve a tu proyecto en Vercel → Settings → Environment Variables y agrega:
 
-```
+\`\`\`
 DATABASE_URL = postgresql://[user]:[password]@[host]/[database]?sslmode=require
-```
+\`\`\`
 
 O si ya tienes la integración de Neon:
-```
+\`\`\`
 DATABASE_URL = ${real_estate_DATABASE_URL}
-```
+\`\`\`
 
 ### 2. JWT Secret
 
 **IMPORTANTE**: Genera un secret seguro para JWT:
 
-```bash
+\`\`\`bash
 # Generar un secret aleatorio
 openssl rand -base64 32
-```
+\`\`\`
 
 Agrega en Vercel:
-```
+\`\`\`
 JWT_SECRET = [tu-secret-generado-aqui]
-```
+\`\`\`
 
 ### 3. WordPress (si aplica)
 
-```
+\`\`\`
 WORDPRESS_API_URL = https://tu-sitio-wordpress.com
 WORDPRESS_USERNAME = tu-usuario
 WORDPRESS_APP_PASSWORD = tu-password-de-aplicacion
-```
+\`\`\`
 
 ## Verificar Configuración
 
@@ -83,7 +83,7 @@ Si no puedes hacer login porque no hay usuarios:
 1. Conéctate a tu base de datos Neon con un cliente SQL
 2. Ejecuta el script de creación de usuario admin:
 
-```sql
+\`\`\`sql
 INSERT INTO "User" (id, email, name, password, role, "isActive", "createdAt", "updatedAt")
 VALUES (
   gen_random_uuid(),
@@ -95,12 +95,12 @@ VALUES (
   NOW(),
   NOW()
 );
-```
+\`\`\`
 
 O usa el script desde tu local conectado a Neon:
-```bash
+\`\`\`bash
 npm run admin:quick
-```
+\`\`\`
 
 ## Checklist de Producción
 

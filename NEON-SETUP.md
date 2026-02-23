@@ -12,9 +12,9 @@ Esta guía te ayudará a configurar y administrar tu base de datos PostgreSQL en
 
 ### Configuración Inicial
 
-```bash
+\`\`\`bash
 npm run db:setup
-```
+\`\`\`
 
 Este comando:
 - Crea todas las tablas necesarias
@@ -28,9 +28,9 @@ Este comando:
 
 ### Verificar Estado
 
-```bash
+\`\`\`bash
 npm run db:status
-```
+\`\`\`
 
 Muestra:
 - Estado de la conexión
@@ -40,9 +40,9 @@ Muestra:
 
 ### Resetear Base de Datos
 
-```bash
+\`\`\`bash
 npm run db:reset
-```
+\`\`\`
 
 ⚠️ **PRECAUCIÓN:** Este comando elimina TODOS los datos y tablas. Úsalo solo si necesitas empezar desde cero.
 
@@ -82,7 +82,7 @@ El setup automático incluye:
 
 Asegúrate de tener configuradas estas variables:
 
-```env
+\`\`\`env
 # Neon Database
 DATABASE_URL=postgresql://user:password@host/database
 DATABASE_URL_UNPOOLED=postgresql://user:password@host/database
@@ -94,7 +94,7 @@ WORDPRESS_APP_PASSWORD=xxxx xxxx xxxx xxxx
 
 # Authentication
 JWT_SECRET=tu-secreto-super-seguro
-```
+\`\`\`
 
 ## 🔄 Flujo de Trabajo en Producción
 
@@ -110,22 +110,22 @@ JWT_SECRET=tu-secreto-super-seguro
 
 Si modificas el schema de Prisma:
 
-```bash
+\`\`\`bash
 # Generar migración
 npx prisma migrate dev --name descripcion_cambio
 
 # Aplicar en producción
 npx prisma migrate deploy
-```
+\`\`\`
 
 ## 🐛 Troubleshooting
 
 ### Error: "relation does not exist"
 
 Las tablas no existen. Ejecuta:
-```bash
+\`\`\`bash
 npm run db:setup
-```
+\`\`\`
 
 ### Error: "permission denied"
 
@@ -137,10 +137,10 @@ Verifica que `DATABASE_URL` esté correctamente configurada.
 
 ### Quiero empezar de nuevo
 
-```bash
+\`\`\`bash
 npm run db:reset
 npm run db:setup
-```
+\`\`\`
 
 ## 📝 Notas Adicionales
 

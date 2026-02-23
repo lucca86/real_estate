@@ -50,7 +50,7 @@ Si prefieres mostrar pesos argentinos:
 
 Para mostrar el precio con el símbolo correcto en el frontend de WordPress, usar:
 
-```php
+\`\`\`php
 <?php 
 // En place de usar es_the_price(), usar el campo formateado:
 $formatted_price = get_post_meta(get_the_ID(), 'es_property_price_formatted', true);
@@ -60,12 +60,12 @@ if ($formatted_price) {
     es_the_price(); // Fallback al precio estándar
 }
 ?>
-```
+\`\`\`
 
 O con shortcode:
-```
+\`\`\`
 [es_property_field name="es_property_price_formatted"]
-```
+\`\`\`
 
 ### 5. Estadísticas de Monedas
 
@@ -78,23 +78,23 @@ Según la base de datos:
 ### 6. Logs de Debug
 
 El sistema ahora registra en consola:
-```
+\`\`\`
 [v0] Added currency: {
   original: 'USD',
   mapped: 'USD',
   formatted: 'USD 150,000'
 }
-```
+\`\`\`
 
 o
 
-```
+\`\`\`
 [v0] Added currency: {
   original: 'ARS',
   mapped: 'ARS',
   formatted: 'Pesos 50.000.000'
 }
-```
+\`\`\`
 
 Esto permite verificar que las monedas se están mapeando correctamente.
 

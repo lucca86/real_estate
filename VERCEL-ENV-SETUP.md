@@ -3,9 +3,9 @@
 ## Problema Actual
 
 El deploy en Vercel está fallando con el error:
-```
+\`\`\`
 Can't reach database server at `localhost:5432`
-```
+\`\`\`
 
 Esto significa que las variables de entorno de Neon NO están configuradas en Vercel.
 
@@ -15,12 +15,12 @@ Esto significa que las variables de entorno de Neon NO están configuradas en Ve
 
 Las siguientes variables ya existen en el entorno de v0 y están disponibles automáticamente:
 
-```env
+\`\`\`env
 real_estate_DATABASE_URL=postgresql://...
 real_estate_POSTGRES_URL=postgresql://...
 real_estate_POSTGRES_PRISMA_URL=postgresql://...
 real_estate_DATABASE_URL_UNPOOLED=postgresql://...
-```
+\`\`\`
 
 **IMPORTANTE:** Estas variables solo funcionan en v0. En Vercel, necesitas configurarlas manualmente.
 
@@ -42,9 +42,9 @@ real_estate_DATABASE_URL_UNPOOLED=postgresql://...
 
 #### Variables Requeridas:
 
-```env
+\`\`\`env
 DATABASE_URL=postgresql://usuario:password@ep-xxxxx.us-east-2.aws.neon.tech/neondb?sslmode=require
-```
+\`\`\`
 
 **IMPORTANTE:** 
 - Asegúrate de agregar `?sslmode=require` al final de la URL
@@ -52,19 +52,19 @@ DATABASE_URL=postgresql://usuario:password@ep-xxxxx.us-east-2.aws.neon.tech/neon
 
 #### Variables Opcionales (para compatibilidad):
 
-```env
+\`\`\`env
 POSTGRES_URL=postgresql://usuario:password@ep-xxxxx.us-east-2.aws.neon.tech/neondb?sslmode=require
 real_estate_DATABASE_URL=postgresql://usuario:password@ep-xxxxx.us-east-2.aws.neon.tech/neondb?sslmode=require
-```
+\`\`\`
 
 #### Otras Variables Necesarias:
 
-```env
+\`\`\`env
 JWT_SECRET=tu-secreto-jwt-seguro-aqui
 WORDPRESS_API_URL=https://tu-wordpress.com/wp-json
 WORDPRESS_USERNAME=tu-usuario
 WORDPRESS_APP_PASSWORD=tu-app-password
-```
+\`\`\`
 
 ### Paso 3: Redeploy
 
@@ -121,9 +121,9 @@ Si ves este mensaje, la conexión fue exitosa. Si no, revisa que la URL de Neon 
 ## Verificación Local vs Producción
 
 ### Local (.env)
-```env
+\`\`\`env
 DATABASE_URL=postgresql://usuario:password@ep-xxxxx.us-east-2.aws.neon.tech/neondb?sslmode=require
-```
+\`\`\`
 
 ### Producción (Vercel)
 Las mismas variables deben estar configuradas en Vercel Dashboard → Settings → Environment Variables
@@ -135,24 +135,24 @@ Las mismas variables deben estar configuradas en Vercel Dashboard → Settings �
 ## Comandos Útiles
 
 ### Verificar conexión local
-```bash
+\`\`\`bash
 npm run db:status
-```
+\`\`\`
 
 ### Ver tablas en Neon
-```bash
+\`\`\`bash
 npx prisma studio
-```
+\`\`\`
 
 ### Aplicar cambios al schema
-```bash
+\`\`\`bash
 npm run db:push
-```
+\`\`\`
 
 ### Ver logs de producción
-```bash
+\`\`\`bash
 vercel logs
-```
+\`\`\`
 
 ---
 

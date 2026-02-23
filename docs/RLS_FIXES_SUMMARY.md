@@ -66,7 +66,7 @@ Después de habilitar Row Level Security (RLS) en todas las tablas, la página d
 ### 8. lib/supabase/server.ts
 **Cambio**: Agregada función `createAdminClient()`
 **Contenido**: 
-```typescript
+\`\`\`typescript
 export async function createAdminClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -79,7 +79,7 @@ export async function createAdminClient() {
     }
   )
 }
-```
+\`\`\`
 
 ## Principios de Decisión
 

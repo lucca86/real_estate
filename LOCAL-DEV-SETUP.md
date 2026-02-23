@@ -12,9 +12,9 @@ Esta guía te ayudará a configurar tu entorno de desarrollo local para usar la 
 
 ### 1. Instalar Dependencias
 
-```bash
+\`\`\`bash
 npm install
-```
+\`\`\`
 
 Esto instalará todas las dependencias necesarias, incluyendo `tsx` para ejecutar scripts TypeScript.
 
@@ -24,7 +24,7 @@ Tienes dos opciones:
 
 #### Opción A: Usar Vercel CLI (Recomendado)
 
-```bash
+\`\`\`bash
 # Instalar Vercel CLI globalmente
 npm install -g vercel
 
@@ -36,7 +36,7 @@ vercel link
 
 # Descargar variables de entorno
 vercel env pull .env.local
-```
+\`\`\`
 
 #### Opción B: Copiar Manualmente desde Vercel Dashboard
 
@@ -44,7 +44,7 @@ vercel env pull .env.local
 2. Settings → Environment Variables
 3. Copia las siguientes variables:
 
-```env
+\`\`\`env
 # Base de datos Neon
 DATABASE_URL="postgresql://..."
 DATABASE_URL_UNPOOLED="postgresql://..."
@@ -56,15 +56,15 @@ WORDPRESS_APP_PASSWORD="..."
 
 # JWT
 JWT_SECRET="..."
-```
+\`\`\`
 
 4. Crea un archivo `.env.local` en la raíz del proyecto y pega las variables
 
 ### 3. Verificar la Conexión a Neon
 
-```bash
+\`\`\`bash
 npm run db:status
-```
+\`\`\`
 
 Este comando verificará:
 - ✅ Conexión a la base de datos
@@ -75,7 +75,7 @@ Este comando verificará:
 
 Si la base de datos está vacía o necesitas recrearla:
 
-```bash
+\`\`\`bash
 # Opción 1: Setup completo (crea tablas + datos iniciales)
 npm run db:setup
 
@@ -84,19 +84,19 @@ npx prisma db push
 
 # Opción 3: Usar migraciones de Prisma (recomendado para producción)
 npx prisma migrate deploy
-```
+\`\`\`
 
 ### 5. Generar el Cliente de Prisma
 
-```bash
+\`\`\`bash
 npx prisma generate
-```
+\`\`\`
 
 ### 6. Iniciar el Servidor de Desarrollo
 
-```bash
+\`\`\`bash
 npm run dev
-```
+\`\`\`
 
 Tu aplicación estará disponible en `http://localhost:3000`
 
@@ -104,7 +104,7 @@ Tu aplicación estará disponible en `http://localhost:3000`
 
 ### Base de Datos
 
-```bash
+\`\`\`bash
 # Ver estado de la base de datos
 npm run db:status
 
@@ -125,11 +125,11 @@ npx prisma migrate dev --name nombre_migracion
 
 # Aplicar migraciones en producción
 npx prisma migrate deploy
-```
+\`\`\`
 
 ### Datos Iniciales
 
-```bash
+\`\`\`bash
 # Seed de tipos de propiedad
 npm run seed:property-types
 
@@ -138,7 +138,7 @@ npm run seed:locations
 
 # Verificar variables de entorno
 npm run verify:env
-```
+\`\`\`
 
 ## 🌍 Estructura de Variables de Entorno
 
@@ -147,59 +147,59 @@ Usado en tu máquina local, apunta a Neon en la nube.
 
 ### Variables de Neon Necesarias
 
-```env
+\`\`\`env
 # URL de conexión pooled (para Prisma Client)
 DATABASE_URL="postgresql://user:pass@host.neon.tech/dbname?sslmode=require&pgbouncer=true"
 
 # URL de conexión directa (para migraciones)
 DATABASE_URL_UNPOOLED="postgresql://user:pass@host.neon.tech/dbname?sslmode=require"
-```
+\`\`\`
 
 ## 🔄 Flujo de Trabajo Recomendado
 
 ### Desarrollo Diario
 
 1. **Actualizar código**
-   ```bash
+   \`\`\`bash
    git pull origin main
-   ```
+   \`\`\`
 
 2. **Actualizar dependencias** (si hubo cambios)
-   ```bash
+   \`\`\`bash
    npm install
-   ```
+   \`\`\`
 
 3. **Aplicar migraciones** (si hay nuevas)
-   ```bash
+   \`\`\`bash
    npx prisma migrate deploy
    npx prisma generate
-   ```
+   \`\`\`
 
 4. **Iniciar desarrollo**
-   ```bash
+   \`\`\`bash
    npm run dev
-   ```
+   \`\`\`
 
 ### Cambios en el Schema
 
 1. **Modificar** `prisma/schema.prisma`
 
 2. **Crear migración**
-   ```bash
+   \`\`\`bash
    npx prisma migrate dev --name descripcion_cambio
-   ```
+   \`\`\`
 
 3. **Generar cliente**
-   ```bash
+   \`\`\`bash
    npx prisma generate
-   ```
+   \`\`\`
 
 4. **Commitear cambios**
-   ```bash
+   \`\`\`bash
    git add prisma/schema.prisma prisma/migrations
    git commit -m "feat: agregar campo X al modelo Y"
    git push origin main
-   ```
+   \`\`\`
 
 ### Sincronizar con Producción
 
@@ -231,33 +231,33 @@ Si prefieres tener una base de datos separada para desarrollo:
 
 ### Error: "Environment variables not found"
 
-```bash
+\`\`\`bash
 # Verificar que existan las variables
 npm run verify:env
 
 # Si faltan, descargarlas de Vercel
 vercel env pull .env.local
-```
+\`\`\`
 
 ### Error: "Can't reach database server"
 
-```bash
+\`\`\`bash
 # Verificar conexión
 npm run db:status
 
 # Verificar que la URL sea correcta
 echo $DATABASE_URL
-```
+\`\`\`
 
 ### Error: "Prisma Client not generated"
 
-```bash
+\`\`\`bash
 npx prisma generate
-```
+\`\`\`
 
 ### Error: "Migration failed"
 
-```bash
+\`\`\`bash
 # Ver migraciones aplicadas
 npx prisma migrate status
 
@@ -266,7 +266,7 @@ npx prisma migrate resolve --applied "nombre_migracion"
 
 # O resetear (¡CUIDADO!)
 npx prisma migrate reset
-```
+\`\`\`
 
 ## 📚 Recursos
 

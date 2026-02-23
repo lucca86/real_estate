@@ -23,7 +23,7 @@ Debes agregar código PHP a tu instalación de WordPress para registrar los meta
 1. Crea una carpeta en `wp-content/plugins/` llamada `estatik-rest-api`
 2. Dentro de esa carpeta, crea un archivo `estatik-rest-api.php` con este contenido:
 
-```php
+\`\`\`php
 <?php
 /**
  * Plugin Name: Estatik REST API Support
@@ -33,7 +33,7 @@ Debes agregar código PHP a tu instalación de WordPress para registrar los meta
  */
 
 // Pega aquí el contenido de register-estatik-meta-fields.php
-```
+\`\`\`
 
 3. Activa el plugin desde **Plugins → Plugins instalados**
 
@@ -63,10 +63,10 @@ Los siguientes campos se sincronizan automáticamente:
 1. Verifica que el código se haya agregado correctamente
 2. Asegúrate de que el custom post type se llame exactamente `properties`
 3. Si Major Estatik usa un nombre diferente para el post type, cámbialo en el código:
-   ```php
+   \`\`\`php
    register_post_meta('properties', $field_name, [...]);
    // Cambia 'properties' por el nombre correcto
-   ```
+   \`\`\`
 
 ### ¿Cómo saber el nombre del post type?
 

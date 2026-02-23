@@ -75,13 +75,13 @@ Dado que estamos usando `createAdminClient()` para operaciones en `ContactServic
 
 ### **Script SQL a Ejecutar:**
 
-```sql
+\`\`\`sql
 -- Habilitar RLS en todas las tablas con políticas
 ALTER TABLE "Contact" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "Service" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "property_types" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "role_permissions" ENABLE ROW LEVEL SECURITY;
-```
+\`\`\`
 
 ### **Cambios en el Código:**
 
@@ -132,7 +132,7 @@ ALTER TABLE "role_permissions" ENABLE ROW LEVEL SECURITY;
 
 Ejecutar esta query para verificar que RLS está habilitado:
 
-```sql
+\`\`\`sql
 SELECT 
   schemaname, 
   tablename, 
@@ -141,7 +141,7 @@ FROM pg_tables
 WHERE schemaname = 'public' 
   AND tablename IN ('Contact', 'Service', 'property_types', 'role_permissions')
 ORDER BY tablename;
-```
+\`\`\`
 
 Todos los valores de `rowsecurity` deben ser `true`.
 

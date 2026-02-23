@@ -60,7 +60,7 @@ Este documento detalla el plan para migrar el almacenamiento de imágenes desde 
 
 ### 3.1 Flujo de Subida de Imágenes
 
-```
+\`\`\`
 ┌─────────────┐
 │   Cliente   │
 └──────┬──────┘
@@ -87,11 +87,11 @@ Este documento detalla el plan para migrar el almacenamiento de imágenes desde 
 │  Guardar en DB       │
 │  (image_id + URL)    │
 └──────────────────────┘
-```
+\`\`\`
 
 ### 3.2 Flujo de Servido de Imágenes
 
-```
+\`\`\`
 Usuario solicita imagen
          ↓
 https://imagedelivery.net/{account_hash}/{image_id}/{variant}
@@ -100,7 +100,7 @@ Cloudflare CDN verifica cache
          ↓
 Si no está en cache → Genera variante → Cachea → Sirve
 Si está en cache → Sirve directamente
-```
+\`\`\`
 
 ---
 
@@ -121,7 +121,7 @@ Si está en cache → Sirve directamente
 - [ ] Crear variante `avatar`: 150x150 (cuadrado)
 
 **Configuración de variantes:**
-```json
+\`\`\`json
 {
   "thumbnail": {
     "fit": "cover",
@@ -144,14 +144,14 @@ Si está en cache → Sirve directamente
     "height": 150
   }
 }
-```
+\`\`\`
 
 **4.3. Agregar variables de entorno**
-```env
+\`\`\`env
 CLOUDFLARE_ACCOUNT_ID=tu_account_id
 CLOUDFLARE_IMAGES_API_TOKEN=tu_api_token
 CLOUDFLARE_IMAGES_ACCOUNT_HASH=tu_hash
-```
+\`\`\`
 
 ---
 
@@ -161,7 +161,7 @@ CLOUDFLARE_IMAGES_ACCOUNT_HASH=tu_hash
 
 Crear archivo: `lib/cloudflare-images.ts`
 
-```typescript
+\`\`\`typescript
 interface CloudflareImageUploadResponse {
   success: boolean
   result: {
@@ -230,13 +230,13 @@ export async function deleteFromCloudflareImages(imageId: string): Promise<boole
 export function getCloudflareImageUrl(imageId: string, variant: string = 'public'): string {
   return `https://imagedelivery.net/${process.env.CLOUDFLARE_IMAGES_ACCOUNT_HASH}/${imageId}/${variant}`
 }
-```
+\`\`\`
 
 **4.5. Actualizar API de subida de propiedades**
 
 Modificar: `app/api/upload-property-image/route.ts`
 
-```typescript
+\`\`\`typescript
 import { uploadToCloudflareImages, getCloudflareImageUrl } from '@/lib/cloudflare-images'
 import sharp from 'sharp'
 
@@ -300,13 +300,13 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: error.message || 'Upload failed' }, { status: 500 })
   }
 }
-```
+\`\`\`
 
 **4.6. Actualizar acciones de usuarios**
 
 Modificar: `lib/actions/users.ts`
 
-```typescript
+\`\`\`typescript
 import { uploadToCloudflareImages, getCloudflareImageUrl } from '@/lib/cloudflare-images'
 
 // En createUser:
@@ -320,7 +320,7 @@ if (avatarFile && avatarFile.size > 0) {
   const { id: imageId } = await uploadToCloudflareImages(avatarFile)
   avatarUrl = getCloudflareImageUrl(imageId, 'avatar')
 }
-```
+\`\`\`
 
 ---
 
@@ -332,7 +332,7 @@ Actualmente las propiedades guardan URLs de Blob. Necesitamos:
 - Mantener compatibilidad con URLs antiguas
 - Agregar campo opcional `cloudflare_image_id` para imágenes nuevas
 
-```sql
+\`\`\`sql
 -- Agregar columna para Cloudflare Image ID
 ALTER TABLE properties 
 ADD COLUMN cloudflare_image_ids JSONB;
@@ -345,13 +345,13 @@ ADD COLUMN cloudflare_image_ids JSONB;
 -- }
 -- O más simple si usamos variantes:
 -- "main_image_id"
-```
+\`\`\`
 
 **4.8. Script de migración de datos**
 
 Crear: `scripts/migrate-images-to-cloudflare.ts`
 
-```typescript
+\`\`\`typescript
 // Este script:
 // 1. Lee todas las propiedades con imágenes en Blob
 // 2. Descarga cada imagen de Blob
@@ -360,7 +360,7 @@ Crear: `scripts/migrate-images-to-cloudflare.ts`
 // 5. (Opcional) Elimina la imagen de Blob
 
 // NOTA: Ejecutar con precaución, hacer backup antes
-```
+\`\`\`
 
 ---
 
@@ -384,7 +384,7 @@ Si algo falla:
 2. Mantener código compatible con ambos sistemas temporalmente
 3. Usar feature flag para controlar qué sistema usar
 
-```typescript
+\`\`\`typescript
 const USE_CLOUDFLARE_IMAGES = process.env.NEXT_PUBLIC_USE_CLOUDFLARE_IMAGES === 'true'
 
 if (USE_CLOUDFLARE_IMAGES) {
@@ -392,7 +392,7 @@ if (USE_CLOUDFLARE_IMAGES) {
 } else {
   // Lógica de Blob (legacy)
 }
-```
+\`\`\`
 
 ---
 
@@ -430,7 +430,7 @@ if (USE_CLOUDFLARE_IMAGES) {
 
 **Ejemplo de uso avanzado:**
 
-```tsx
+\`\`\`tsx
 <picture>
   <source
     srcSet={`${imageUrl}/webp`}
@@ -446,7 +446,7 @@ if (USE_CLOUDFLARE_IMAGES) {
     loading="lazy"
   />
 </picture>
-```
+\`\`\`
 
 ---
 

@@ -3,9 +3,9 @@
 ## El Problema
 
 Después del login, la aplicación se congela y no responde a clicks porque la conexión de PostgreSQL se cierra inesperadamente con el error:
-```
+\`\`\`
 prisma:error Error in PostgreSQL connection: Error { kind: Closed, cause: None }
-```
+\`\`\`
 
 ## La Solución
 
@@ -14,21 +14,21 @@ He implementado las siguientes correcciones:
 ### 1. Simplificación del Schema de Prisma
 
 **Antes:**
-```prisma
+\`\`\`prisma
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
-```
+\`\`\`
 
 **Después:**
-```prisma
+\`\`\`prisma
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-```
+\`\`\`
 
 Con Neon, no necesitamos `directUrl` separada porque Neon maneja el pooling automáticamente.
 
@@ -51,14 +51,14 @@ La aplicación ahora agrega estos parámetros a tu URL de Neon:
 ### En Local:
 
 1. **Regenera el Prisma Client:**
-   ```bash
+   \`\`\`bash
    npx prisma generate
-   ```
+   \`\`\`
 
 2. **Reinicia el servidor:**
-   ```bash
+   \`\`\`bash
    npm run dev
-   ```
+   \`\`\`
 
 ### En Producción (Vercel):
 

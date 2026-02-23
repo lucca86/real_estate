@@ -28,9 +28,9 @@ El problema ocurre cuando el `JWT_SECRET` en tu archivo `.env` cambió después 
 
 Asegúrate de que tu archivo `.env` tenga un `JWT_SECRET` consistente:
 
-```env
+\`\`\`env
 JWT_SECRET="dev-secret-key-change-in-production-98765"
-```
+\`\`\`
 
 No cambies este valor a menos que quieras invalidar todas las sesiones activas.
 

@@ -6,9 +6,9 @@ Esta guía te ayudará a configurar correctamente las variables de entorno para 
 
 ### Paso 1: Verifica tu configuración actual
 
-```bash
+\`\`\`bash
 npm run check:env
-```
+\`\`\`
 
 Este comando te dirá exactamente qué variables faltan o tienen valores incorrectos.
 
@@ -19,15 +19,15 @@ Este comando te dirá exactamente qué variables faltan o tienen valores incorre
 3. Selecciona tu proyecto `real_estate`
 4. Haz clic en "Connection Details"
 5. Copia la **Connection string** completa (debe verse algo así):
-   ```
+   \`\`\`
    postgresql://username:password@ep-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require
-   ```
+   \`\`\`
 
 ### Paso 3: Configura tu archivo .env
 
 Abre el archivo `.env` en la raíz de tu proyecto y reemplaza la línea de `DATABASE_URL`:
 
-```env
+\`\`\`env
 # Reemplaza esta línea con tu URL real de Neon
 DATABASE_URL="postgresql://username:password@ep-xxx-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require"
 
@@ -36,19 +36,19 @@ DATABASE_URL_UNPOOLED="postgresql://username:password@ep-xxx-xxx.us-east-2.aws.n
 
 # El resto de las variables pueden quedar como están por ahora
 JWT_SECRET="dev-secret-key-change-in-production-98765"
-```
+\`\`\`
 
 ### Paso 4: Verifica nuevamente
 
-```bash
+\`\`\`bash
 npm run check:env
-```
+\`\`\`
 
 Deberías ver ✅ en DATABASE_URL.
 
 ### Paso 5: Inicializa la base de datos
 
-```bash
+\`\`\`bash
 # Crear las tablas
 npm run db:push
 
@@ -57,28 +57,28 @@ npm run db:seed
 
 # Crear usuario administrador
 npm run admin:quick
-```
+\`\`\`
 
 ### Paso 6: Verifica el login
 
-```bash
+\`\`\`bash
 npm run admin:verify
-```
+\`\`\`
 
 Si todo está correcto, deberías ver:
-```
+\`\`\`
 ✅ ¡CONTRASEÑA VÁLIDA! Las credenciales funcionan correctamente
 
 📋 Credenciales de prueba:
    Email: admin@mahler.com
    Contraseña: Admin123!
-```
+\`\`\`
 
 ---
 
 ## 🔧 Comandos Útiles
 
-```bash
+\`\`\`bash
 # Verificar estado de variables de entorno
 npm run check:env
 
@@ -93,7 +93,7 @@ npm run db:status
 
 # Abrir Prisma Studio (GUI para ver/editar datos)
 npm run db:studio
-```
+\`\`\`
 
 ---
 
@@ -112,9 +112,9 @@ Tu `.env` tiene valores placeholder. Sigue los pasos anteriores para obtener la 
 ### Error: "Invalid password"
 
 El usuario administrador no existe o la contraseña es incorrecta. Ejecuta:
-```bash
+\`\`\`bash
 npm run admin:reset
-```
+\`\`\`
 
 ### No puedo conectarme a Neon
 

@@ -17,19 +17,19 @@ La contraseña del usuario administrador no coincide o está mal hasheada.
 **Solución:**
 
 1. **Verificar las credenciales actuales:**
-   ```bash
+   \`\`\`bash
    npm run admin:verify
-   ```
+   \`\`\`
 
 2. **Si la contraseña es inválida, resetearla:**
-   ```bash
+   \`\`\`bash
    npm run admin:reset
-   ```
+   \`\`\`
 
 3. **O crear un nuevo administrador:**
-   ```bash
+   \`\`\`bash
    npm run admin:create
-   ```
+   \`\`\`
 
 **Credenciales por defecto:**
 - Email: `admin@mahler.com`
@@ -64,9 +64,9 @@ La variable `DATABASE_URL` no está configurada en Vercel.
    - Guarda y redeploy
 
 3. **Verifica la conexión:**
-   ```bash
+   \`\`\`bash
    npm run db:status
-   ```
+   \`\`\`
 
 **Referencia:** Ver [VERCEL-ENV-SETUP.md](./VERCEL-ENV-SETUP.md) para instrucciones detalladas.
 
@@ -84,24 +84,24 @@ El archivo `prisma/schema.prisma` está desactualizado o corrupto.
 **Solución:**
 
 1. **Hacer git pull:**
-   ```bash
+   \`\`\`bash
    git pull origin main
-   ```
+   \`\`\`
 
 2. **Verificar el datasource:**
    Abre `prisma/schema.prisma` y verifica que tenga:
-   ```prisma
+   \`\`\`prisma
    datasource db {
      provider = "postgresql"
      url      = env("DATABASE_URL")
      directUrl = env("DATABASE_URL_UNPOOLED")
    }
-   ```
+   \`\`\`
 
 3. **Regenerar Prisma Client:**
-   ```bash
+   \`\`\`bash
    npm run prisma:generate
-   ```
+   \`\`\`
 
 ---
 
@@ -117,21 +117,21 @@ El archivo `prisma/schema.prisma` está desactualizado o corrupto.
 
 1. **Verifica que `postinstall` esté configurado:**
    En `package.json` debe existir:
-   ```json
+   \`\`\`json
    "scripts": {
      "postinstall": "prisma generate"
    }
-   ```
+   \`\`\`
 
 2. **Verifica las variables de entorno:**
    - `DATABASE_URL` debe estar configurada
    - `JWT_SECRET` debe estar configurada
 
 3. **Force redeploy:**
-   ```bash
+   \`\`\`bash
    git commit --allow-empty -m "Force rebuild"
    git push
-   ```
+   \`\`\`
 
 ---
 
@@ -154,9 +154,9 @@ El archivo `prisma/schema.prisma` está desactualizado o corrupto.
    - **Missing env vars:** Revisa que todas las variables estén configuradas
 
 3. **Ejecuta las migraciones:**
-   ```bash
+   \`\`\`bash
    npm run db:push
-   ```
+   \`\`\`
 
 ---
 
@@ -165,14 +165,14 @@ El archivo `prisma/schema.prisma` está desactualizado o corrupto.
 ### Lista de variables requeridas
 
 **En desarrollo (.env):**
-```env
+\`\`\`env
 DATABASE_URL="postgresql://..."
 DATABASE_URL_UNPOOLED="postgresql://..."
 JWT_SECRET="tu-secreto-seguro-aqui"
 WORDPRESS_API_URL="https://tu-wordpress.com"
 WORDPRESS_USERNAME="tu-usuario"
 WORDPRESS_APP_PASSWORD="xxxx xxxx xxxx xxxx"
-```
+\`\`\`
 
 **En producción (Vercel):**
 - `DATABASE_URL`
@@ -183,9 +183,9 @@ WORDPRESS_APP_PASSWORD="xxxx xxxx xxxx xxxx"
 - `WORDPRESS_APP_PASSWORD`
 
 **Verificar configuración:**
-```bash
+\`\`\`bash
 npm run env:check
-```
+\`\`\`
 
 ---
 
@@ -218,7 +218,7 @@ npm run env:check
 
 ## 🆘 Comandos Útiles de Diagnóstico
 
-```bash
+\`\`\`bash
 # Verificar estado de la base de datos
 npm run db:status
 
@@ -233,7 +233,7 @@ npm run db:studio
 
 # Regenerar Prisma Client
 npm run prisma:generate
-```
+\`\`\`
 
 ---
 
@@ -252,7 +252,7 @@ Si ninguna de estas soluciones funciona:
    - [ADMIN-SETUP.md](./ADMIN-SETUP.md)
 
 3. **Comandos de reset (último recurso):**
-   ```bash
+   \`\`\`bash
    # Reset de base de datos
    npm run db:reset
    

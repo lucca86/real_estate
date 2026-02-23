@@ -21,7 +21,7 @@ Tienes **2 opciones** para agregar el código PHP:
 1. Crea una carpeta: `/wp-content/plugins/estatik-currency-display/`
 2. Crea un archivo: `estatik-currency-display.php` con este contenido:
 
-```php
+\`\`\`php
 <?php
 /**
  * Plugin Name: Estatik Currency Display
@@ -31,7 +31,7 @@ Tienes **2 opciones** para agregar el código PHP:
  */
 
 // PEGA AQUÍ todo el contenido de functions-price-currency.php
-```
+\`\`\`
 
 3. Ve a **Plugins → Plugins instalados** y activa el plugin
 
@@ -41,9 +41,9 @@ Tienes **2 opciones** para agregar el código PHP:
 
 1. Ve a cualquier **Página o Post** en WordPress
 2. Agrega este shortcode en el contenido:
-   ```
+   \`\`\`
    [property_price_with_currency id="PROPERTY_ID"]
-   ```
+   \`\`\`
    (Reemplaza `PROPERTY_ID` con el ID de una propiedad sincronizada)
 
 3. Guarda y visualiza la página
@@ -80,28 +80,28 @@ Si la OPCIÓN 1 no funciona automáticamente, necesitas override los templates d
 1. Abre el archivo copiado
 2. Busca donde se muestra el precio (generalmente `es_get_the_price()`)
 3. Reemplázalo con:
-   ```php
+   \`\`\`php
    <?php echo get_property_price_with_currency(get_the_ID()); ?>
-   ```
+   \`\`\`
 
 ### 4.4 Ejemplo visual:
 
 **ANTES:**
-```php
+\`\`\`php
 <div class="es-price">
     <?php echo es_get_the_price(); ?>
 </div>
-```
+\`\`\`
 
 **DESPUÉS:**
-```php
+\`\`\`php
 <div class="es-price">
     <?php 
     $price_with_currency = get_property_price_with_currency(get_the_ID());
     echo !empty($price_with_currency) ? esc_html($price_with_currency) : es_get_the_price();
     ?>
 </div>
-```
+\`\`\`
 
 ## Paso 5: Personalizar Estilos (Opcional)
 
@@ -112,7 +112,7 @@ Si quieres personalizarlos más:
 1. Ve a **Apariencia → Personalizar → CSS adicional**
 2. Agrega tus estilos personalizados:
 
-```css
+\`\`\`css
 /* Hacer los precios en USD más grandes y verdes */
 .currency-badge-usd {
     background-color: #27ae60;
@@ -130,7 +130,7 @@ Si quieres personalizarlos más:
     font-weight: bold;
     color: #2c3e50;
 }
-```
+\`\`\`
 
 ## Solución de Problemas
 

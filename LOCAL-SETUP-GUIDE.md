@@ -8,9 +8,9 @@
 2. Selecciona tu proyecto
 3. Ve a la sección **Connection Details**
 4. Copia la **Connection String** (debería verse así):
-   ```
+   \`\`\`
    postgresql://username:password@ep-xxxx-xxxx.us-east-2.aws.neon.tech/neondb?sslmode=require
-   ```
+   \`\`\`
 
 ### Opción B: Desde Vercel (si ya está desplegado)
 
@@ -23,22 +23,22 @@
 
 1. Abre el archivo `.env` en la raíz del proyecto
 2. Reemplaza la línea `DATABASE_URL=` con tu URL real de Neon:
-   ```env
+   \`\`\`env
    DATABASE_URL="postgresql://username:password@ep-xxxx.neon.tech/neondb?sslmode=require"
    DATABASE_URL_UNPOOLED="postgresql://username:password@ep-xxxx.neon.tech/neondb?sslmode=require"
-   ```
+   \`\`\`
 
 ## Paso 3: Instalar dependencias
 
-```bash
+\`\`\`bash
 npm install
-```
+\`\`\`
 
 ## Paso 4: Verificar la configuración
 
-```bash
+\`\`\`bash
 npm run env:check
-```
+\`\`\`
 
 Este comando verificará que todas las variables de entorno necesarias estén configuradas correctamente.
 
@@ -46,9 +46,9 @@ Este comando verificará que todas las variables de entorno necesarias estén co
 
 ### Opción A: Usar Prisma Push (Recomendado para desarrollo)
 
-```bash
+\`\`\`bash
 npm run db:push
-```
+\`\`\`
 
 Este comando:
 - Crea todas las tablas según tu schema de Prisma
@@ -57,9 +57,9 @@ Este comando:
 
 ### Opción B: Usar Migraciones (Para producción)
 
-```bash
+\`\`\`bash
 npx prisma migrate dev --name init
-```
+\`\`\`
 
 Este comando:
 - Crea una migración inicial
@@ -68,9 +68,9 @@ Este comando:
 
 ## Paso 6: Poblar la base de datos con datos iniciales
 
-```bash
+\`\`\`bash
 npm run db:seed
-```
+\`\`\`
 
 Este comando crea:
 - Un usuario administrador (admin@example.com / admin123)
@@ -80,9 +80,9 @@ Este comando crea:
 
 ## Paso 7: Verificar que todo funciona
 
-```bash
+\`\`\`bash
 npm run db:status
-```
+\`\`\`
 
 Este comando muestra:
 - Estado de la conexión a Neon
@@ -91,9 +91,9 @@ Este comando muestra:
 
 ## Paso 8: Iniciar el servidor de desarrollo
 
-```bash
+\`\`\`bash
 npm run dev
-```
+\`\`\`
 
 Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
@@ -120,26 +120,26 @@ Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 **Problema:** Prisma no puede leer el schema.
 
 **Solución:**
-```bash
+\`\`\`bash
 npx prisma generate
-```
+\`\`\`
 
 ### Error: "Table does not exist"
 
 **Problema:** La base de datos no tiene las tablas necesarias.
 
 **Solución:**
-```bash
+\`\`\`bash
 npm run db:push
 npm run db:seed
-```
+\`\`\`
 
 ### Las tablas existen pero no hay datos
 
 **Solución:**
-```bash
+\`\`\`bash
 npm run db:seed
-```
+\`\`\`
 
 ## Credenciales de Prueba
 

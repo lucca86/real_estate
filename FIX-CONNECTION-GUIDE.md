@@ -11,23 +11,23 @@ El error "PostgreSQL connection: Error { kind: Closed, cause: None }" ocurre por
 
 ### 1. Regenerar Prisma Client
 
-```bash
+\`\`\`bash
 npx prisma generate
-```
+\`\`\`
 
 ### 2. Verificar tu archivo .env
 
 Tu archivo `.env` DEBE tener la URL real de Neon, no un placeholder.
 
 Verifica que tengas algo como:
-```env
+\`\`\`env
 DATABASE_URL="postgresql://neondb_owner:XXXXXXX@ep-spring-hat-ad436c6g-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require"
-```
+\`\`\`
 
 **NO** debe tener valores como:
-```env
+\`\`\`env
 DATABASE_URL="postgresql://user:password@host.neon.tech/dbname"
-```
+\`\`\`
 
 ### 3. Obtener tu URL Real de Neon
 
@@ -35,26 +35,26 @@ DATABASE_URL="postgresql://user:password@host.neon.tech/dbname"
 2. Selecciona tu proyecto
 3. Ve a "Connection Details" o "Dashboard"
 4. Copia la "Connection string" que se ve así:
-   ```
+   \`\`\`
    postgresql://neondb_owner:xxxxx@ep-xxxxx-pooler.c-2.us-east-1.aws.neon.tech/neondb
-   ```
+   \`\`\`
 5. Pégala en tu archivo `.env` como `DATABASE_URL`
 6. Asegúrate de que termine con `?sslmode=require`
 
 ### 4. Reiniciar el Servidor
 
-```bash
+\`\`\`bash
 # Detén el servidor (Ctrl+C)
 # Luego reinicia
 npm run dev
-```
+\`\`\`
 
 ### 5. Verificar la Conexión
 
-```bash
+\`\`\`bash
 # Este comando debería conectarse exitosamente
 npx prisma db pull
-```
+\`\`\`
 
 Si ves tablas listadas, la conexión funciona.
 
@@ -63,25 +63,25 @@ Si ves tablas listadas, la conexión funciona.
 ### A. Si el error persiste en local
 
 1. **Borra la carpeta `.next`**:
-   ```bash
+   \`\`\`bash
    rm -rf .next
    # En Windows: rmdir /s .next
-   ```
+   \`\`\`
 
 2. **Reinstala node_modules** (solo si es necesario):
-   ```bash
+   \`\`\`bash
    npm install
-   ```
+   \`\`\`
 
 3. **Regenera Prisma**:
-   ```bash
+   \`\`\`bash
    npx prisma generate
-   ```
+   \`\`\`
 
 4. **Reinicia**:
-   ```bash
+   \`\`\`bash
    npm run dev
-   ```
+   \`\`\`
 
 ### B. Para Producción (Vercel)
 

@@ -16,33 +16,33 @@ Ve a tu proyecto en Vercel → **Settings** → **Environment Variables** y agre
 
 Estas variables se configuran automáticamente cuando conectas Neon, pero verifica que existan:
 
-```
+\`\`\`
 DATABASE_URL=postgresql://user:password@host.neon.tech/dbname?sslmode=require
 DATABASE_URL_UNPOOLED=postgresql://user:password@host.neon.tech/dbname?sslmode=require
-```
+\`\`\`
 
 **Importante**: `DATABASE_URL` debe usar connection pooling, mientras que `DATABASE_URL_UNPOOLED` es para migraciones.
 
 ### Autenticación
 
-```
+\`\`\`
 JWT_SECRET=tu-clave-secreta-super-segura-minimo-32-caracteres
-```
+\`\`\`
 
 **Generar JWT_SECRET seguro:**
-```bash
+\`\`\`bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
+\`\`\`
 
 ### WordPress Integration (Opcional)
 
 Si usas sincronización con WordPress:
 
-```
+\`\`\`
 WORDPRESS_API_URL=https://tusitio.com/wp-json
 WORDPRESS_USERNAME=tu-usuario-wordpress
 WORDPRESS_APP_PASSWORD=xxxx xxxx xxxx xxxx xxxx xxxx
-```
+\`\`\`
 
 ## Paso 2: Ejecutar Migraciones en Producción
 
@@ -50,42 +50,42 @@ WORDPRESS_APP_PASSWORD=xxxx xxxx xxxx xxxx xxxx xxxx
 
 1. Configura la variable de entorno temporalmente:
 
-```bash
+\`\`\`bash
 export DATABASE_URL="tu-url-de-neon-unpooled"
-```
+\`\`\`
 
 2. Ejecuta las migraciones:
 
-```bash
+\`\`\`bash
 npx prisma migrate deploy
-```
+\`\`\`
 
 3. Genera el cliente de Prisma:
 
-```bash
+\`\`\`bash
 npx prisma generate
-```
+\`\`\`
 
 ### Opción B: Desde Vercel CLI
 
 1. Instala Vercel CLI:
 
-```bash
+\`\`\`bash
 npm i -g vercel
-```
+\`\`\`
 
 2. Vincula tu proyecto:
 
-```bash
+\`\`\`bash
 vercel link
-```
+\`\`\`
 
 3. Ejecuta las migraciones:
 
-```bash
+\`\`\`bash
 vercel env pull .env.production
 npx prisma migrate deploy --schema=./prisma/schema.prisma
-```
+\`\`\`
 
 ## Paso 3: Seed de Datos Iniciales (Primera vez)
 
@@ -96,7 +96,7 @@ Después de las migraciones, necesitas crear los datos iniciales:
 1. Ve a la consola SQL de Neon
 2. Ejecuta el siguiente SQL:
 
-```sql
+\`\`\`sql
 -- Crear usuario administrador (password: admin123)
 INSERT INTO "User" (id, email, name, password, role, "isActive", "createdAt", "updatedAt")
 VALUES (
@@ -109,13 +109,13 @@ VALUES (
   NOW(),
   NOW()
 );
-```
+\`\`\`
 
 **Importante**: Cambia el email y la contraseña después del primer login.
 
 ### Seed de Tipos de Propiedad
 
-```sql
+\`\`\`sql
 INSERT INTO "PropertyType" (id, name, description, "isActive", "createdAt", "updatedAt")
 VALUES 
   (gen_random_uuid()::text, 'Casa', 'Casa unifamiliar', true, NOW(), NOW()),
@@ -123,11 +123,11 @@ VALUES
   (gen_random_uuid()::text, 'Terreno', 'Lote o terreno', true, NOW(), NOW()),
   (gen_random_uuid()::text, 'Local Comercial', 'Local para negocio', true, NOW(), NOW()),
   (gen_random_uuid()::text, 'Oficina', 'Oficina comercial', true, NOW(), NOW());
-```
+\`\`\`
 
 ### Seed de Ubicaciones (Argentina como ejemplo)
 
-```sql
+\`\`\`sql
 -- País
 INSERT INTO "Country" (id, name, code, "isActive", "createdAt", "updatedAt")
 VALUES ('country-ar', 'Argentina', 'AR', true, NOW(), NOW());
@@ -145,7 +145,7 @@ INSERT INTO "Neighborhood" (id, name, "cityId", "isActive", "createdAt", "update
 VALUES 
   (gen_random_uuid()::text, 'Centro', 'city-corrientes', true, NOW(), NOW()),
   (gen_random_uuid()::text, 'San Lorenzo', 'city-corrientes', true, NOW(), NOW());
-```
+\`\`\`
 
 ## Paso 4: Verificar Despliegue
 
@@ -187,11 +187,11 @@ Si configuraste WordPress:
 ### Error: "Prisma Client not generated"
 
 En `package.json`, verifica que exista:
-```json
+\`\`\`json
 "scripts": {
   "postinstall": "prisma generate"
 }
-```
+\`\`\`
 
 Esto asegura que Prisma se genere automáticamente en cada deploy.
 
@@ -207,7 +207,7 @@ Las migraciones NO se ejecutan automáticamente en cada deploy por seguridad. De
 
 ## Comandos Útiles
 
-```bash
+\`\`\`bash
 # Ver logs de producción
 vercel logs
 
@@ -222,7 +222,7 @@ npx prisma migrate deploy
 
 # Ver estado de la base de datos
 npx prisma studio
-```
+\`\`\`
 
 ## Seguridad en Producción
 
