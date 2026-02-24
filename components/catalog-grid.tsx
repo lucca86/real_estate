@@ -82,14 +82,14 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
     )
   }
 
-  // Load updatedBy user data - DB uses camelCase: updatedById, table "User"
+  // Load updatedBy user data using the "users" table (snake_case)
   const propertiesWithUsers = await Promise.all(
     properties.map(async (property: any) => {
       let updatedBy = null
       const userId = property.updatedById ?? property.updated_by_id
       if (userId) {
         const { data: user } = await supabase
-          .from("User")
+          .from("users")
           .select("name")
           .eq("id", userId)
           .single()

@@ -518,24 +518,28 @@ export async function getPropertyById(id: string) {
     return null
   }
 
-  // Load created and updated by user data (DB uses camelCase: createdById, updatedById, table "User")
+  // Load created and updated by user data
+  // The view "properties" may expose these as snake_case or camelCase depending on the view definition
   let createdBy = null
   let updatedBy = null
 
-  if (property.createdById) {
+  const createdById = (property as any).createdById ?? (property as any).created_by_id
+  const updatedById = (property as any).updatedById ?? (property as any).updated_by_id
+
+  if (createdById) {
     const { data: creator } = await supabase
-      .from("User")
+      .from("users")
       .select("id, name, email")
-      .eq("id", property.createdById)
+      .eq("id", createdById)
       .single()
     createdBy = creator
   }
 
-  if (property.updatedById) {
+  if (updatedById) {
     const { data: updater } = await supabase
-      .from("User")
+      .from("users")
       .select("id, name, email")
-      .eq("id", property.updatedById)
+      .eq("id", updatedById)
       .single()
     updatedBy = updater
   }
