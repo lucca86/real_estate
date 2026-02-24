@@ -166,15 +166,14 @@ export default async function PropertiesPage({
     return <div>Error al cargar propiedades</div>
   }
 
-  // Load updatedBy user data using the "users" table (snake_case)
+  // Load updatedBy user data (table uses snake_case: updated_by_id)
   const propertiesWithUsers = await Promise.all(
     (properties || []).map(async (property: any) => {
-      const userId = property.updatedById ?? property.updated_by_id
-      if (userId) {
+      if (property.updated_by_id) {
         const { data: user } = await supabase
           .from("users")
           .select("name")
-          .eq("id", userId)
+          .eq("id", property.updated_by_id)
           .single()
         return { ...property, updatedBy: user }
       }
