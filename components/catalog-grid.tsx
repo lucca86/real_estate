@@ -82,15 +82,16 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
     )
   }
 
-  // Load owner and updated by user data for each property
+  // Load updatedBy user data - DB uses camelCase: updatedById, table "User"
   const propertiesWithUsers = await Promise.all(
     properties.map(async (property: any) => {
       let updatedBy = null
-      if (property.updated_by_id) {
+      const userId = property.updatedById ?? property.updated_by_id
+      if (userId) {
         const { data: user } = await supabase
-          .from("users")
+          .from("User")
           .select("name")
-          .eq("id", property.updated_by_id)
+          .eq("id", userId)
           .single()
         updatedBy = user
       }
@@ -119,12 +120,6 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
       </div>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {propertiesWithUsers.map((property: any) => (
-          <CatalogPropertyCard key={property.id} property={property} />
-        ))}
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {properties.map((property) => (
           <CatalogPropertyCard key={property.id} property={property} />
         ))}
       </div>
