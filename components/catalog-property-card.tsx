@@ -250,15 +250,17 @@ export function CatalogPropertyCard({ property }: CatalogPropertyCardProps) {
             </div>
           )}
           {property.wordpress_url && (
-            <a
-              href={property.wordpress_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 hover:underline"
-              onClick={(e) => e.stopPropagation()}
+            <button
+              type="button"
+              className="text-left text-blue-600 hover:text-blue-800 hover:underline"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                window.open(property.wordpress_url!, "_blank", "noopener,noreferrer")
+              }}
             >
               WP ID: {property.wordpress_id} →
-            </a>
+            </button>
           )}
         </div>
       </div>

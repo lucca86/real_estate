@@ -526,6 +526,8 @@ export async function getPropertyById(id: string) {
   const createdById = (property as any).createdById ?? (property as any).created_by_id
   const updatedById = (property as any).updatedById ?? (property as any).updated_by_id
 
+  console.log("[v0] property user fields:", { createdById, updatedById, keys: Object.keys(property as any).filter(k => k.toLowerCase().includes("by") || k.toLowerCase().includes("user") || k.toLowerCase().includes("created") || k.toLowerCase().includes("updated")) })
+
   if (createdById) {
     const { data: creator } = await supabase
       .from("users")

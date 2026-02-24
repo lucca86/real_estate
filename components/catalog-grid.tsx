@@ -82,6 +82,13 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
     )
   }
 
+  // Log first property to debug field names
+  if (properties.length > 0) {
+    const first = properties[0] as any
+    console.log("[v0] catalog first property keys with 'by'/'user':", Object.keys(first).filter(k => k.toLowerCase().includes("by") || k.toLowerCase().includes("user")))
+    console.log("[v0] catalog updatedById:", first.updatedById, "| updated_by_id:", first.updated_by_id)
+  }
+
   // Load updatedBy user data using the "users" table (snake_case)
   const propertiesWithUsers = await Promise.all(
     properties.map(async (property: any) => {
