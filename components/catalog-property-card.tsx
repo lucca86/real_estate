@@ -252,7 +252,7 @@ export function CatalogPropertyCard({ property }: CatalogPropertyCardProps) {
           {property.wordpress_url && (
             <button
               type="button"
-              className="text-left text-blue-600 hover:text-blue-800 hover:underline"
+              className="text-left text-blue-600 hover:text-blue-800 hover:underline cursor-pointer bg-transparent border-0 p-0 font-inherit text-xs"
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
