@@ -1,4 +1,4 @@
-import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { getCurrentUser } from "@/lib/auth"
 import { headers } from "next/headers"
 
@@ -63,7 +63,7 @@ export async function logAudit(params: {
   metadata?: Record<string, any>
 }) {
   try {
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
     const user = await getCurrentUser()
     const headersList = await headers()
 
