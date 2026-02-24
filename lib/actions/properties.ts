@@ -8,6 +8,7 @@ import crypto from "crypto"
 import { revalidatePath } from "next/cache"
 import type { PropertyWithDetails } from "@/types"
 import type { ActionResult } from "@/types/action-result"
+import { logAudit } from "@/lib/audit"
 
 export async function createProperty(formData: FormData): Promise<ActionResult<PropertyWithDetails>> {
   console.log("[v0] createProperty called")
@@ -144,6 +145,8 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
       sync_to_wordpress: syncToWordPress,
       is_featured: isFeatured,
       internal_notes: formData.get("internalNotes") as string | null,
+      created_by_id: currentUser.id,
+      updated_by_id: currentUser.id,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
@@ -181,10 +184,15 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
       }
     }
 
-    console.log("[v0] About to revalidate and return")
+    await logAudit({
+      module: "properties",
+      action: "create",
+      entity_type: "Propiedad",
+      entity_id: newProperty.id,
+      metadata: { title: newProperty.title, status: newProperty.status },
+    })
     revalidatePath("/")
     revalidatePath("/properties")
-    console.log("[v0] Returning success")
     return { success: true, data: newProperty as PropertyWithDetails }
   } catch (error: any) {
     console.error("[v0] Error in createProperty:", error)
@@ -320,6 +328,7 @@ export async function updateProperty(propertyId: string, formData: FormData) {
     published,
     sync_to_wordpress: syncToWordPress,
     internal_notes: formData.get("internalNotes") as string | null,
+    updated_by_id: currentUser.id,
     updated_at: new Date().toISOString(),
   })
   .eq("id", propertyId)
@@ -392,6 +401,13 @@ export async function updateProperty(propertyId: string, formData: FormData) {
     }
   }
 
+  await logAudit({
+    module: "properties",
+    action: "update",
+    entity_type: "Propiedad",
+    entity_id: propertyId,
+    metadata: { title: (updatedProperty as any).title, status: (updatedProperty as any).status },
+  })
   revalidatePath("/properties")
   revalidatePath("/catalog")
   revalidatePath(`/properties/${propertyId}/edit`)
@@ -461,6 +477,12 @@ export async function deleteProperty(propertyId: string) {
       return { success: false, error: `Error deleting property: ${deleteError.message}` }
     }
 
+    await logAudit({
+      module: "properties",
+      action: "delete",
+      entity_type: "Propiedad",
+      entity_id: propertyId,
+    })
     revalidatePath("/")
     revalidatePath("/properties")
     revalidatePath("/dashboard")
@@ -512,11 +534,34 @@ export async function getPropertyById(id: string) {
   }
 
   if (!property) {
-    console.error("Property not found with id:", id)
     return null
   }
 
-  return property
+  // Load created_by and updated_by user data (table uses snake_case: created_by_id, updated_by_id)
+  let createdBy = null
+  let updatedBy = null
+
+  const p = property as any
+
+  if (p.created_by_id) {
+    const { data: creator } = await supabase
+      .from("users")
+      .select("id, name, email")
+      .eq("id", p.created_by_id)
+      .single()
+    createdBy = creator
+  }
+
+  if (p.updated_by_id) {
+    const { data: updater } = await supabase
+      .from("users")
+      .select("id, name, email")
+      .eq("id", p.updated_by_id)
+      .single()
+    updatedBy = updater
+  }
+
+  return { ...property, createdBy, updatedBy }
 }
 
 const parseArrayField = (value: any): string[] => {

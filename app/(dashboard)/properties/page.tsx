@@ -105,6 +105,7 @@ export default async function PropertiesPage({
       city:cities!city_id(name),
       province:provinces!province_id(name),
       wordpress_id,
+      wordpress_url,
       wordpress_synced_at
     `)
     .order("created_at", { ascending: false })
@@ -161,8 +162,27 @@ export default async function PropertiesPage({
   const { data: properties, error } = await query
 
   if (error) {
-    console.log("[v0] Error fetching properties:", error)
+    console.error("[v0] Error fetching properties:", error)
+    return <div>Error al cargar propiedades</div>
   }
+
+  // Load all updatedBy users in a single query to avoid N+1 and stack overflow
+  const userIds = [...new Set((properties || []).map((p: any) => p.updated_by_id).filter(Boolean))]
+  let usersMap: Record<string, { name: string }> = {}
+  if (userIds.length > 0) {
+    const { data: users } = await supabase
+      .from("users")
+      .select("id, name")
+      .in("id", userIds)
+    if (users) {
+      usersMap = Object.fromEntries(users.map((u) => [u.id, { name: u.name }]))
+    }
+  }
+
+  const propertiesWithUsers = (properties || []).map((property: any) => ({
+    ...property,
+    updatedBy: property.updated_by_id ? (usersMap[property.updated_by_id] ?? null) : null,
+  }))
 
   const totalPages = count ? Math.ceil(count / limit) : 0
 
@@ -197,7 +217,7 @@ export default async function PropertiesPage({
         </aside>
 
         <main className="flex-1 space-y-4 min-w-0">
-          <PropertiesTable properties={properties || []} currentUser={user} />
+          <PropertiesTable properties={propertiesWithUsers || []} currentUser={user} />
 
           {totalPages > 1 && (
             <PropertiesPagination

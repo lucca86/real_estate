@@ -27,6 +27,12 @@ interface Property {
   currency: string
   price_per_m2: number | null
   property_label: string | null
+  owner: { name: string; phone: string } | null
+  wordpress_id: number | null
+  wordpress_url: string | null
+  wordpress_synced_at: string | null
+  updated_at: string | null
+  updatedBy: { name: string } | null
 }
 
 interface CatalogPropertyCardProps {
@@ -212,6 +218,49 @@ export function CatalogPropertyCard({ property }: CatalogPropertyCardProps) {
           </span>
           {property.price_per_m2 && (
             <span className="ml-auto text-xs text-muted-foreground">${property.price_per_m2.toFixed(0)}/m²</span>
+          )}
+        </div>
+
+        {/* Owner and Update Info */}
+        <div className="flex flex-col gap-0.5 border-t border-border pt-2 text-xs text-muted-foreground">
+          {property.owner?.name && (
+            <div className="flex justify-between">
+              <span>Propietario:</span>
+              <span className="font-medium">{property.owner.name}</span>
+            </div>
+          )}
+          {property.updated_at && property.updatedBy?.name && (
+            <div className="flex justify-between">
+              <span>Actualizada por:</span>
+              <span className="font-medium">{property.updatedBy.name}</span>
+            </div>
+          )}
+          {property.wordpress_synced_at && property.wordpress_id && property.wordpress_id > 0 && (
+            <div className="flex justify-between text-green-600">
+              <span>Sincronizada:</span>
+              <span className="font-medium">
+                {new Date(property.wordpress_synced_at).toLocaleString("es-AR", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            </div>
+          )}
+          {property.wordpress_url && (
+            <button
+              type="button"
+              className="text-left text-blue-600 hover:text-blue-800 hover:underline cursor-pointer bg-transparent border-0 p-0 font-inherit text-xs"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                window.open(property.wordpress_url!, "_blank", "noopener,noreferrer")
+              }}
+            >
+              WP ID: {property.wordpress_id} →
+            </button>
           )}
         </div>
       </div>
