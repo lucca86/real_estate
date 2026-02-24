@@ -543,14 +543,6 @@ export async function getPropertyById(id: string) {
   return { ...property, createdBy, updatedBy }
 }
 
-  if (!property) {
-    console.error("Property not found with id:", id)
-    return null
-  }
-
-  return property
-}
-
 const parseArrayField = (value: any): string[] => {
   if (!value) return []
 
