@@ -166,20 +166,23 @@ export default async function PropertiesPage({
     return <div>Error al cargar propiedades</div>
   }
 
-  // Load updatedBy user data (table uses snake_case: updated_by_id)
-  const propertiesWithUsers = await Promise.all(
-    (properties || []).map(async (property: any) => {
-      if (property.updated_by_id) {
-        const { data: user } = await supabase
-          .from("users")
-          .select("name")
-          .eq("id", property.updated_by_id)
-          .single()
-        return { ...property, updatedBy: user }
-      }
-      return { ...property, updatedBy: null }
-    })
-  )
+  // Load all updatedBy users in a single query to avoid N+1 and stack overflow
+  const userIds = [...new Set((properties || []).map((p: any) => p.updated_by_id).filter(Boolean))]
+  let usersMap: Record<string, { name: string }> = {}
+  if (userIds.length > 0) {
+    const { data: users } = await supabase
+      .from("users")
+      .select("id, name")
+      .in("id", userIds)
+    if (users) {
+      usersMap = Object.fromEntries(users.map((u) => [u.id, { name: u.name }]))
+    }
+  }
+
+  const propertiesWithUsers = (properties || []).map((property: any) => ({
+    ...property,
+    updatedBy: property.updated_by_id ? (usersMap[property.updated_by_id] ?? null) : null,
+  }))
 
   const totalPages = count ? Math.ceil(count / limit) : 0
 
