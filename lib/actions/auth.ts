@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { compare } from "bcryptjs"
 import { cookies } from "next/headers"
 import { SignJWT } from "jose"
+import { logAudit } from "@/lib/audit"
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || "your-secret-key-change-this-in-production"
@@ -71,6 +72,13 @@ export async function signIn(formData: FormData) {
       path: "/",
     })
 
+    await logAudit({
+      module: "settings",
+      action: "login",
+      entity_type: "Sesión",
+      entity_id: user.id,
+      metadata: { email: user.email, role: user.role },
+    })
     return { success: true }
   } catch (error) {
     console.error("[v0] signIn error:", error)

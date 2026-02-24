@@ -8,6 +8,7 @@ import crypto from "crypto"
 import { revalidatePath } from "next/cache"
 import type { PropertyWithDetails } from "@/types"
 import type { ActionResult } from "@/types/action-result"
+import { logAudit } from "@/lib/audit"
 
 export async function createProperty(formData: FormData): Promise<ActionResult<PropertyWithDetails>> {
   console.log("[v0] createProperty called")
@@ -183,10 +184,15 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
       }
     }
 
-    console.log("[v0] About to revalidate and return")
+    await logAudit({
+      module: "properties",
+      action: "create",
+      entity_type: "Propiedad",
+      entity_id: newProperty.id,
+      metadata: { title: newProperty.title, status: newProperty.status },
+    })
     revalidatePath("/")
     revalidatePath("/properties")
-    console.log("[v0] Returning success")
     return { success: true, data: newProperty as PropertyWithDetails }
   } catch (error: any) {
     console.error("[v0] Error in createProperty:", error)
@@ -395,6 +401,13 @@ export async function updateProperty(propertyId: string, formData: FormData) {
     }
   }
 
+  await logAudit({
+    module: "properties",
+    action: "update",
+    entity_type: "Propiedad",
+    entity_id: propertyId,
+    metadata: { title: (updatedProperty as any).title, status: (updatedProperty as any).status },
+  })
   revalidatePath("/properties")
   revalidatePath("/catalog")
   revalidatePath(`/properties/${propertyId}/edit`)
@@ -464,6 +477,12 @@ export async function deleteProperty(propertyId: string) {
       return { success: false, error: `Error deleting property: ${deleteError.message}` }
     }
 
+    await logAudit({
+      module: "properties",
+      action: "delete",
+      entity_type: "Propiedad",
+      entity_id: propertyId,
+    })
     revalidatePath("/")
     revalidatePath("/properties")
     revalidatePath("/dashboard")

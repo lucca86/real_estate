@@ -5,6 +5,7 @@ import { hashPassword, getCurrentUser, hasPermission } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import { randomUUID } from "crypto"
 import { put } from "@vercel/blob"
+import { logAudit } from "@/lib/audit"
 
 export async function createUser(formData: FormData) {
   try {
@@ -71,6 +72,13 @@ export async function createUser(formData: FormData) {
       throw error
     }
 
+    await logAudit({
+      module: "users",
+      action: "create",
+      entity_type: "Usuario",
+      entity_id: newUser.id,
+      metadata: { name: newUser.name, email: newUser.email, role: newUser.role },
+    })
     revalidatePath("/users")
     return { success: true }
   } catch (error) {
@@ -136,6 +144,13 @@ export async function updateUser(userId: string, formData: FormData) {
 
     if (error) throw error
 
+    await logAudit({
+      module: "users",
+      action: "update",
+      entity_type: "Usuario",
+      entity_id: userId,
+      metadata: { name, email, role },
+    })
     revalidatePath("/users")
     revalidatePath(`/users/${userId}/edit`)
     return { success: true }
@@ -179,6 +194,12 @@ export async function deleteUser(userId: string) {
       throw error
     }
 
+    await logAudit({
+      module: "users",
+      action: "delete",
+      entity_type: "Usuario",
+      entity_id: userId,
+    })
     revalidatePath("/users")
     return { success: true, wasDeactivated: false }
   } catch (error: any) {
