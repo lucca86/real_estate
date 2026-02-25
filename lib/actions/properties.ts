@@ -422,7 +422,7 @@ export async function deleteProperty(propertyId: string) {
     return { success: false, error: "No estás autenticado" }
   }
 
-  if (currentUser.role !== "ADMIN" && currentUser.role !== "SUPERVISOR") {
+  if (currentUser.role !== "ADMIN" && currentUser.role !== "SUPERVISOR" && currentUser.role !== "VENDEDOR") {
     return { success: false, error: "No tienes permisos para eliminar esta propiedad" }
   }
 
@@ -437,6 +437,15 @@ export async function deleteProperty(propertyId: string) {
 
     if (fetchError || !property) {
       return { success: false, error: "Propiedad no encontrada" }
+    }
+
+    // In restricted mode, VENDEDOR can only delete their own properties
+    if (currentUser.role === "VENDEDOR") {
+      const { getPropertyEditMode } = await import("@/lib/actions/system-settings")
+      const editMode = await getPropertyEditMode()
+      if (editMode === "restricted" && property.created_by_id && property.created_by_id !== currentUser.id) {
+        return { success: false, error: "Solo puedes eliminar propiedades que hayas creado" }
+      }
     }
 
     // Delete from WordPress first if synced

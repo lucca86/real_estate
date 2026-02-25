@@ -7,6 +7,7 @@ import { ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { getPropertyById } from "@/lib/actions/properties"
+import { getPropertyEditMode } from "@/lib/actions/system-settings"
 
 type TransactionType = "VENTA" | "ALQUILER" | "VENTA_ALQUILER" | "ALQUILER_OPCION_COMPRA"
 
@@ -28,9 +29,13 @@ export default async function EditPropertyPage({
     notFound()
   }
 
-  // VENDEDOR can only edit properties they created or properties without a creator assigned
-  if (user.role === "VENDEDOR" && propertyData.created_by_id && propertyData.created_by_id !== user.id) {
-    redirect("/properties")
+  // Apply property_edit_mode setting: in "restricted" mode, VENDEDOR can only edit their own properties
+  // ADMIN and SUPERVISOR can always edit any property
+  if (user.role === "VENDEDOR") {
+    const editMode = await getPropertyEditMode()
+    if (editMode === "restricted" && propertyData.created_by_id && propertyData.created_by_id !== user.id) {
+      redirect("/properties")
+    }
   }
 
   const property = {
