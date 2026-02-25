@@ -7,6 +7,7 @@ import { ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { getPropertyById } from "@/lib/actions/properties"
+import { getPropertyEditMode } from "@/lib/actions/system-settings"
 
 type TransactionType = "VENTA" | "ALQUILER" | "VENTA_ALQUILER" | "ALQUILER_OPCION_COMPRA"
 
@@ -28,26 +29,21 @@ export default async function EditPropertyPage({
     notFound()
   }
 
-  if (propertyData.created_by_id && propertyData.created_by_id !== user.id && user.role === "VENDEDOR") {
-    redirect("/properties")
+  // Apply property_edit_mode setting: in "restricted" mode, VENDEDOR can only edit their own properties
+  // ADMIN and SUPERVISOR can always edit any property
+  if (user.role === "VENDEDOR") {
+    const editMode = await getPropertyEditMode()
+    if (editMode === "restricted" && propertyData.created_by_id && propertyData.created_by_id !== user.id) {
+      redirect("/properties")
+    }
   }
 
   const property = {
     id: propertyData.id,
     title: propertyData.title,
     description: propertyData.description,
-    ownerId: propertyData.owner_id,
-    owner: propertyData.owner ? { id: propertyData.owner.id, name: propertyData.owner.name } : undefined,
-    propertyTypeId: propertyData.property_type_id,
     status: propertyData.status,
     address: propertyData.address,
-    city: propertyData.city?.name || "",
-    country: propertyData.country?.name || "",
-    state: propertyData.province?.name || "",
-    countryId: propertyData.country_id,
-    provinceId: propertyData.province_id,
-    cityId: propertyData.city_id,
-    neighborhoodId: propertyData.neighborhood_id,
     latitude: propertyData.latitude,
     longitude: propertyData.longitude,
     bedrooms: propertyData.bedrooms,
@@ -84,6 +80,9 @@ export default async function EditPropertyPage({
     updatedAt: new Date(propertyData.updated_at),
   }
 
+  const imagesToSync = (propertyData.images || []).filter((img: any) => img.syncToWordPress === true)
+  const hasImagesToSync = imagesToSync.length > 0
+
   return (
     <div className="space-y-6">
       <div>
@@ -106,6 +105,7 @@ export default async function EditPropertyPage({
             propertyId={property.id}
             wordpressId={property.wordpressId}
             syncedAt={property.syncedAt}
+            hasImagesToSync={hasImagesToSync}
           />
         </CardContent>
       </Card>

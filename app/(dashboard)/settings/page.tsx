@@ -7,6 +7,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Info, MapPin, Shield, Activity, Calendar } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { PropertyEditModeCard } from "@/components/property-edit-mode-card"
+import { getPropertyEditMode } from "@/lib/actions/system-settings"
 
 export default async function SettingsPage() {
   const user = await getCurrentUser()
@@ -25,12 +27,17 @@ export default async function SettingsPage() {
     process.env.WORDPRESS_APP_PASSWORD
   )
 
+  const propertyEditMode = await getPropertyEditMode()
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-balance">Configuración</h1>
         <p className="text-muted-foreground">Administra la configuración del sistema</p>
       </div>
+
+      {/* Property edit mode */}
+      <PropertyEditModeCard currentMode={propertyEditMode} />
 
       {/* Appointments Settings card */}
       <Card>
