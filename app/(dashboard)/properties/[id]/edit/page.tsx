@@ -28,7 +28,8 @@ export default async function EditPropertyPage({
     notFound()
   }
 
-  if (propertyData.created_by_id && propertyData.created_by_id !== user.id && user.role === "VENDEDOR") {
+  // VENDEDOR can only edit properties they created or properties without a creator assigned
+  if (user.role === "VENDEDOR" && propertyData.created_by_id && propertyData.created_by_id !== user.id) {
     redirect("/properties")
   }
 
