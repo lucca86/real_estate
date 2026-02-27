@@ -51,7 +51,6 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
   const [bathrooms, setBathrooms] = useState(searchParams.get("bathrooms") || "Cualquiera")
   const [activeOnly, setActiveOnly] = useState(initialActiveOnly)
   const [syncedOnly, setSyncedOnly] = useState(searchParams.get("syncedOnly") === "true")
-  const [createdBy, setCreatedBy] = useState(searchParams.get("createdBy") ?? "all")
   const [updatedBy, setUpdatedBy] = useState(searchParams.get("updatedBy") ?? "all")
 
   const [cities, setCities] = useState<City[]>([])
@@ -116,7 +115,6 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
     if (bathrooms !== "Cualquiera") params.set("bathrooms", bathrooms)
     if (!activeOnly) params.set("activeOnly", "false")
     if (syncedOnly) params.set("syncedOnly", "true")
-    if (createdBy && createdBy !== "all") params.set("createdBy", createdBy)
     if (updatedBy && updatedBy !== "all") params.set("updatedBy", updatedBy)
 
     router.push(`/properties?${params.toString()}`)
@@ -135,7 +133,6 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
     setBathrooms("Cualquiera")
     setActiveOnly(true)
     setSyncedOnly(false)
-    setCreatedBy("all")
     setUpdatedBy("all")
     router.push("/properties")
   }
@@ -336,24 +333,7 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="createdBy">Creada por</Label>
-          <Select value={createdBy} onValueChange={setCreatedBy}>
-            <SelectTrigger>
-              <SelectValue placeholder="Todos los usuarios" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los usuarios</SelectItem>
-              {users.map((u) => (
-                <SelectItem key={u.id} value={u.id}>
-                  {u.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="updatedBy">Modificada por</Label>
+          <Label htmlFor="updatedBy">Actualizada por</Label>
           <Select value={updatedBy} onValueChange={setUpdatedBy}>
             <SelectTrigger>
               <SelectValue placeholder="Todos los usuarios" />
