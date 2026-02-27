@@ -20,7 +20,8 @@ export async function getDashboardStats() {
     const { count: upcomingAppointments } = await supabase
       .from("appointments")
       .select("*", { count: "exact", head: true })
-      .gte("date", new Date().toISOString())
+      .gte("scheduled_date", new Date().toISOString())
+      .not("status", "eq", "CANCELADA")
 
     const { data: propertiesByType } = await supabase.from("properties").select(`
         property_type_id,
@@ -55,7 +56,6 @@ export async function getDashboardStats() {
         id,
         title,
         price,
-        currency,
         created_at,
         property_types(name),
         cities(name)
@@ -68,10 +68,9 @@ export async function getDashboardStats() {
         id: prop.id,
         title: prop.title,
         price: prop.price,
-        currency: prop.currency,
         created_at: prop.created_at,
-        property_types: prop.property_types,
-        cities: prop.cities,
+        property_types: prop.property_types?.[0] || null,
+        cities: prop.cities?.[0] || null,
       })) || []
 
     const chartData = {

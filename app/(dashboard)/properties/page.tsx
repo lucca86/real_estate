@@ -37,6 +37,7 @@ export default async function PropertiesPage({
   const bathrooms = params.bathrooms as string
   const activeOnly = params.activeOnly !== "false"
   const syncedOnly = params.syncedOnly === "true"
+  const updatedBy = params.updatedBy as string
 
   const page = params.page ? Number.parseInt(params.page as string) : 1
   const limit = params.limit ? Number.parseInt(params.limit as string) : 12
@@ -92,6 +93,10 @@ export default async function PropertiesPage({
 
   if (syncedOnly) {
     countQuery = countQuery.not("wordpress_id", "is", null)
+  }
+
+  if (updatedBy) {
+    countQuery = countQuery.eq("updated_by_id", updatedBy)
   }
 
   const { count } = await countQuery
@@ -157,6 +162,10 @@ export default async function PropertiesPage({
 
   if (syncedOnly) {
     query = query.not("wordpress_id", "is", null)
+  }
+
+  if (updatedBy) {
+    query = query.eq("updated_by_id", updatedBy)
   }
 
   const { data: properties, error } = await query
