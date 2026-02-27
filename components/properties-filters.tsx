@@ -29,6 +29,12 @@ interface PropertyType {
   is_active: boolean
 }
 
+interface User {
+  id: string
+  name: string
+  role: string
+}
+
 export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { activeOnly?: boolean }) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -45,17 +51,20 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
   const [bathrooms, setBathrooms] = useState(searchParams.get("bathrooms") || "Cualquiera")
   const [activeOnly, setActiveOnly] = useState(initialActiveOnly)
   const [syncedOnly, setSyncedOnly] = useState(searchParams.get("syncedOnly") === "true")
+  const [createdBy, setCreatedBy] = useState(searchParams.get("createdBy") ?? "all")
+  const [updatedBy, setUpdatedBy] = useState(searchParams.get("updatedBy") ?? "all")
 
   const [cities, setCities] = useState<City[]>([])
   const [neighborhoods, setNeighborhoods] = useState<Neighborhood[]>([])
   const [filteredNeighborhoods, setFilteredNeighborhoods] = useState<Neighborhood[]>([])
   const [propertyTypes, setPropertyTypes] = useState<PropertyType[]>([])
+  const [users, setUsers] = useState<User[]>([])
 
   useEffect(() => {
     const loadData = async () => {
       const supabase = createBrowserClient()
 
-      const { data: propertyTypesData, error: typesError } = await supabase
+      const { data: propertyTypesData } = await supabase
         .from("property_types")
         .select("id, name, is_active")
         .eq("is_active", true)
@@ -65,11 +74,15 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
 
       const { data: neighborhoodsData } = await supabase.from("neighborhoods").select("id, name, city_id").order("name")
 
-      if (propertyTypesData) {
-        setPropertyTypes(propertyTypesData)
-      }
+      const { data: usersData } = await supabase
+        .from("users")
+        .select("id, name, role")
+        .order("name")
+
+      if (propertyTypesData) setPropertyTypes(propertyTypesData)
       if (citiesData) setCities(citiesData)
       if (neighborhoodsData) setNeighborhoods(neighborhoodsData)
+      if (usersData) setUsers(usersData)
     }
 
     loadData()
@@ -103,6 +116,8 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
     if (bathrooms !== "Cualquiera") params.set("bathrooms", bathrooms)
     if (!activeOnly) params.set("activeOnly", "false")
     if (syncedOnly) params.set("syncedOnly", "true")
+    if (createdBy && createdBy !== "all") params.set("createdBy", createdBy)
+    if (updatedBy && updatedBy !== "all") params.set("updatedBy", updatedBy)
 
     router.push(`/properties?${params.toString()}`)
   }
@@ -120,6 +135,8 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
     setBathrooms("Cualquiera")
     setActiveOnly(true)
     setSyncedOnly(false)
+    setCreatedBy("all")
+    setUpdatedBy("all")
     router.push("/properties")
   }
 
@@ -314,6 +331,40 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
               <SelectItem value="2">2+</SelectItem>
               <SelectItem value="3">3+</SelectItem>
               <SelectItem value="4">4+</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="createdBy">Creada por</Label>
+          <Select value={createdBy} onValueChange={setCreatedBy}>
+            <SelectTrigger>
+              <SelectValue placeholder="Todos los usuarios" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los usuarios</SelectItem>
+              {users.map((u) => (
+                <SelectItem key={u.id} value={u.id}>
+                  {u.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="updatedBy">Modificada por</Label>
+          <Select value={updatedBy} onValueChange={setUpdatedBy}>
+            <SelectTrigger>
+              <SelectValue placeholder="Todos los usuarios" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los usuarios</SelectItem>
+              {users.map((u) => (
+                <SelectItem key={u.id} value={u.id}>
+                  {u.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
