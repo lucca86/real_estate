@@ -80,8 +80,14 @@ export default async function EditPropertyPage({
     updatedAt: new Date(propertyData.updated_at),
   }
 
-  const imagesToSync = (propertyData.images || []).filter((img: any) => img.syncToWordPress === true)
-  const hasImagesToSync = imagesToSync.length > 0
+  // images are stored as text[] where each element is a JSON string — must parse before accessing fields
+  const parsedImages = (propertyData.images || []).map((img: any) => {
+    if (typeof img === "string") {
+      try { return JSON.parse(img) } catch { return {} }
+    }
+    return img
+  })
+  const hasImagesToSync = parsedImages.some((img: any) => img.syncToWordPress === true)
 
   return (
     <div className="space-y-6">
