@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Pie, PieChart, Cell } from "recharts"
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Pie, PieChart, Cell, LabelList } from "recharts"
 
 const COLORS = [
   "#3b82f6", // blue-500
@@ -23,6 +23,7 @@ const TRANSACTION_COLORS = {
 interface DashboardChartsProps {
   propertyTypes: { name: string; count: number }[]
   transactionTypes: { name: string; count: number }[]
+  agentRanking: { name: string; count: number }[]
 }
 
 const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }: any) => {
@@ -61,7 +62,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null
 }
 
-export function DashboardCharts({ propertyTypes, transactionTypes }: DashboardChartsProps) {
+export function DashboardCharts({ propertyTypes, transactionTypes, agentRanking }: DashboardChartsProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {/* Property Types Chart */}
@@ -151,6 +152,51 @@ export function DashboardCharts({ propertyTypes, transactionTypes }: DashboardCh
           ) : (
             <div className="flex h-[300px] items-center justify-center text-muted-foreground">
               No hay datos disponibles
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      {/* Agent Ranking Chart - full width */}
+      <Card className="md:col-span-2">
+        <CardHeader>
+          <CardTitle>Ranking de Agentes por Propiedades Creadas</CardTitle>
+          <CardDescription>Agentes ordenados de mayor a menor cantidad de propiedades creadas</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {agentRanking.length > 0 ? (
+            <ResponsiveContainer width="100%" height={Math.max(agentRanking.length * 56, 220)}>
+              <BarChart
+                layout="vertical"
+                data={agentRanking}
+                margin={{ top: 4, right: 48, left: 4, bottom: 4 }}
+              >
+                <XAxis type="number" hide />
+                <YAxis type="category" dataKey="name" hide />
+                <Bar dataKey="count" radius={[0, 6, 6, 0]} maxBarSize={40}>
+                  {/* Agent name inside the bar, left aligned */}
+                  <LabelList
+                    dataKey="name"
+                    position="insideLeft"
+                    style={{ fill: "#fff", fontSize: 13, fontWeight: 600 }}
+                    offset={12}
+                  />
+                  {/* Count outside the bar, right aligned */}
+                  <LabelList
+                    dataKey="count"
+                    position="right"
+                    formatter={(v: number) => `${v} prop.`}
+                    style={{ fill: "#a1a1aa", fontSize: 13, fontWeight: 700 }}
+                    offset={8}
+                  />
+                  {agentRanking.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-[200px] items-center justify-center text-muted-foreground">
+              No hay datos disponibles. Las propiedades creadas desde ahora registrarán el agente responsable.
             </div>
           )}
         </CardContent>
