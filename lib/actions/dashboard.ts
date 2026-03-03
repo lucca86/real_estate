@@ -83,6 +83,7 @@ export async function getDashboardStats() {
         id,
         title,
         price,
+        currency,
         created_at,
         property_types(name),
         cities(name)
@@ -95,6 +96,7 @@ export async function getDashboardStats() {
         id: prop.id,
         title: prop.title,
         price: prop.price,
+        currency: prop.currency,
         created_at: prop.created_at,
         property_types: prop.property_types?.[0] || null,
         cities: prop.cities?.[0] || null,
