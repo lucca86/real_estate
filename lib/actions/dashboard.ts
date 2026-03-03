@@ -50,6 +50,33 @@ export async function getDashboardStats() {
       return acc
     }, {})
 
+    // Ranking of agents by properties created
+    const { data: propertiesByAgent } = await supabase
+      .from("properties")
+      .select("created_by_id")
+      .not("created_by_id", "is", null)
+
+    const agentIdCounts: Record<string, number> = {}
+    propertiesByAgent?.forEach((p: any) => {
+      if (p.created_by_id) {
+        agentIdCounts[p.created_by_id] = (agentIdCounts[p.created_by_id] || 0) + 1
+      }
+    })
+
+    const agentIds = Object.keys(agentIdCounts)
+    let agentRanking: { name: string; count: number }[] = []
+
+    if (agentIds.length > 0) {
+      const { data: agentUsers } = await supabase
+        .from("users")
+        .select("id, name")
+        .in("id", agentIds)
+
+      agentRanking = (agentUsers || [])
+        .map((u: any) => ({ name: u.name, count: agentIdCounts[u.id] || 0 }))
+        .sort((a, b) => b.count - a.count)
+    }
+
     const { data: recentProperties } = await supabase
       .from("properties")
       .select(`
@@ -82,6 +109,7 @@ export async function getDashboardStats() {
         name,
         count,
       })),
+      agentRanking,
     }
 
     return {
@@ -108,6 +136,7 @@ export async function getDashboardStats() {
       charts: {
         propertyTypes: [],
         transactionTypes: [],
+        agentRanking: [],
       },
       recentProperties: [],
     }

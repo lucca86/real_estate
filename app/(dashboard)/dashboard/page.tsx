@@ -94,6 +94,7 @@ export default async function DashboardPage() {
       <DashboardCharts
         propertyTypes={dashboardData.charts.propertyTypes}
         transactionTypes={dashboardData.charts.transactionTypes}
+        agentRanking={dashboardData.charts.agentRanking}
       />
 
       <RecentProperties properties={dashboardData.recentProperties} />

@@ -23,6 +23,7 @@ const TRANSACTION_COLORS = {
 interface DashboardChartsProps {
   propertyTypes: { name: string; count: number }[]
   transactionTypes: { name: string; count: number }[]
+  agentRanking: { name: string; count: number }[]
 }
 
 const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }: any) => {
@@ -61,7 +62,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null
 }
 
-export function DashboardCharts({ propertyTypes, transactionTypes }: DashboardChartsProps) {
+export function DashboardCharts({ propertyTypes, transactionTypes, agentRanking }: DashboardChartsProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {/* Property Types Chart */}
@@ -151,6 +152,58 @@ export function DashboardCharts({ propertyTypes, transactionTypes }: DashboardCh
           ) : (
             <div className="flex h-[300px] items-center justify-center text-muted-foreground">
               No hay datos disponibles
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      {/* Agent Ranking Chart - full width */}
+      <Card className="md:col-span-2">
+        <CardHeader>
+          <CardTitle>Ranking de Agentes por Propiedades Creadas</CardTitle>
+          <CardDescription>Agentes ordenados de mayor a menor cantidad de propiedades creadas</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {agentRanking.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={agentRanking} margin={{ top: 5, right: 20, left: 0, bottom: 60 }}>
+                <XAxis
+                  dataKey="name"
+                  angle={-30}
+                  textAnchor="end"
+                  height={80}
+                  tick={{ fill: "hsl(var(--foreground))", fontSize: 12 }}
+                  interval={0}
+                />
+                <YAxis
+                  allowDecimals={false}
+                  tick={{ fill: "hsl(var(--foreground))" }}
+                  label={{ value: "Propiedades", angle: -90, position: "insideLeft", offset: 10, fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="rounded-lg border bg-background p-2 shadow-md">
+                          <p className="font-semibold">{payload[0].payload.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {payload[0].value} {payload[0].value === 1 ? "propiedad creada" : "propiedades creadas"}
+                          </p>
+                        </div>
+                      )
+                    }
+                    return null
+                  }}
+                />
+                <Bar dataKey="count" radius={[8, 8, 0, 0]} maxBarSize={60}>
+                  {agentRanking.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex h-[300px] items-center justify-center text-muted-foreground">
+              No hay datos disponibles. Las propiedades creadas desde ahora registrarán el agente responsable.
             </div>
           )}
         </CardContent>
