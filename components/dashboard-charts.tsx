@@ -185,7 +185,7 @@ export function DashboardCharts({ propertyTypes, transactionTypes, agentRanking 
                     dataKey="count"
                     position="right"
                     formatter={(v: number) => `${v} prop.`}
-                    style={{ fill: "hsl(var(--foreground))", fontSize: 13, fontWeight: 700 }}
+                    style={{ fill: "#a1a1aa", fontSize: 13, fontWeight: 700 }}
                     offset={8}
                   />
                   {agentRanking.map((entry, index) => (
