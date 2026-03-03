@@ -164,48 +164,29 @@ export function DashboardCharts({ propertyTypes, transactionTypes, agentRanking 
         </CardHeader>
         <CardContent>
           {agentRanking.length > 0 ? (
-            <ResponsiveContainer width="100%" height={Math.max(agentRanking.length * 52, 200)}>
+            <ResponsiveContainer width="100%" height={Math.max(agentRanking.length * 56, 220)}>
               <BarChart
                 layout="vertical"
                 data={agentRanking}
-                margin={{ top: 4, right: 60, left: 8, bottom: 4 }}
+                margin={{ top: 4, right: 48, left: 4, bottom: 4 }}
               >
-                <XAxis
-                  type="number"
-                  allowDecimals={false}
-                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  width={160}
-                  tick={{ fill: "hsl(var(--foreground))", fontSize: 13, fontWeight: 500 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }}
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="rounded-lg border bg-background p-2 shadow-md">
-                          <p className="font-semibold">{payload[0].payload.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {payload[0].value} {payload[0].value === 1 ? "propiedad creada" : "propiedades creadas"}
-                          </p>
-                        </div>
-                      )
-                    }
-                    return null
-                  }}
-                />
-                <Bar dataKey="count" radius={[0, 6, 6, 0]} maxBarSize={36}>
+                <XAxis type="number" hide />
+                <YAxis type="category" dataKey="name" hide />
+                <Bar dataKey="count" radius={[0, 6, 6, 0]} maxBarSize={40}>
+                  {/* Agent name inside the bar, left aligned */}
+                  <LabelList
+                    dataKey="name"
+                    position="insideLeft"
+                    style={{ fill: "#fff", fontSize: 13, fontWeight: 600 }}
+                    offset={12}
+                  />
+                  {/* Count outside the bar, right aligned */}
                   <LabelList
                     dataKey="count"
                     position="right"
-                    style={{ fill: "hsl(var(--foreground))", fontSize: 13, fontWeight: 600 }}
+                    formatter={(v: number) => `${v} prop.`}
+                    style={{ fill: "hsl(var(--foreground))", fontSize: 13, fontWeight: 700 }}
+                    offset={8}
                   />
                   {agentRanking.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
