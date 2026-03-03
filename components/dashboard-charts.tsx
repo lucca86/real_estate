@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Pie, PieChart, Cell } from "recharts"
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Pie, PieChart, Cell, LabelList } from "recharts"
 
 const COLORS = [
   "#3b82f6", // blue-500
@@ -164,22 +164,29 @@ export function DashboardCharts({ propertyTypes, transactionTypes, agentRanking 
         </CardHeader>
         <CardContent>
           {agentRanking.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={agentRanking} margin={{ top: 5, right: 20, left: 0, bottom: 60 }}>
+            <ResponsiveContainer width="100%" height={Math.max(agentRanking.length * 52, 200)}>
+              <BarChart
+                layout="vertical"
+                data={agentRanking}
+                margin={{ top: 4, right: 60, left: 8, bottom: 4 }}
+              >
                 <XAxis
-                  dataKey="name"
-                  angle={-30}
-                  textAnchor="end"
-                  height={80}
-                  tick={{ fill: "hsl(var(--foreground))", fontSize: 12 }}
-                  interval={0}
+                  type="number"
+                  allowDecimals={false}
+                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
                 />
                 <YAxis
-                  allowDecimals={false}
-                  tick={{ fill: "hsl(var(--foreground))" }}
-                  label={{ value: "Propiedades", angle: -90, position: "insideLeft", offset: 10, fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                  type="category"
+                  dataKey="name"
+                  width={160}
+                  tick={{ fill: "hsl(var(--foreground))", fontSize: 13, fontWeight: 500 }}
+                  axisLine={false}
+                  tickLine={false}
                 />
                 <Tooltip
+                  cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }}
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       return (
@@ -194,7 +201,12 @@ export function DashboardCharts({ propertyTypes, transactionTypes, agentRanking 
                     return null
                   }}
                 />
-                <Bar dataKey="count" radius={[8, 8, 0, 0]} maxBarSize={60}>
+                <Bar dataKey="count" radius={[0, 6, 6, 0]} maxBarSize={36}>
+                  <LabelList
+                    dataKey="count"
+                    position="right"
+                    style={{ fill: "hsl(var(--foreground))", fontSize: 13, fontWeight: 600 }}
+                  />
                   {agentRanking.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
@@ -202,7 +214,7 @@ export function DashboardCharts({ propertyTypes, transactionTypes, agentRanking 
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex h-[300px] items-center justify-center text-muted-foreground">
+            <div className="flex h-[200px] items-center justify-center text-muted-foreground">
               No hay datos disponibles. Las propiedades creadas desde ahora registrarán el agente responsable.
             </div>
           )}
