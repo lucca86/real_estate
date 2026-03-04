@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/lib/auth"
+import { getCurrentUser, checkPermission } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { PropertiesTable } from "@/components/properties-table"
 import { PropertiesFilters } from "@/components/properties-filters"
@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Plus, FileText } from "lucide-react"
 import Link from "next/link"
 import { createAdminClient } from "@/lib/supabase/server"
-import { getUserPermissions } from "@/lib/permissions"
 import { PropertiesPagination } from "@/components/properties-pagination"
 
 export default async function PropertiesPage({
@@ -20,9 +19,10 @@ export default async function PropertiesPage({
     redirect("/login")
   }
 
-  const permissions = await getUserPermissions(user.id)
-  const canCreate = Boolean(permissions["properties.create"])
-  const canDelete = Boolean(permissions["properties.delete"])
+  const [canCreate, canDelete] = await Promise.all([
+    checkPermission("properties.create"),
+    checkPermission("properties.delete"),
+  ])
 
   const params = await searchParams
 

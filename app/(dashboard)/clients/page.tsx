@@ -2,11 +2,10 @@ import Link from "next/link"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { getClients, getAgents } from "@/lib/actions/clients"
-import { getCurrentUser } from "@/lib/auth"
+import { getCurrentUser, checkPermission } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { ClientsTable } from "@/components/clients-table"
 import { Suspense } from "react"
-import { getUserPermissions } from "@/lib/permissions"
 
 export default async function ClientsPage() {
   const user = await getCurrentUser()
@@ -15,8 +14,7 @@ export default async function ClientsPage() {
     redirect("/login")
   }
 
-  const permissions = await getUserPermissions(user.id)
-  const canManage = permissions["clients.manage"]
+  const canManage = await checkPermission("clients.manage")
 
   const [clientsResult, agentsResult] = await Promise.all([
     getClients(),
