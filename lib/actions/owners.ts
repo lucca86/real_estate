@@ -54,12 +54,37 @@ export async function getOwners() {
           .select("*", { count: "exact", head: true })
           .eq("owner_id", owner.id)
 
+        const city = Array.isArray(owner.city) ? owner.city[0] : owner.city
+        const province = Array.isArray(owner.province) ? owner.province[0] : owner.province
+        const country = Array.isArray(owner.country) ? owner.country[0] : owner.country
+
+        // Build an explicit plain object — avoids circular reference errors
+        // when Next.js serializes the RSC payload (spread of Supabase rows can
+        // include non-serializable internal references)
         return {
-          ...owner,
-          isActive: owner.is_active,
-          city: Array.isArray(owner.city) ? owner.city[0] : owner.city,
-          province: Array.isArray(owner.province) ? owner.province[0] : owner.province,
-          country: Array.isArray(owner.country) ? owner.country[0] : owner.country,
+          id: owner.id,
+          name: owner.name ?? "",
+          first_name: owner.first_name ?? "",
+          last_name: owner.last_name ?? "",
+          owner_type: owner.owner_type ?? "Propietario",
+          real_estate_agency: owner.real_estate_agency ?? null,
+          email: owner.email ?? null,
+          phone: owner.phone ?? "",
+          secondary_phone: owner.secondary_phone ?? null,
+          address: owner.address ?? null,
+          city_id: owner.city_id ?? null,
+          province_id: owner.province_id ?? null,
+          country_id: owner.country_id ?? null,
+          id_number: owner.id_number ?? null,
+          tax_id: owner.tax_id ?? null,
+          notes: owner.notes ?? null,
+          is_active: owner.is_active ?? true,
+          isActive: owner.is_active ?? true,
+          created_at: owner.created_at ?? null,
+          updated_at: owner.updated_at ?? null,
+          city: city ? { id: city.id, name: city.name } : null,
+          province: province ? { id: province.id, name: province.name } : null,
+          country: country ? { id: country.id, name: country.name } : null,
           _count: {
             properties: count || 0,
           },
