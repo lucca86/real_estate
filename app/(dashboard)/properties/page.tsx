@@ -21,7 +21,8 @@ export default async function PropertiesPage({
   }
 
   const permissions = await getUserPermissions(user.id)
-  const canCreate = permissions["properties.create"]
+  const canCreate = Boolean(permissions["properties.create"])
+  const canDelete = Boolean(permissions["properties.delete"])
 
   const params = await searchParams
 
@@ -226,7 +227,7 @@ export default async function PropertiesPage({
         </aside>
 
         <main className="flex-1 space-y-4 min-w-0">
-          <PropertiesTable properties={propertiesWithUsers || []} currentUser={user} />
+              <PropertiesTable properties={propertiesWithUsers || []} currentUser={user} canDelete={canDelete} />
 
           {totalPages > 1 && (
             <PropertiesPagination

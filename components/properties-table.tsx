@@ -38,6 +38,7 @@ interface Property {
 interface PropertiesTableProps {
   properties: Property[]
   currentUser: SessionUser
+  canDelete?: boolean
 }
 
 const statusColors: Record<string, string> = {
@@ -77,7 +78,7 @@ const currencyLabels: Record<string, string> = {
   ARS: "Pesos",
 }
 
-function PropertyCard({ property, currentUser }: { property: Property; currentUser: SessionUser }) {
+function PropertyCard({ property, currentUser, canDelete }: { property: Property; currentUser: SessionUser; canDelete?: boolean }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
   const propertyImages = Array.isArray(property.images) ? property.images : []
@@ -236,7 +237,7 @@ function PropertyCard({ property, currentUser }: { property: Property; currentUs
                 <span className="sr-only">Editar</span>
               </Link>
             </Button>
-            {(currentUser.role === "ADMIN" || property.ownerId === currentUser.id) && (
+            {canDelete && (
               <DeletePropertyButton propertyId={property.id} propertyTitle={property.title} />
             )}
           </div>
@@ -246,7 +247,7 @@ function PropertyCard({ property, currentUser }: { property: Property; currentUs
   )
 }
 
-export function PropertiesTable({ properties, currentUser }: PropertiesTableProps) {
+export function PropertiesTable({ properties, currentUser, canDelete = false }: PropertiesTableProps) {
   return (
     <Card>
       <CardContent className="p-4 sm:p-6">
@@ -265,7 +266,7 @@ export function PropertiesTable({ properties, currentUser }: PropertiesTableProp
         ) : (
           <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {properties.map((property) => (
-              <PropertyCard key={property.id} property={property} currentUser={currentUser} />
+              <PropertyCard key={property.id} property={property} currentUser={currentUser} canDelete={canDelete} />
             ))}
           </div>
         )}
