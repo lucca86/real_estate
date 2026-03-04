@@ -1,7 +1,6 @@
-import { getCurrentUser } from "@/lib/auth"
+import { getCurrentUser, checkPermission } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { getOwners } from "@/lib/actions/owners"
-import { getUserPermissions } from "@/lib/permissions"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import Link from "next/link"
@@ -15,8 +14,7 @@ export default async function OwnersPage() {
     redirect("/login")
   }
 
-  const permissions = await getUserPermissions(user.id)
-  const canCreate = permissions["owners.manage"]
+  const canCreate = await checkPermission("owners.manage")
 
   const result = await getOwners()
 

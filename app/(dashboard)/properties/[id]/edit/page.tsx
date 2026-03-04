@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/lib/auth"
+import { getCurrentUser, checkPermission } from "@/lib/auth"
 import { redirect, notFound } from "next/navigation"
 import { PropertyForm } from "@/components/property-form"
 import { WordPressSyncButton } from "@/components/wordpress-sync-button"
@@ -37,6 +37,8 @@ export default async function EditPropertyPage({
       redirect("/properties")
     }
   }
+
+  const canDeleteImages = await checkPermission("images.delete")
 
   const property = {
     id: propertyData.id,
@@ -116,7 +118,7 @@ export default async function EditPropertyPage({
         </CardContent>
       </Card>
 
-      <PropertyForm editProperty={property} />
+                <PropertyForm editProperty={property} canDeleteImages={canDeleteImages} />
     </div>
   )
 }
