@@ -28,6 +28,17 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     ],
   },
   {
+    name: "images",
+    label: "Imágenes",
+    permissions: [
+      {
+        key: "images.delete",
+        label: "Eliminar imágenes",
+        description: "Borrar imágenes de propiedades de forma definitiva (solo ADMIN y SUPERVISOR)",
+      },
+    ],
+  },
+  {
     name: "property_types",
     label: "Tipos de Propiedad",
     permissions: [

@@ -118,12 +118,13 @@ interface Property {
 
 interface PropertyFormProps {
   editProperty?: Property
-  onSuccess?: () => void // Added onSuccess prop
-  agents?: Array<{ id: string; name: string }> // Added agents prop
-  userId?: string // Added userId prop
-  owners?: Array<{ id: string; name: string }> // Added owners prop
-  cities?: Array<{ id: string; name: string }> // Added cities prop
-  propertyTypes?: Array<{ id: string; name: string }> // Added propertyTypes prop
+  onSuccess?: () => void
+  agents?: Array<{ id: string; name: string }>
+  userId?: string
+  owners?: Array<{ id: string; name: string }>
+  cities?: Array<{ id: string; name: string }>
+  propertyTypes?: Array<{ id: string; name: string }>
+  canDeleteImages?: boolean // Only ADMIN and SUPERVISOR can permanently delete images
 }
 
 interface PropertyFormData {
@@ -188,6 +189,7 @@ export function PropertyForm({
   owners = [],
   cities = [],
   propertyTypes = [],
+  canDeleteImages = false,
 }: PropertyFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
@@ -1574,7 +1576,7 @@ export function PropertyForm({
           <CardDescription>Sube hasta {12} imágenes optimizadas automáticamente</CardDescription>
         </CardHeader>
         <CardContent>
-          <PropertyImageUpload images={images} onChange={setImages} maxImages={12} />
+          <PropertyImageUpload images={images} onChange={setImages} maxImages={12} canDeleteImages={canDeleteImages} />
         </CardContent>
       </Card>
 
