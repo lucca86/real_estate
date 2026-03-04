@@ -1,7 +1,9 @@
 "use client"
 
+import { useState, useTransition, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Pie, PieChart, Cell, LabelList } from "recharts"
+import { getAgentRanking, type RankingPeriod } from "@/lib/actions/agent-ranking"
 
 const COLORS = [
   "#3b82f6", // blue-500
@@ -62,7 +64,25 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null
 }
 
-export function DashboardCharts({ propertyTypes, transactionTypes, agentRanking }: DashboardChartsProps) {
+const PERIOD_LABELS: { value: RankingPeriod; label: string }[] = [
+  { value: "week", label: "Semana" },
+  { value: "month", label: "Mes" },
+  { value: "year", label: "Año" },
+  { value: "all", label: "Todo" },
+]
+
+export function DashboardCharts({ propertyTypes, transactionTypes, agentRanking: initialAgentRanking }: DashboardChartsProps) {
+  const [period, setPeriod] = useState<RankingPeriod>("all")
+  const [agentRanking, setAgentRanking] = useState(initialAgentRanking)
+  const [isPending, startTransition] = useTransition()
+
+  useEffect(() => {
+    startTransition(async () => {
+      const data = await getAgentRanking(period)
+      setAgentRanking(data)
+    })
+  }, [period])
+
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {/* Property Types Chart */}
@@ -159,11 +179,39 @@ export function DashboardCharts({ propertyTypes, transactionTypes, agentRanking 
       {/* Agent Ranking Chart - full width */}
       <Card className="md:col-span-2">
         <CardHeader>
-          <CardTitle>Ranking de Agentes por Propiedades Creadas</CardTitle>
-          <CardDescription>Agentes ordenados de mayor a menor cantidad de propiedades creadas</CardDescription>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle>Ranking de Agentes por Propiedades Creadas</CardTitle>
+              <CardDescription>
+                {period === "week" && "Última semana"}
+                {period === "month" && "Último mes"}
+                {period === "year" && "Último año"}
+                {period === "all" && "Todos los tiempos"}
+              </CardDescription>
+            </div>
+            <div className="flex gap-1 rounded-lg border p-1 self-start">
+              {PERIOD_LABELS.map(({ value, label }) => (
+                <button
+                  key={value}
+                  onClick={() => setPeriod(value)}
+                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                    period === value
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          {agentRanking.length > 0 ? (
+          {isPending ? (
+            <div className="flex h-[200px] items-center justify-center text-muted-foreground text-sm">
+              Cargando...
+            </div>
+          ) : agentRanking.length > 0 ? (
             <ResponsiveContainer width="100%" height={Math.max(agentRanking.length * 56, 220)}>
               <BarChart
                 layout="vertical"
@@ -196,7 +244,7 @@ export function DashboardCharts({ propertyTypes, transactionTypes, agentRanking 
             </ResponsiveContainer>
           ) : (
             <div className="flex h-[200px] items-center justify-center text-muted-foreground">
-              No hay datos disponibles. Las propiedades creadas desde ahora registrarán el agente responsable.
+              No hay propiedades creadas en este período.
             </div>
           )}
         </CardContent>
