@@ -80,6 +80,20 @@ export default async function EditPropertyPage({
     videos: propertyData.videos || [],
     createdAt: new Date(propertyData.created_at),
     updatedAt: new Date(propertyData.updated_at),
+    // camelCase FK fields required by PropertyForm to pre-populate selects
+    ownerId: propertyData.owner_id ?? null,
+    propertyTypeId: propertyData.property_type_id ?? null,
+    cityId: propertyData.city_id ?? null,
+    countryId: propertyData.country_id ?? null,
+    provinceId: propertyData.province_id ?? null,
+    neighborhoodId: propertyData.neighborhood_id ?? null,
+    // Related objects for display (name labels in dropdowns)
+    owner: propertyData.owner ?? null,
+    propertyType: propertyData.propertyType ?? null,
+    city: propertyData.city ?? null,
+    province: propertyData.province ?? null,
+    country: propertyData.country ?? null,
+    neighborhood: propertyData.neighborhood ?? null,
   }
 
   // images are stored as text[] where each element is a JSON string — must parse before accessing fields
