@@ -196,7 +196,7 @@ export function PropertyForm({
   const [propertyOwners, setPropertyOwners] = useState<Array<{ id: string; name: string }>>(owners) // Renamed to avoid conflict
   const [propertyTypesList, setPropertyTypesList] = useState<Array<{ id: string; name: string }>>(propertyTypes) // Renamed to avoid conflict
   const [mapCoordinates, setMapCoordinates] = useState<{ lat: number; lng: number } | null>(
-    editProperty?.latitude && editProperty?.longitude
+    editProperty?.latitude != null && editProperty?.longitude != null
       ? { lat: editProperty.latitude, lng: editProperty.longitude }
       : null,
   )
@@ -394,9 +394,18 @@ export function PropertyForm({
     loadFeatures()
   }, [editProperty?.id])
 
+  // Capture initial IDs in a ref so the effect only runs once on mount
+  const initialCountryId = useRef(selectedCountryId)
+  const initialProvinceId = useRef(selectedProvinceId)
+  const initialCityId = useRef(selectedCityId)
+
   useEffect(() => {
     async function fetchData() {
       try {
+        const countryId = initialCountryId.current
+        const provinceId = initialProvinceId.current
+        const cityId = initialCityId.current
+
         const [ownersResponse, propertyTypesResponse, countriesData] = await Promise.all([
           fetch("/api/owners"),
           fetch("/api/property-types"),
@@ -405,27 +414,27 @@ export function PropertyForm({
 
         if (ownersResponse.ok) {
           const ownersData = await ownersResponse.json()
-          setPropertyOwners(ownersData) // Use renamed state
+          setPropertyOwners(ownersData)
         }
 
         if (propertyTypesResponse.ok) {
           const propertyTypesData = await propertyTypesResponse.json()
-          setPropertyTypesList(propertyTypesData) // Use renamed state
+          setPropertyTypesList(propertyTypesData)
         }
 
         setCountries(countriesData)
 
-        // Fetch provinces, cities, and neighborhoods based on default or existing IDs
-        if (selectedCountryId) {
-          const provincesData = await getProvinces(selectedCountryId)
+        // Fetch provinces, cities, and neighborhoods based on initial IDs only
+        if (countryId) {
+          const provincesData = await getProvinces(countryId)
           setProvinces(provincesData)
         }
-        if (selectedProvinceId) {
-          const citiesData = await getCities(selectedProvinceId)
-          setCities(citiesData) // Use renamed state
+        if (provinceId) {
+          const citiesData = await getCities(provinceId)
+          setCities(citiesData)
         }
-        if (selectedCityId) {
-          const neighborhoodsData = await getNeighborhoods(selectedCityId)
+        if (cityId) {
+          const neighborhoodsData = await getNeighborhoods(cityId)
           setNeighborhoods(neighborhoodsData)
         }
       } catch (error) {
@@ -433,7 +442,8 @@ export function PropertyForm({
       }
     }
     fetchData()
-  }, [selectedCountryId, selectedProvinceId, selectedCityId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (provinces.length > 0 && selectedProvinceId && !selectedProvinceName) {
@@ -582,7 +592,7 @@ export function PropertyForm({
             description: "La propiedad se actualizó correctamente",
           })
         }
-        propertyId = editProperty.id // Set propertyId for updates
+        propertyId = editProperty.id
       } else {
         result = await createProperty(finalFormData)
 
@@ -594,9 +604,9 @@ export function PropertyForm({
           title: "Propiedad creada",
           description: "La propiedad se creó correctamente",
         })
-        if (result && typeof result === "object" && "id" in result) {
-          // Check if result is an object and has an 'id'
-          propertyId = (result as { id: string }).id
+        // result.data contains the newly created property with its id
+        if (result.data && typeof result.data === "object" && "id" in result.data) {
+          propertyId = (result.data as { id: string }).id
         }
       }
 
@@ -1208,7 +1218,10 @@ export function PropertyForm({
                 type="number"
                 step="any"
                 value={formData.latitude ?? ""}
-                onChange={(e) => setFormData((prev) => ({ ...prev, latitude: Number(e.target.value) }))}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setFormData((prev) => ({ ...prev, latitude: val === "" ? null : Number(val) }))
+                }}
                 disabled={isSubmitting}
               />
             </div>
@@ -1221,7 +1234,10 @@ export function PropertyForm({
                 type="number"
                 step="any"
                 value={formData.longitude ?? ""}
-                onChange={(e) => setFormData((prev) => ({ ...prev, longitude: Number(e.target.value) }))}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setFormData((prev) => ({ ...prev, longitude: val === "" ? null : Number(val) }))
+                }}
                 disabled={isSubmitting}
               />
             </div>
@@ -1303,7 +1319,10 @@ export function PropertyForm({
                 type="number"
                 min="0"
                 value={formData.bedrooms ?? ""}
-                onChange={(e) => setFormData((prev) => ({ ...prev, bedrooms: Number(e.target.value) }))}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setFormData((prev) => ({ ...prev, bedrooms: val === "" ? undefined : Number(val) }))
+                }}
                 disabled={isSubmitting}
               />
             </div>
@@ -1316,7 +1335,10 @@ export function PropertyForm({
                 type="number"
                 min="0"
                 value={formData.bathrooms ?? ""}
-                onChange={(e) => setFormData((prev) => ({ ...prev, bathrooms: Number(e.target.value) }))}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setFormData((prev) => ({ ...prev, bathrooms: val === "" ? undefined : Number(val) }))
+                }}
                 disabled={isSubmitting}
               />
             </div>
@@ -1329,7 +1351,10 @@ export function PropertyForm({
                 type="number"
                 min="0"
                 value={formData.parkingSpaces ?? ""}
-                onChange={(e) => setFormData((prev) => ({ ...prev, parkingSpaces: Number(e.target.value) }))}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setFormData((prev) => ({ ...prev, parkingSpaces: val === "" ? undefined : Number(val) }))
+                }}
                 disabled={isSubmitting}
               />
             </div>
@@ -1342,7 +1367,10 @@ export function PropertyForm({
                 type="number"
                 max={new Date().getFullYear()}
                 value={formData.yearBuilt ?? ""}
-                onChange={(e) => setFormData((prev) => ({ ...prev, yearBuilt: Number(e.target.value) }))}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setFormData((prev) => ({ ...prev, yearBuilt: val === "" ? null : Number(val) }))
+                }}
                 disabled={isSubmitting}
                 placeholder="Dejar vacío si no aplica"
               />
