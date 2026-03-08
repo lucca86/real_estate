@@ -3,12 +3,10 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { getCurrentUser } from "@/lib/auth"
 import { syncPropertyToWordPress, deletePropertyFromWordPress } from "./wordpress"
-import { wordpressAPI } from "@/lib/wordpress"
 import crypto from "crypto"
 import { revalidatePath } from "next/cache"
 import type { PropertyWithDetails } from "@/types"
 import type { ActionResult } from "@/types/action-result"
-import { logAudit } from "@/lib/audit"
 
 export async function createProperty(formData: FormData): Promise<ActionResult<PropertyWithDetails>> {
   console.log("[v0] createProperty called")
@@ -139,17 +137,14 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
         property_label: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
         adrema: adrema || null,
         features: parseArrayField(features),
-      videos: videos ? JSON.parse(videos) : [],
-      virtual_tour: virtualTour || null,
-      published,
-      sync_to_wordpress: syncToWordPress,
-      is_featured: isFeatured,
-      internal_notes: formData.get("internalNotes") as string | null,
-      created_by_id: currentUser.id,
-      updated_by_id: currentUser.id,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
+        videos: videos ? JSON.parse(videos) : [],
+        virtual_tour: virtualTour || null,
+        published,
+        sync_to_wordpress: syncToWordPress,
+        is_featured: isFeatured,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
       .select()
       .single()
 
@@ -184,15 +179,10 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
       }
     }
 
-    await logAudit({
-      module: "properties",
-      action: "create",
-      entity_type: "Propiedad",
-      entity_id: newProperty.id,
-      metadata: { title: newProperty.title, status: newProperty.status },
-    })
+    console.log("[v0] About to revalidate and return")
     revalidatePath("/")
     revalidatePath("/properties")
+    console.log("[v0] Returning success")
     return { success: true, data: newProperty as PropertyWithDetails }
   } catch (error: any) {
     console.error("[v0] Error in createProperty:", error)
@@ -323,15 +313,13 @@ export async function updateProperty(propertyId: string, formData: FormData) {
       property_label: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
       adrema: adrema || null,
       features: parseArrayField(features),
-    videos: videos ? JSON.parse(videos) : [],
-    virtual_tour: virtualTour || null,
-    published,
-    sync_to_wordpress: syncToWordPress,
-    internal_notes: formData.get("internalNotes") as string | null,
-    updated_by_id: currentUser.id,
-    updated_at: new Date().toISOString(),
-  })
-  .eq("id", propertyId)
+      videos: videos ? JSON.parse(videos) : [],
+      virtual_tour: virtualTour || null,
+      published,
+      sync_to_wordpress: syncToWordPress,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", propertyId)
     .select()
     .single()
 
@@ -401,13 +389,6 @@ export async function updateProperty(propertyId: string, formData: FormData) {
     }
   }
 
-  await logAudit({
-    module: "properties",
-    action: "update",
-    entity_type: "Propiedad",
-    entity_id: propertyId,
-    metadata: { title: (updatedProperty as any).title, status: (updatedProperty as any).status },
-  })
   revalidatePath("/properties")
   revalidatePath("/catalog")
   revalidatePath(`/properties/${propertyId}/edit`)
@@ -422,14 +403,14 @@ export async function deleteProperty(propertyId: string) {
     return { success: false, error: "No estás autenticado" }
   }
 
-  if (currentUser.role !== "ADMIN" && currentUser.role !== "SUPERVISOR" && currentUser.role !== "VENDEDOR") {
+  if (currentUser.role !== "ADMIN" && currentUser.role !== "SUPERVISOR") {
     return { success: false, error: "No tienes permisos para eliminar esta propiedad" }
   }
 
   try {
-    const supabase = await createAdminClient()
+    const supabase = await createClient()
 
-    const { data: property, error: fetchError} = await supabase
+    const { data: property, error: fetchError } = await supabase
       .from("properties")
       .select("*")
       .eq("id", propertyId)
@@ -439,19 +420,9 @@ export async function deleteProperty(propertyId: string) {
       return { success: false, error: "Propiedad no encontrada" }
     }
 
-    // In restricted mode, VENDEDOR can only delete their own properties
-    if (currentUser.role === "VENDEDOR") {
-      const { getPropertyEditMode } = await import("@/lib/actions/system-settings")
-      const editMode = await getPropertyEditMode()
-      if (editMode === "restricted" && property.created_by_id && property.created_by_id !== currentUser.id) {
-        return { success: false, error: "Solo puedes eliminar propiedades que hayas creado" }
-      }
-    }
-
-    // Delete from WordPress first if synced
-    if (property.wordpress_id && property.wordpress_id > 0) {
+    if (property.wordpress_id) {
       try {
-        await wordpressAPI.deleteProperty(property.wordpress_id)
+        await deletePropertyFromWordPress(propertyId)
       } catch (wpError) {
         console.error("[v0] Error deleting from WordPress:", wpError)
         // Continue with local deletion even if WordPress fails
@@ -486,12 +457,6 @@ export async function deleteProperty(propertyId: string) {
       return { success: false, error: `Error deleting property: ${deleteError.message}` }
     }
 
-    await logAudit({
-      module: "properties",
-      action: "delete",
-      entity_type: "Propiedad",
-      entity_id: propertyId,
-    })
     revalidatePath("/")
     revalidatePath("/properties")
     revalidatePath("/dashboard")
@@ -543,34 +508,11 @@ export async function getPropertyById(id: string) {
   }
 
   if (!property) {
+    console.error("Property not found with id:", id)
     return null
   }
 
-  // Load created_by and updated_by user data (table uses snake_case: created_by_id, updated_by_id)
-  let createdBy = null
-  let updatedBy = null
-
-  const p = property as any
-
-  if (p.created_by_id) {
-    const { data: creator } = await supabase
-      .from("users")
-      .select("id, name, email")
-      .eq("id", p.created_by_id)
-      .single()
-    createdBy = creator
-  }
-
-  if (p.updated_by_id) {
-    const { data: updater } = await supabase
-      .from("users")
-      .select("id, name, email")
-      .eq("id", p.updated_by_id)
-      .single()
-    updatedBy = updater
-  }
-
-  return { ...property, createdBy, updatedBy }
+  return property
 }
 
 const parseArrayField = (value: any): string[] => {

@@ -82,25 +82,7 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
     )
   }
 
-  // Load all updatedBy users in a single query to avoid N+1 and stack overflow
-  const userIds = [...new Set(properties.map((p: any) => p.updated_by_id).filter(Boolean))]
-  let usersMap: Record<string, { name: string }> = {}
-  if (userIds.length > 0) {
-    const { data: users } = await supabase
-      .from("users")
-      .select("id, name")
-      .in("id", userIds)
-    if (users) {
-      usersMap = Object.fromEntries(users.map((u) => [u.id, { name: u.name }]))
-    }
-  }
-
-  const propertiesWithUsers = properties.map((property: any) => ({
-    ...property,
-    updatedBy: property.updated_by_id ? (usersMap[property.updated_by_id] ?? null) : null,
-  }))
-
-  if (propertiesWithUsers.length === 0) {
+  if (properties.length === 0) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12 text-center">
@@ -116,11 +98,12 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {propertiesWithUsers.length} {propertiesWithUsers.length === 1 ? "propiedad encontrada" : "propiedades encontradas"}
+          {properties.length} {properties.length === 1 ? "propiedad encontrada" : "propiedades encontradas"}
         </p>
       </div>
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {propertiesWithUsers.map((property: any) => (
+
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {properties.map((property) => (
           <CatalogPropertyCard key={property.id} property={property} />
         ))}
       </div>

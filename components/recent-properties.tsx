@@ -7,7 +7,7 @@ interface Property {
   id: string
   title: string
   price: number
-  currency: string
+  currency: string | null
   created_at: string
   property_types: { name: string } | null
   cities: { name: string } | null
@@ -47,9 +47,10 @@ export async function getRecentProperties() {
         id,
         title,
         price,
+        currency,
         created_at,
-        property_types(name),
-        cities(name)
+        property_types:property_type_id(name),
+        cities:city_id(name)
       `)
       .order("created_at", { ascending: false })
       .limit(5)
@@ -64,6 +65,7 @@ export async function getRecentProperties() {
       id: property.id,
       title: property.title,
       price: property.price,
+      currency: property.currency,
       created_at: property.created_at,
       property_types: property.property_types,
       cities: property.cities,
@@ -75,15 +77,8 @@ export async function getRecentProperties() {
 }
 
 export function RecentProperties({ properties }: RecentPropertiesProps) {
-  const formatPrice = (price: number, currency: string) => {
-    const currencyMap: Record<string, string> = {
-      USD: "USD",
-      ARS: "ARS",
-      EUR: "EUR",
-    }
-    
-    const currencyCode = currencyMap[currency] || "USD"
-    
+  const formatPrice = (price: number, currency?: string | null) => {
+    const currencyCode = currency || "ARS"
     return new Intl.NumberFormat("es-AR", {
       style: "currency",
       currency: currencyCode,

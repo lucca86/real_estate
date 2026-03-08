@@ -1,4 +1,4 @@
-import { getCurrentUser, checkPermission } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/auth"
 import { redirect, notFound } from "next/navigation"
 import { PropertyForm } from "@/components/property-form"
 import { WordPressSyncButton } from "@/components/wordpress-sync-button"
@@ -7,7 +7,6 @@ import { ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { getPropertyById } from "@/lib/actions/properties"
-import { getPropertyEditMode } from "@/lib/actions/system-settings"
 
 type TransactionType = "VENTA" | "ALQUILER" | "VENTA_ALQUILER" | "ALQUILER_OPCION_COMPRA"
 
@@ -29,16 +28,9 @@ export default async function EditPropertyPage({
     notFound()
   }
 
-  // Apply property_edit_mode setting: in "restricted" mode, VENDEDOR can only edit their own properties
-  // ADMIN and SUPERVISOR can always edit any property
-  if (user.role === "VENDEDOR") {
-    const editMode = await getPropertyEditMode()
-    if (editMode === "restricted" && propertyData.created_by_id && propertyData.created_by_id !== user.id) {
-      redirect("/properties")
-    }
+  if (propertyData.created_by_id && propertyData.created_by_id !== user.id && user.role === "VENDEDOR") {
+    redirect("/properties")
   }
-
-  const canDeleteImages = await checkPermission("images.delete")
 
   const property = {
     id: propertyData.id,
@@ -80,30 +72,10 @@ export default async function EditPropertyPage({
     videos: propertyData.videos || [],
     createdAt: new Date(propertyData.created_at),
     updatedAt: new Date(propertyData.updated_at),
-    // camelCase FK fields required by PropertyForm to pre-populate selects
-    ownerId: propertyData.owner_id ?? null,
-    propertyTypeId: propertyData.property_type_id ?? null,
-    cityId: propertyData.city_id ?? null,
-    countryId: propertyData.country_id ?? null,
-    provinceId: propertyData.province_id ?? null,
-    neighborhoodId: propertyData.neighborhood_id ?? null,
-    // Related objects for display (name labels in dropdowns)
-    owner: propertyData.owner ?? null,
-    propertyType: propertyData.propertyType ?? null,
-    city: propertyData.city ?? null,
-    province: propertyData.province ?? null,
-    country: propertyData.country ?? null,
-    neighborhood: propertyData.neighborhood ?? null,
   }
 
-  // images are stored as text[] where each element is a JSON string — must parse before accessing fields
-  const parsedImages = (propertyData.images || []).map((img: any) => {
-    if (typeof img === "string") {
-      try { return JSON.parse(img) } catch { return {} }
-    }
-    return img
-  })
-  const hasImagesToSync = parsedImages.some((img: any) => img.syncToWordPress === true)
+  const imagesToSync = (propertyData.images || []).filter((img: any) => img.syncToWordPress === true)
+  const hasImagesToSync = imagesToSync.length > 0
 
   return (
     <div className="space-y-6">
@@ -132,7 +104,7 @@ export default async function EditPropertyPage({
         </CardContent>
       </Card>
 
-                <PropertyForm editProperty={property} canDeleteImages={canDeleteImages} />
+      <PropertyForm editProperty={property} />
     </div>
   )
 }

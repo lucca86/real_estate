@@ -44,9 +44,9 @@ const ownerSchema = z.object({
   phone: z.string().min(1, "El teléfono es requerido"),
   secondaryPhone: z.string().optional(),
   address: z.string().optional(),
-  cityId: z.string().min(1, "La ciudad es requerida"),
-  provinceId: z.string().min(1, "La provincia es requerida"),
-  countryId: z.string().min(1, "El país es requerido"),
+  cityId: z.string().optional(),
+  provinceId: z.string().optional(),
+  countryId: z.string().optional(),
   idNumber: z.string().optional(),
   taxId: z.string().optional(),
   notes: z.string().optional(),
@@ -91,16 +91,9 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  // Find Argentina ID dynamically from the countries list
-  const argentinaCountry = countries.find((c) => c.name === "Argentina")
-  const defaultCountryId = argentinaCountry?.id || ""
-  
-  // Find default province (Corrientes) and city
-  const defaultProvince = provinces.find((p) => p.name === "Corrientes" && p.country_id === defaultCountryId)
-  const defaultProvinceId = defaultProvince?.id || ""
-  
-  const defaultCity = cities.find((c) => c.name === "Corrientes" && c.province_id === defaultProvinceId)
-  const defaultCityId = defaultCity?.id || ""
+  const defaultCountryId = "5627a007-5ebf-4044-a337-da2a33ba5d0c" // Argentina
+  const defaultProvinceId = "f54e20b7-d5f8-4ae1-81f9-a09b2e2ee8f3" // Corrientes province
+  const defaultCityId = "d4e9f123-a5b6-4c7d-8e9f-0a1b2c3d4e5f" // Corrientes city
 
   const [selectedCountryId, setSelectedCountryId] = useState(owner?.country_id || defaultCountryId)
   const [selectedProvinceId, setSelectedProvinceId] = useState(owner?.province_id || defaultProvinceId)
@@ -122,9 +115,9 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
       phone: owner?.phone || "",
       secondaryPhone: owner?.secondary_phone || "",
       address: owner?.address || "",
-      cityId: owner?.city_id || "",
-      provinceId: owner?.province_id || "",
-      countryId: owner?.country_id || "",
+      cityId: owner?.city_id || defaultCityId,
+      provinceId: owner?.province_id || defaultProvinceId,
+      countryId: owner?.country_id || defaultCountryId,
       idNumber: owner?.id_number || "",
       taxId: owner?.tax_id || "",
       notes: owner?.notes || "",
@@ -133,21 +126,15 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
   })
 
   useEffect(() => {
-    if (!owner && defaultCountryId) {
+    if (!owner && countries.length > 0) {
       // For new owners, ensure default values are set
       setValue("countryId", defaultCountryId)
+      setValue("provinceId", defaultProvinceId)
+      setValue("cityId", defaultCityId)
       setSelectedCountryId(defaultCountryId)
-      
-      if (defaultProvinceId) {
-        setValue("provinceId", defaultProvinceId)
-        setSelectedProvinceId(defaultProvinceId)
-      }
-      
-      if (defaultCityId) {
-        setValue("cityId", defaultCityId)
-      }
+      setSelectedProvinceId(defaultProvinceId)
     }
-  }, [defaultCountryId, defaultProvinceId, defaultCityId, owner, setValue])
+  }, [countries.length, owner, setValue])
 
   const isActive = watch("isActive")
   const cityId = watch("cityId")
@@ -382,9 +369,7 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
 
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <Label htmlFor="countryId">
-                País <span className="text-destructive">*</span>
-              </Label>
+              <Label htmlFor="countryId">País</Label>
               <Select value={selectedCountryId} onValueChange={handleCountryChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar país" />
@@ -401,9 +386,7 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="provinceId">
-                Provincia/Estado <span className="text-destructive">*</span>
-              </Label>
+              <Label htmlFor="provinceId">Provincia/Estado</Label>
               <Select value={selectedProvinceId} onValueChange={handleProvinceChange} disabled={!selectedCountryId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar provincia..." />
@@ -421,13 +404,10 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
                   ))}
                 </SelectContent>
               </Select>
-              {errors.provinceId && <p className="text-sm text-destructive">{errors.provinceId.message}</p>}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cityId">
-                Ciudad <span className="text-destructive">*</span>
-              </Label>
+              <Label htmlFor="cityId">Ciudad</Label>
               <Select value={cityId} onValueChange={handleCityChange} disabled={!selectedProvinceId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar ciudad..." />
@@ -445,7 +425,6 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
                   ))}
                 </SelectContent>
               </Select>
-              {errors.cityId && <p className="text-sm text-destructive">{errors.cityId.message}</p>}
             </div>
           </div>
 

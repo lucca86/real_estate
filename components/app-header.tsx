@@ -64,7 +64,7 @@ export function AppHeader({ user, onMenuClick }: AppHeaderProps) {
             alt="Gestión Inmobiliaria"
             width={40}
             height={40}
-            className="h-10 w-10 object-contain"
+            className="object-contain"
             priority
           />
         )}

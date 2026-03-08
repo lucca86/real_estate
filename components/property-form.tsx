@@ -96,7 +96,6 @@ interface Property {
   published?: boolean
   features?: string[]
   videos?: string[]
-  internalNotes?: string | null
   createdAt?: Date
   updatedAt?: Date
   // Added properties from the update section
@@ -118,13 +117,12 @@ interface Property {
 
 interface PropertyFormProps {
   editProperty?: Property
-  onSuccess?: () => void
-  agents?: Array<{ id: string; name: string }>
-  userId?: string
-  owners?: Array<{ id: string; name: string }>
-  cities?: Array<{ id: string; name: string }>
-  propertyTypes?: Array<{ id: string; name: string }>
-  canDeleteImages?: boolean // Only ADMIN and SUPERVISOR can permanently delete images
+  onSuccess?: () => void // Added onSuccess prop
+  agents?: Array<{ id: string; name: string }> // Added agents prop
+  userId?: string // Added userId prop
+  owners?: Array<{ id: string; name: string }> // Added owners prop
+  cities?: Array<{ id: string; name: string }> // Added cities prop
+  propertyTypes?: Array<{ id: string; name: string }> // Added propertyTypes prop
 }
 
 interface PropertyFormData {
@@ -163,7 +161,6 @@ interface PropertyFormData {
   published?: boolean
   adrema?: string | null
   videos?: string[] // Added videos field
-  internalNotes?: string | null
   // Added properties from the update section
   category?: string
   type?: string
@@ -189,7 +186,6 @@ export function PropertyForm({
   owners = [],
   cities = [],
   propertyTypes = [],
-  canDeleteImages = false,
 }: PropertyFormProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
@@ -331,7 +327,6 @@ export function PropertyForm({
     published: editProperty?.published ?? true,
     adrema: editProperty?.adrema,
     videos: editProperty?.videos, // Initialize videos
-    internalNotes: editProperty?.internalNotes || null,
     // Properties from the update section
     category: editProperty?.category || "",
     type: editProperty?.type || "Venta",
@@ -468,18 +463,12 @@ export function PropertyForm({
     }
   }, [neighborhoods, formData.neighborhoodId, selectedNeighborhoodName])
 
-  // Auto-calculate lot size when front and back meters change
   useEffect(() => {
-    if (formData.frontMeters && formData.backMeters && formData.frontMeters > 0 && formData.backMeters > 0) {
-      const calculated = Number((formData.frontMeters * formData.backMeters).toFixed(2))
-      
-      // Always update the calculated value when front or back meters change
+    if (formData.frontMeters && formData.backMeters && (!formData.lotSize || formData.lotSize === 0)) {
+      const calculated = formData.frontMeters * formData.backMeters
       setFormData((prev) => ({ ...prev, lotSize: calculated }))
-    } else if ((!formData.frontMeters || formData.frontMeters === 0) || (!formData.backMeters || formData.backMeters === 0)) {
-      // Clear lot size if either measurement is removed
-      setFormData((prev) => ({ ...prev, lotSize: undefined }))
     }
-  }, [formData.frontMeters, formData.backMeters])
+  }, [formData.frontMeters, formData.backMeters, formData.lotSize])
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -508,6 +497,10 @@ export function PropertyForm({
       validationErrors.push("El precio es requerido")
     }
     if (!formData.currency) validationErrors.push("Debe seleccionar una moneda")
+
+    if (!formData.lotSize || formData.lotSize <= 0) {
+      validationErrors.push("El tamaño del lote es requerido y debe ser mayor a 0")
+    }
 
     const selectedPropertyType = propertyTypesList.find((pt) => pt.id === formData.propertyTypeId) // Use renamed state
     const isLand = selectedPropertyType?.name?.toLowerCase().includes("terreno")
@@ -1361,6 +1354,46 @@ export function PropertyForm({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
+              <Label htmlFor="area">Área cubierta (m²)</Label>
+              <Input
+                id="area"
+                name="area"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.area ?? ""}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setFormData((prev) => ({ ...prev, area: val === "" ? undefined : Number(val) }))
+                }}
+                disabled={isSubmitting}
+              />
+            </div>
+
+            <div className="space-y-2">
+              {/* Made lot size required with red asterisk */}
+              <Label htmlFor="lotSize">
+                Tamaño del Lote (m²) <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="lotSize"
+                name="lotSize"
+                type="number"
+                step="0.01"
+                min="0.01"
+                value={formData.lotSize ?? ""}
+                onChange={(e) => {
+                  const val = e.target.value
+                  setFormData((prev) => ({ ...prev, lotSize: val === "" ? undefined : Number(val) }))
+                }}
+                disabled={isSubmitting}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
               <Label htmlFor="frontMeters">Frente (m)</Label>
               <Input
                 id="frontMeters"
@@ -1393,45 +1426,6 @@ export function PropertyForm({
                 }}
                 disabled={isSubmitting}
                 placeholder="Metros de fondo"
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="area">Área cubierta (m²)</Label>
-              <Input
-                id="area"
-                name="area"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.area ?? ""}
-                onChange={(e) => {
-                  const val = e.target.value
-                  setFormData((prev) => ({ ...prev, area: val === "" ? undefined : Number(val) }))
-                }}
-                disabled={isSubmitting}
-                placeholder="Área cubierta"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="lotSize" className="text-muted-foreground">
-                Tamaño del Lote (m²) <span className="text-xs">(Opcional)</span>
-              </Label>
-              <Input
-                id="lotSize"
-                name="lotSize"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.lotSize ?? ""}
-                onChange={(e) => {
-                  const val = e.target.value
-                  setFormData((prev) => ({ ...prev, lotSize: val === "" ? undefined : Number(val) }))
-                }}
-                disabled={isSubmitting}
-                placeholder="Tamaño del lote"
               />
             </div>
           </div>
@@ -1576,25 +1570,7 @@ export function PropertyForm({
           <CardDescription>Sube hasta {12} imágenes optimizadas automáticamente</CardDescription>
         </CardHeader>
         <CardContent>
-          <PropertyImageUpload images={images} onChange={setImages} maxImages={12} canDeleteImages={canDeleteImages} />
-        </CardContent>
-      </Card>
-
-      <Card className="border-l-4 border-l-primary/50">
-        <CardHeader>
-          <CardTitle>Notas Internas</CardTitle>
-          <CardDescription>Información privada visible solo para el equipo</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            id="internalNotes"
-            name="internalNotes"
-            value={formData.internalNotes ?? ""}
-            onChange={(e) => setFormData((prev) => ({ ...prev, internalNotes: e.target.value || null }))}
-            disabled={isSubmitting}
-            placeholder="Agregue notas internas sobre esta propiedad que solo sean visibles para el equipo..."
-            className="min-h-[120px] resize-y"
-          />
+          <PropertyImageUpload images={images} onChange={setImages} maxImages={12} />
         </CardContent>
       </Card>
 

@@ -7,9 +7,9 @@ Configurar tu entorno local para usar Neon (base de datos en la nube) igual que 
 
 ## ✅ Paso 1: Instalar Dependencias
 
-\`\`\`bash
+```bash
 npm install
-\`\`\`
+```
 
 ---
 
@@ -21,7 +21,7 @@ Tu proyecto ya tiene las variables de Neon configuradas en Vercel. Necesitas cop
 
 Abre tu archivo `.env` y reemplaza estas líneas:
 
-\`\`\`env
+```env
 # ❌ REEMPLAZA ESTO:
 DATABASE_URL="${real_estate_DATABASE_URL}"
 DATABASE_URL_UNPOOLED="${real_estate_DATABASE_URL_UNPOOLED}"
@@ -29,7 +29,7 @@ DATABASE_URL_UNPOOLED="${real_estate_DATABASE_URL_UNPOOLED}"
 # ✅ CON LAS URLs REALES DE NEON:
 DATABASE_URL="postgresql://[usuario]:[password]@[host].neon.tech/[database]?sslmode=require"
 DATABASE_URL_UNPOOLED="postgresql://[usuario]:[password]@[host].neon.tech/[database]?sslmode=require"
-\`\`\`
+```
 
 ### Opción B: Obtener las URLs desde Vercel Dashboard
 
@@ -42,9 +42,9 @@ DATABASE_URL_UNPOOLED="postgresql://[usuario]:[password]@[host].neon.tech/[datab
 
 ### ✅ Verificar Variables
 
-\`\`\`bash
+```bash
 npm run env:check
-\`\`\`
+```
 
 Si ves `✅ Todas las variables requeridas están configuradas!`, continúa al siguiente paso.
 
@@ -52,9 +52,9 @@ Si ves `✅ Todas las variables requeridas están configuradas!`, continúa al s
 
 ## ✅ Paso 3: Generar Cliente de Prisma
 
-\`\`\`bash
+```bash
 npx prisma generate
-\`\`\`
+```
 
 Este comando genera el cliente de TypeScript para interactuar con la base de datos.
 
@@ -62,9 +62,9 @@ Este comando genera el cliente de TypeScript para interactuar con la base de dat
 
 ## ✅ Paso 4: Crear Tablas en Neon
 
-\`\`\`bash
+```bash
 npx prisma db push
-\`\`\`
+```
 
 Este comando:
 - Crea todas las tablas en tu base de datos Neon
@@ -75,9 +75,9 @@ Este comando:
 
 ## ✅ Paso 5: Poblar con Datos Iniciales
 
-\`\`\`bash
+```bash
 npm run db:seed
-\`\`\`
+```
 
 Esto crea:
 - ✅ Usuario administrador (admin@realestate.com / admin123)
@@ -89,9 +89,9 @@ Esto crea:
 
 ## ✅ Paso 6: Iniciar el Servidor
 
-\`\`\`bash
+```bash
 npm run dev
-\`\`\`
+```
 
 Abre [http://localhost:3000](http://localhost:3000)
 
@@ -109,7 +109,7 @@ Tu entorno local está conectado a Neon en la nube. Todos los cambios que hagas 
 
 ## 🔧 Comandos Útiles
 
-\`\`\`bash
+```bash
 # Ver el estado de la base de datos
 npm run db:status
 
@@ -124,7 +124,7 @@ npm run db:reset
 
 # Ver logs del servidor
 npm run dev
-\`\`\`
+```
 
 ---
 
@@ -144,10 +144,10 @@ npm run dev
 **Problema:** Las tablas no se han creado en Neon.
 
 **Solución:**
-\`\`\`bash
+```bash
 npx prisma db push
 npm run db:seed
-\`\`\`
+```
 
 ### Error al hacer `npm install`
 
@@ -160,14 +160,14 @@ npm run db:seed
 ### La aplicación no inicia
 
 **Solución:**
-\`\`\`bash
+```bash
 # Limpia y reinstala
 rm -rf node_modules
 rm package-lock.json
 npm install
 npx prisma generate
 npm run dev
-\`\`\`
+```
 
 ---
 

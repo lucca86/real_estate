@@ -125,6 +125,14 @@ class Estatik_REST_API_Bridge {
         
         // Log para debug
         error_log('[Estatik Bridge] Creating property: ' . $params['title']);
+        error_log('[Estatik Bridge] Received taxonomies: ' . print_r($params['taxonomies'] ?? 'NONE', true));
+        
+        $post_types = get_post_types(array(), 'names');
+        if (!in_array('properties', $post_types)) {
+            error_log('[Estatik Bridge] ERROR: Post type "properties" is not registered!');
+            error_log('[Estatik Bridge] Available post types: ' . print_r($post_types, true));
+            return new WP_Error('post_type_not_found', 'El tipo de post "properties" no está registrado en WordPress. Por favor, activa el plugin Estatik.', array('status' => 500));
+        }
         
         // Crear el post
         $post_data = array(
@@ -134,11 +142,19 @@ class Estatik_REST_API_Bridge {
             'post_type'    => 'properties', // Custom post type de Estatik
         );
         
-        $post_id = wp_insert_post($post_data);
+        error_log('[Estatik Bridge] Attempting to create post with data: ' . print_r($post_data, true));
+        
+        $post_id = wp_insert_post($post_data, true); // Added true to get WP_Error on failure
         
         if (is_wp_error($post_id)) {
             error_log('[Estatik Bridge] Error creating post: ' . $post_id->get_error_message());
-            return new WP_Error('create_failed', 'No se pudo crear la propiedad', array('status' => 500));
+            return new WP_Error('create_failed', 'No se pudo crear la propiedad: ' . $post_id->get_error_message(), array('status' => 500));
+        }
+        
+        if (!$post_id || $post_id === 0) {
+            error_log('[Estatik Bridge] ERROR: wp_insert_post returned 0 or false');
+            error_log('[Estatik Bridge] This usually means the post type is not registered or there are permission issues');
+            return new WP_Error('create_failed', 'No se pudo crear la propiedad: wp_insert_post returned 0. Verifica que el plugin Estatik esté activo y el post type "properties" esté registrado.', array('status' => 500));
         }
         
         error_log('[Estatik Bridge] Post created with ID: ' . $post_id);
@@ -147,20 +163,31 @@ class Estatik_REST_API_Bridge {
             stick_post($post_id);
         }
         
+        // Asignar taxonomías ANTES de guardar meta fields
+        if (isset($params['taxonomies']) && is_array($params['taxonomies'])) {
+            error_log('[Estatik Bridge] Assigning taxonomies before meta fields');
+            $this->assign_taxonomies($post_id, $params['taxonomies']);
+        }
+        
         // Guardar meta fields
         if (isset($params['meta']) && is_array($params['meta'])) {
             $this->save_meta_fields($post_id, $params['meta']);
         }
         
-        // Asignar taxonomías
-        if (isset($params['taxonomies']) && is_array($params['taxonomies'])) {
-            $this->assign_taxonomies($post_id, $params['taxonomies']);
+        $created_post = get_post($post_id);
+        if (!$created_post) {
+            error_log('[Estatik Bridge] ERROR: Post was created but cannot be retrieved');
+            return new WP_Error('verification_failed', 'La propiedad se creó pero no se puede verificar', array('status' => 500));
         }
+        
+        error_log('[Estatik Bridge] SUCCESS: Property created and verified with ID: ' . $post_id);
         
         return rest_ensure_response(array(
             'success' => true,
-            'post_id' => $post_id,
-            'message' => 'Propiedad creada exitosamente'
+            'post_id' => intval($post_id), // Explicitly cast to int
+            'message' => 'Propiedad creada exitosamente',
+            'post_title' => $created_post->post_title,
+            'post_status' => $created_post->post_status
         ));
     }
     
@@ -268,6 +295,11 @@ class Estatik_REST_API_Bridge {
             'es_property_address_components', 'es_property_gallery', 'es_property_video_url',
             'es_property_virtual_tour', 'es_property_is_open_house', 'es_property_is_appointment_only',
             'es_property_appointments', 'es_property_keywords', '_thumbnail_id',
+            'es_property_features', 'es_property_amenities', 
+            'es_property_feature_list', 'es_property_amenity_list',
+            // Campos de moneda para mostrar el precio con su moneda
+            'es_property_price_currency', // Código de moneda: USD, ARS, etc.
+            'es_property_price_formatted', // Precio formateado con moneda: "USD 100,000" o "Pesos 15,000,000"
         );
         
         foreach ($meta_fields as $key => $value) {
@@ -281,7 +313,7 @@ class Estatik_REST_API_Bridge {
                 }
                 
                 update_post_meta($post_id, $key, $sanitized_value);
-                error_log('[Estatik Bridge] Updated meta ' . $key);
+                error_log('[Estatik Bridge] Updated meta ' . $key . ': ' . print_r($sanitized_value, true));
             }
         }
     }
