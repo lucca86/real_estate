@@ -9,21 +9,14 @@ import type { PropertyWithDetails } from "@/types"
 import type { ActionResult } from "@/types/action-result"
 
 export async function createProperty(formData: FormData): Promise<ActionResult<PropertyWithDetails>> {
-  console.log("[v0] createProperty called")
-
   const currentUser = await getCurrentUser()
   if (!currentUser) {
-    console.log("[v0] No authenticated user")
     return { success: false, error: "No autenticado. Por favor inicia sesión." }
   }
-
-  console.log("[v0] User authenticated:", currentUser.id)
 
   const supabase = await createClient()
 
   try {
-    // Extract form data
-    console.log("[v0] Extracting form data")
 
     const title = formData.get("title") as string
     const description = formData.get("description") as string
@@ -62,10 +55,7 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
     const backMeters = formData.get("backMeters") ? Number.parseFloat(formData.get("backMeters") as string) : null
     const adrema = formData.get("adrema") as string
 
-    console.log("[v0] Form data extracted:", { title, ownerId, propertyTypeId, status, cityId })
-
     if (!title || !ownerId || !propertyTypeId || !status || !address || !cityId || !countryId || !provinceId) {
-      console.log("[v0] Missing required fields")
       return { success: false, error: "Faltan campos requeridos" }
     }
 
@@ -99,8 +89,6 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
 
     const pricePerM2 = price && parsedArea ? Number.parseFloat(price) / parsedArea : null
 
-    console.log("[v0] About to insert into database")
-
     const { data: newProperty, error } = await supabase
       .from("properties")
       .insert({
@@ -122,8 +110,8 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
         parking_spaces: parsedParkingSpaces,
         area: parsedArea,
         lot_size: parsedLotSize,
-        frontSize: frontMeters,
-        depthSize: backMeters,
+        front_size: frontMeters,
+        depth_size: backMeters,
         year_built: parsedYearBuilt,
         transaction_type: transactionType,
         rental_period: rentalPeriod || null,
@@ -149,11 +137,8 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
       .single()
 
     if (error) {
-      console.error("[v0] Database insert error:", error)
       throw new Error(`Error al crear la propiedad: ${error.message}`)
     }
-
-    console.log("[v0] Property created successfully:", newProperty?.id)
 
     if (syncToWordPress && newProperty) {
       try {
@@ -179,14 +164,11 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
       }
     }
 
-    console.log("[v0] About to revalidate and return")
     revalidatePath("/")
     revalidatePath("/properties")
-    console.log("[v0] Returning success")
     return { success: true, data: newProperty as PropertyWithDetails }
   } catch (error: any) {
-    console.error("[v0] Error in createProperty:", error)
-    console.error("[v0] Error stack:", error.stack)
+    console.error("Error in createProperty:", error)
     return {
       success: false,
       error: error.message || "Error desconocido al crear la propiedad",
@@ -298,8 +280,8 @@ export async function updateProperty(propertyId: string, formData: FormData) {
       parking_spaces: parsedParkingSpaces,
       area: parsedArea,
       lot_size: parsedLotSize,
-      frontSize: frontMeters,
-      depthSize: backMeters,
+      front_size: frontMeters,
+      depth_size: backMeters,
       year_built: parsedYearBuilt,
       transaction_type: transactionType,
       rental_period: rentalPeriod || null,

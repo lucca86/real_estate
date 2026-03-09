@@ -387,7 +387,7 @@ export function PropertyForm({
           setSelectedAmenidades(amenIds)
         }
       } catch (error) {
-        console.error("[v0] Error loading features:", error)
+        console.error("Error loading features:", error)
       }
     }
 
@@ -474,17 +474,23 @@ export function PropertyForm({
   }, [neighborhoods, formData.neighborhoodId, selectedNeighborhoodName])
 
   useEffect(() => {
-    if (formData.frontMeters && formData.backMeters && (!formData.lotSize || formData.lotSize === 0)) {
-      const calculated = formData.frontMeters * formData.backMeters
+    // Only auto-calculate lotSize if frontMeters and backMeters are filled and lotSize is not set
+    if (
+      formData.frontMeters &&
+      formData.frontMeters > 0 &&
+      formData.backMeters &&
+      formData.backMeters > 0 &&
+      (!formData.lotSize || formData.lotSize === 0)
+    ) {
+      const calculated = Math.round(formData.frontMeters * formData.backMeters * 100) / 100
       setFormData((prev) => ({ ...prev, lotSize: calculated }))
     }
-  }, [formData.frontMeters, formData.backMeters, formData.lotSize])
+  }, [formData.frontMeters, formData.backMeters]) // Intentionally NOT including lotSize to avoid overwriting manual entries
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     if (isSubmittingRef.current) {
-      console.log("[v0] Form already submitting, ignoring duplicate submission")
       return
     }
 
@@ -549,7 +555,7 @@ export function PropertyForm({
       return
     }
 
-    console.log("[v0] Starting form submission")
+
 
     const finalFormData = new FormData()
 
