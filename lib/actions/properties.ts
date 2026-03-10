@@ -110,8 +110,8 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
         parking_spaces: parsedParkingSpaces,
         area: parsedArea,
         lot_size: parsedLotSize,
-        front_size: frontMeters,
-        depth_size: backMeters,
+        frontSize: frontMeters,
+        depthSize: backMeters,
         year_built: parsedYearBuilt,
         transaction_type: transactionType,
         rental_period: rentalPeriod || null,
@@ -280,8 +280,8 @@ export async function updateProperty(propertyId: string, formData: FormData) {
       parking_spaces: parsedParkingSpaces,
       area: parsedArea,
       lot_size: parsedLotSize,
-      front_size: frontMeters,
-      depth_size: backMeters,
+      frontSize: frontMeters,
+      depthSize: backMeters,
       year_built: parsedYearBuilt,
       transaction_type: transactionType,
       rental_period: rentalPeriod || null,
@@ -347,7 +347,7 @@ export async function updateProperty(propertyId: string, formData: FormData) {
         try {
           await syncPropertyToWordPress(updatedProperty.id)
         } catch (syncError) {
-          console.error("[v0] WordPress sync failed:", syncError)
+          console.error("WordPress sync failed:", syncError)
           revalidatePath("/properties")
           revalidatePath("/catalog")
           revalidatePath(`/properties/${propertyId}/edit`)

@@ -54,9 +54,9 @@ export default async function EditPropertyPage({
     parkingSpaces: propertyData.parking_spaces != null ? Number(propertyData.parking_spaces) : undefined,
     area: propertyData.area != null ? Number(propertyData.area) : undefined,
     lotSize: propertyData.lot_size != null ? Number(propertyData.lot_size) : undefined,
-    // front_size and depth_size are the correct snake_case column names in DB
-    frontSize: propertyData.front_size != null ? Number(propertyData.front_size) : undefined,
-    depthSize: propertyData.depth_size != null ? Number(propertyData.depth_size) : undefined,
+    // frontSize and depthSize are camelCase column names in the DB (quoted identifiers)
+    frontSize: propertyData.frontSize != null ? Number(propertyData.frontSize) : undefined,
+    depthSize: propertyData.depthSize != null ? Number(propertyData.depthSize) : undefined,
     yearBuilt: propertyData.year_built != null ? Number(propertyData.year_built) : null,
     price: propertyData.price != null ? Number(propertyData.price) : undefined,
     currency: propertyData.currency,
