@@ -20,6 +20,7 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
 
     const title = formData.get("title") as string
     const description = formData.get("description") as string
+    const internalNotes = formData.get("internalNotes") as string
     const ownerId = formData.get("ownerId") as string
     const propertyTypeId = formData.get("propertyTypeId") as string
     const status = formData.get("status") as string
@@ -95,6 +96,7 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
         id: crypto.randomUUID(),
         title,
         description: description || null,
+        internal_notes: internalNotes || null,
         owner_id: ownerId,
         property_type_id: propertyTypeId,
         status,

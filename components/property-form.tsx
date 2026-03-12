@@ -53,6 +53,7 @@ interface Property {
   id?: string
   title?: string
   description?: string | null
+  internalNotes?: string | null
   ownerId?: string
   owner?: { id: string; name: string }
   propertyTypeId?: string
@@ -128,6 +129,7 @@ interface PropertyFormProps {
 interface PropertyFormData {
   title?: string
   description?: string | null
+  internalNotes?: string | null
   ownerId?: string
   propertyTypeId?: string
   status?: string
@@ -342,6 +344,7 @@ export function PropertyForm({
     ownerEmail: editProperty?.ownerEmail,
     ownerPhone: editProperty?.ownerPhone,
     createdBy: editProperty?.createdBy || userId || "",
+    internalNotes: editProperty?.internalNotes || "",
   })
 
   const scrollRef = useRef<HTMLFormElement>(null)
@@ -910,6 +913,21 @@ export function PropertyForm({
               onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
               required
               disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="internalNotes">
+              Notas Internas (solo para agentes)
+            </Label>
+            <Textarea
+              id="internalNotes"
+              name="internalNotes"
+              rows={3}
+              value={formData.internalNotes ?? ""}
+              onChange={(e) => setFormData((prev) => ({ ...prev, internalNotes: e.target.value }))}
+              disabled={isSubmitting}
+              placeholder="Notas privadas sobre la propiedad, no visibles para clientes"
             />
           </div>
 

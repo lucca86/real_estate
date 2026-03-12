@@ -36,6 +36,7 @@ export default async function EditPropertyPage({
     id: propertyData.id,
     title: propertyData.title,
     description: propertyData.description,
+    internalNotes: propertyData.internal_notes,
     status: propertyData.status,
     address: propertyData.address,
     // Location IDs — mapped from snake_case DB columns
