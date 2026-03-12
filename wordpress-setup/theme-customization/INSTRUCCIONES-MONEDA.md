@@ -19,12 +19,12 @@ Se proporcionan **3 métodos** para mostrar la moneda. Elige el que mejor se ada
 ### Instalación
 
 1. **Copiar el archivo JavaScript:**
-   ```bash
+   \`\`\`bash
    wp-content/themes/tu-tema/js/currency-display.js
-   ```
+   \`\`\`
 
 2. **Agregar al `functions.php` de tu tema:**
-   ```php
+   \`\`\`php
    function enqueue_currency_display_script() {
        wp_enqueue_script(
            'estatik-currency-display',
@@ -35,7 +35,7 @@ Se proporcionan **3 métodos** para mostrar la moneda. Elige el que mejor se ada
        );
    }
    add_action('wp_enqueue_scripts', 'enqueue_currency_display_script');
-   ```
+   \`\`\`
 
 3. **Listo!** El script detectará automáticamente todos los precios y agregará badges de USD/ARS.
 
@@ -52,9 +52,9 @@ Se proporcionan **3 métodos** para mostrar la moneda. Elige el que mejor se ada
 
 Agregar TODOS los códigos del archivo `enqueue-currency-script.php` al `functions.php`:
 
-```php
+\`\`\`php
 // Copiar todo el contenido de enqueue-currency-script.php
-```
+\`\`\`
 
 ---
 
@@ -68,14 +68,14 @@ Agregar TODOS los códigos del archivo `enqueue-currency-script.php` al `functio
 
 En cualquier template de WordPress:
 
-```php
+\`\`\`php
 <?php echo do_shortcode('[property_price_currency]'); ?>
-```
+\`\`\`
 
 O en el editor de bloques:
-```
+\`\`\`
 [property_price_currency]
-```
+\`\`\`
 
 ---
 
@@ -88,17 +88,17 @@ Ir a una propiedad en WordPress → Custom Fields → Buscar:
 
 ### 2. Si NO aparecen los campos
 El plugin PHP no está guardando los campos. Verificar:
-```bash
+\`\`\`bash
 wordpress-setup/estatik-rest-api-bridge/estatik-rest-api-bridge.php
-```
+\`\`\`
 
 Buscar en la línea ~280 que esté:
-```php
+\`\`\`php
 case 'es_property_price_currency':
 case 'es_property_price_formatted':
     update_post_meta($post_id, $key, sanitize_text_field($value));
     break;
-```
+\`\`\`
 
 ### 3. Si los campos están pero no se muestran
 Aplicar MÉTODO 1 (JavaScript) que funciona en todos los casos.
@@ -117,27 +117,27 @@ Los precios se mostrarán así:
 ## Troubleshooting
 
 ### El script no se carga
-```bash
+\`\`\`bash
 # Verificar que el archivo existe:
 wp-content/themes/tu-tema/js/currency-display.js
 
 # Verificar en el navegador (F12 → Network → JS) que se cargó
-```
+\`\`\`
 
 ### Los badges no aparecen
-```javascript
+\`\`\`javascript
 // Abrir consola del navegador (F12) y ejecutar:
 document.querySelectorAll('.es-property__price')
 
 // Debe mostrar los elementos de precio
 // Si es [0], el selector está mal. Inspeccionar el HTML y ajustar en currency-display.js línea 54
-```
+\`\`\`
 
 ### Conflicto con otros plugins
-```php
+\`\`\`php
 // En functions.php, cambiar la prioridad:
 add_action('wp_enqueue_scripts', 'enqueue_currency_display_script', 999);
-```
+\`\`\`
 
 ---
 

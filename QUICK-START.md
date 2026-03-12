@@ -12,9 +12,9 @@ Esta guía te ayudará a poner en marcha tu entorno de desarrollo local conectad
 
 ### Paso 1: Instalar Dependencias
 
-```bash
+\`\`\`bash
 npm install
-```
+\`\`\`
 
 ### Paso 2: Configurar Variables de Entorno
 
@@ -22,25 +22,25 @@ Tu archivo `.env` ya está configurado para usar las variables de Neon que está
 
 **Verifica tu archivo `.env`:**
 
-```env
+\`\`\`env
 # Estas variables usan las credenciales de Neon que ya tienes
 DATABASE_URL="${real_estate_DATABASE_URL}"
 DATABASE_URL_UNPOOLED="${real_estate_DATABASE_URL_UNPOOLED}"
 
 # Genera un JWT secret seguro
 JWT_SECRET="tu-clave-secreta-aqui"
-```
+\`\`\`
 
 **Si necesitas obtener las URLs directamente**, ejecuta:
 
-```bash
+\`\`\`bash
 # Ver las variables de entorno disponibles
 npm run env:check
-```
+\`\`\`
 
 ### Paso 3: Inicializar la Base de Datos
 
-```bash
+\`\`\`bash
 # Generar el cliente de Prisma
 npx prisma generate
 
@@ -49,20 +49,20 @@ npx prisma db push
 
 # (Opcional) Poblar con datos de ejemplo
 npm run db:seed
-```
+\`\`\`
 
 ## ✅ Verificar la Instalación
 
-```bash
+\`\`\`bash
 # Iniciar el servidor de desarrollo
 npm run dev
-```
+\`\`\`
 
 Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
 ## 🗄️ Comandos de Base de Datos Útiles
 
-```bash
+\`\`\`bash
 # Ver el estado de la base de datos
 npm run db:status
 
@@ -74,7 +74,7 @@ npx prisma migrate dev --name nombre-descriptivo
 
 # Ver los datos directamente en Neon
 npm run db:check
-```
+\`\`\`
 
 ## 🔍 Solución de Problemas
 
@@ -84,7 +84,7 @@ Tu archivo `.env` no tiene las credenciales correctas. Las variables de Neon con
 
 **Solución:**
 
-```bash
+\`\`\`bash
 # Opción 1: Usar el script de setup interactivo
 npm run setup:local
 
@@ -92,15 +92,15 @@ npm run setup:local
 # 1. Ve a tu proyecto en Vercel Dashboard
 # 2. Settings → Environment Variables
 # 3. Copia las variables que empiezan con "real_estate_" o "POSTGRES"
-```
+\`\`\`
 
 ### Error: Prisma no puede conectarse
 
 **Verifica la conexión:**
 
-```bash
+\`\`\`bash
 npx prisma db pull
-```
+\`\`\`
 
 Si falla, verifica que:
 1. Las URLs de Neon están correctas en `.env`
@@ -111,10 +111,10 @@ Si falla, verifica que:
 
 Ejecuta la migración inicial:
 
-```bash
+\`\`\`bash
 npx prisma db push
 npm run db:seed
-```
+\`\`\`
 
 ## 📚 Recursos
 

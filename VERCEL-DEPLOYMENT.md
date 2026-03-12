@@ -10,9 +10,9 @@
 ## Problema en Producción
 
 El error en Vercel es:
-```
+\`\`\`
 Can't reach database server at `localhost:5432`
-```
+\`\`\`
 
 Esto significa que las variables de entorno de Neon NO están configuradas en Vercel.
 
@@ -26,9 +26,9 @@ Las variables de entorno con prefijo `real_estate_` solo existen en v0, NO en Ve
 
 Tu archivo `.env` local ya tiene la URL correcta. Cópiala:
 
-```env
+\`\`\`env
 DATABASE_URL=postgresql://...tu URL de Neon...
-```
+\`\`\`
 
 #### Opción B: Desde Neon Console
 
@@ -46,7 +46,7 @@ DATABASE_URL=postgresql://...tu URL de Neon...
 
 #### Variables Requeridas:
 
-```
+\`\`\`
 DATABASE_URL
 Valor: postgresql://[usuario]:[password]@[host]/[database]?sslmode=require
 
@@ -64,7 +64,7 @@ Valor: tu_usuario_wordpress
 
 WORDPRESS_APP_PASSWORD
 Valor: tu_password_de_aplicacion_wordpress
-```
+\`\`\`
 
 #### Importante sobre DATABASE_URL:
 
@@ -118,11 +118,11 @@ Después del deployment, verifica que funcione:
 **Causa**: La contraseña del admin no coincide
 
 **Solución**:
-```bash
+\`\`\`bash
 # En tu máquina local:
 npm run admin:reset
 # Ingresa la nueva contraseña cuando te lo pida
-```
+\`\`\`
 
 ### Error: "JWT_SECRET not configured"
 
@@ -136,24 +136,24 @@ npm run admin:reset
 ## Comandos Útiles
 
 ### Verificar conexión local:
-```bash
+\`\`\`bash
 npm run check:env
-```
+\`\`\`
 
 ### Resetear contraseña del admin:
-```bash
+\`\`\`bash
 npm run admin:reset
-```
+\`\`\`
 
 ### Verificar credenciales del admin:
-```bash
+\`\`\`bash
 npm run admin:verify
-```
+\`\`\`
 
 ### Ver estado de la base de datos:
-```bash
+\`\`\`bash
 npm run db:status
-```
+\`\`\`
 
 ## URLs Importantes
 

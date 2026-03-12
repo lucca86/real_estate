@@ -55,7 +55,7 @@ Para cada archivo en la lista siguiente, necesitas:
 ## Ejemplo de Transformación
 
 **ANTES:**
-```typescript
+\`\`\`typescript
 import { getCurrentUser } from "@/lib/auth"
 import { DashboardLayout } from "@/components/dashboard-layout"
 
@@ -70,10 +70,10 @@ export default async function SomePage() {
     </DashboardLayout>
   )
 }
-```
+\`\`\`
 
 **DESPUÉS:**
-```typescript
+\`\`\`typescript
 export default async function SomePage() {
   return (
     <div>
@@ -81,7 +81,7 @@ export default async function SomePage() {
     </div>
   )
 }
-```
+\`\`\`
 
 ## Nota Importante
 NO modifiques `app/(dashboard)/layout.tsx` - ese archivo DEBE mantener el DashboardLayout porque es el que lo aplica a todas las páginas hijas.

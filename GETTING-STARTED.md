@@ -12,16 +12,16 @@ Esta guía te ayudará a configurar el proyecto localmente y desplegarlo en prod
 
 ### Paso 1: Clonar el repositorio
 
-```bash
+\`\`\`bash
 git clone <tu-repositorio>
 cd real_state
-```
+\`\`\`
 
 ### Paso 2: Instalar dependencias
 
-```bash
+\`\`\`bash
 npm install
-```
+\`\`\`
 
 **IMPORTANTE:** Si obtienes un error `You don't have any datasource defined`, es porque falta el archivo `.env`. Continúa con el siguiente paso.
 
@@ -29,7 +29,7 @@ npm install
 
 Crea un archivo `.env` en la raíz del proyecto con el siguiente contenido:
 
-```env
+\`\`\`env
 # Base de datos Neon
 DATABASE_URL="postgresql://user:password@host/database?sslmode=require"
 DATABASE_URL_UNPOOLED="postgresql://user:password@host/database?sslmode=require"
@@ -41,7 +41,7 @@ JWT_SECRET="your-super-secret-jwt-key-change-this"
 WORDPRESS_API_URL="https://tu-wordpress.com/wp-json"
 WORDPRESS_USERNAME="admin"
 WORDPRESS_APP_PASSWORD="xxxx xxxx xxxx xxxx"
-```
+\`\`\`
 
 **¿Dónde encuentro mis credenciales de Neon?**
 
@@ -53,9 +53,9 @@ WORDPRESS_APP_PASSWORD="xxxx xxxx xxxx xxxx"
 
 ### Paso 4: Generar el cliente de Prisma
 
-```bash
+\`\`\`bash
 npx prisma generate
-```
+\`\`\`
 
 Este comando genera los tipos TypeScript necesarios basados en tu esquema de base de datos.
 
@@ -63,9 +63,9 @@ Este comando genera los tipos TypeScript necesarios basados en tu esquema de bas
 
 Ejecuta el script de configuración que creará todas las tablas y datos iniciales:
 
-```bash
+\`\`\`bash
 npm run db:setup
-```
+\`\`\`
 
 Este script:
 - ✅ Crea todas las tablas (usuarios, propiedades, clientes, etc.)
@@ -78,23 +78,23 @@ Este script:
 
 ### Paso 6: Verificar la configuración
 
-```bash
+\`\`\`bash
 npm run db:status
-```
+\`\`\`
 
 Este comando verifica que todas las tablas estén creadas correctamente.
 
 ### Paso 7: Iniciar el servidor de desarrollo
 
-```bash
+\`\`\`bash
 npm run dev
-```
+\`\`\`
 
 Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
 ## 🗄️ Comandos de Base de Datos
 
-```bash
+\`\`\`bash
 # Inicializar base de datos (tablas + datos)
 npm run db:setup
 
@@ -106,7 +106,7 @@ npm run db:reset
 
 # Ver el schema en Prisma Studio
 npx prisma studio
-```
+\`\`\`
 
 ## 🌍 Despliegue en Vercel
 
@@ -120,36 +120,36 @@ Tu proyecto ya está conectado a GitHub y Vercel.
 2. Ve a **Settings** → **Environment Variables**
 3. Agrega las siguientes variables:
 
-```
+\`\`\`
 DATABASE_URL=<tu-url-de-neon>
 DATABASE_URL_UNPOOLED=<tu-url-de-neon-unpooled>
 JWT_SECRET=<genera-un-secret-seguro>
 WORDPRESS_API_URL=<opcional>
 WORDPRESS_USERNAME=<opcional>
 WORDPRESS_APP_PASSWORD=<opcional>
-```
+\`\`\`
 
 ### Paso 3: Inicializar base de datos de producción
 
 Desde tu terminal local, pero usando la URL de producción:
 
-```bash
+\`\`\`bash
 # Opción 1: Usar Vercel CLI
 DATABASE_URL="<tu-url-de-produccion>" npm run db:setup
 
 # Opción 2: Ejecutar scripts SQL directamente en Neon Console
 # Ve a Neon Console → SQL Editor y ejecuta los scripts en scripts/
-```
+\`\`\`
 
 ### Paso 4: Deploy automático
 
 Cada vez que hagas push a la rama `main`, Vercel desplegará automáticamente.
 
-```bash
+\`\`\`bash
 git add .
 git commit -m "Initial setup"
 git push origin main
-```
+\`\`\`
 
 ## 🔧 Solución de Problemas
 
@@ -176,19 +176,19 @@ git push origin main
 **Causa:** Las tablas no se han creado en la base de datos.
 
 **Solución:**
-```bash
+\`\`\`bash
 npm run db:setup
-```
+\`\`\`
 
 ### El login no funciona
 
 **Causa:** No existe el usuario administrador.
 
 **Solución:**
-```bash
+\`\`\`bash
 npm run db:setup
 # Luego inicia sesión con: admin@mahler.com / Admin123!
-```
+\`\`\`
 
 ## 📚 Próximos Pasos
 

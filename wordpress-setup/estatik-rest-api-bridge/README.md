@@ -5,9 +5,9 @@ Este plugin de WordPress expone un endpoint REST API personalizado que permite s
 ## Instalación
 
 1. **Subir el plugin a WordPress:**
-   ```
+   \`\`\`
    wp-content/plugins/estatik-rest-api-bridge/
-   ```
+   \`\`\`
 
 2. **Activar el plugin:**
    - Ve a WordPress Admin → Plugins
@@ -24,7 +24,7 @@ Este plugin de WordPress expone un endpoint REST API personalizado que permite s
 
 ### Crear Propiedad
 
-```bash
+\`\`\`bash
 POST /wp-json/estatik-bridge/v1/properties
 Authorization: Basic {base64(username:app_password)}
 Content-Type: application/json
@@ -47,11 +47,11 @@ Content-Type: application/json
     "es_status": ["active"]
   }
 }
-```
+\`\`\`
 
 ### Actualizar Propiedad
 
-```bash
+\`\`\`bash
 PUT /wp-json/estatik-bridge/v1/properties/123
 Authorization: Basic {base64(username:app_password)}
 Content-Type: application/json
@@ -62,14 +62,14 @@ Content-Type: application/json
     "es_price": 260000
   }
 }
-```
+\`\`\`
 
 ### Eliminar Propiedad
 
-```bash
+\`\`\`bash
 DELETE /wp-json/estatik-bridge/v1/properties/123
 Authorization: Basic {base64(username:app_password)}
-```
+\`\`\`
 
 ## Seguridad
 
@@ -122,6 +122,6 @@ Authorization: Basic {base64(username:app_password)}
 ### Los campos no se guardan
 - Verifica que los nombres de los campos coincidan exactamente con los listados arriba
 - Revisa los logs de WordPress para ver errores específicos
-```
+\`\`\`
 
-```typescript file="" isHidden
+\`\`\`typescript file="" isHidden

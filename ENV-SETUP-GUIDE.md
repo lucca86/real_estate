@@ -8,9 +8,9 @@ El error `Can't reach database server at host:5432` significa que tu archivo `.e
 
 ### Opción 1: Usar el Asistente Interactivo (Recomendado)
 
-```bash
+\`\`\`bash
 npm run setup:env
-```
+\`\`\`
 
 Este comando ejecutará un asistente que te guiará paso a paso para configurar tu archivo `.env`.
 
@@ -25,26 +25,26 @@ Este comando ejecutará un asistente que te guiará paso a paso para configurar 
 
 2. **Edita tu archivo `.env` local:**
 
-```env
+\`\`\`env
 # Reemplaza esto:
 DATABASE_URL="postgresql://user:password@host:5432/database"
 
 # Con tu URL real de Neon:
 DATABASE_URL="postgresql://tu-usuario:tu-password@ep-xxx.us-east-2.aws.neon.tech:5432/tu-database?sslmode=require"
-```
+\`\`\`
 
 3. **Copia la URL dos veces:**
 
-```env
+\`\`\`env
 DATABASE_URL="tu-url-de-neon-aqui"
 DATABASE_URL_UNPOOLED="tu-url-de-neon-aqui"
-```
+\`\`\`
 
 ## Después de Configurar
 
 Una vez que tengas el `.env` configurado correctamente:
 
-```bash
+\`\`\`bash
 # 1. Crear las tablas en Neon
 npm run db:push
 
@@ -53,29 +53,29 @@ npm run db:seed
 
 # 3. Iniciar el servidor de desarrollo
 npm run dev
-```
+\`\`\`
 
 ## Verificar la Conexión
 
 Para verificar que la conexión funciona:
 
-```bash
+\`\`\`bash
 npm run db:status
-```
+\`\`\`
 
 ## Variables de Entorno Necesarias
 
 ### Mínimo para Desarrollo Local
 
-```env
+\`\`\`env
 DATABASE_URL="postgresql://..."        # ✅ OBLIGATORIO
 DATABASE_URL_UNPOOLED="postgresql://..." # ✅ OBLIGATORIO
 JWT_SECRET="cualquier-string-seguro"   # ✅ OBLIGATORIO
-```
+\`\`\`
 
 ### Opcionales (solo si usas estas funcionalidades)
 
-```env
+\`\`\`env
 # WordPress (solo si sincronizas con WordPress)
 WORDPRESS_API_URL="https://tu-sitio.com/wp-json"
 WORDPRESS_USERNAME="tu-usuario"
@@ -85,7 +85,7 @@ WORDPRESS_APP_PASSWORD="xxxx xxxx xxxx xxxx"
 NEXT_PUBLIC_real_estate_STACK_PROJECT_ID="..."
 NEXT_PUBLIC_real_estate_STACK_PUBLISHABLE_CLIENT_KEY="..."
 real_estate_STACK_SECRET_SERVER_KEY="..."
-```
+\`\`\`
 
 ## Notas Importantes
 
@@ -115,6 +115,6 @@ Si sigues teniendo problemas:
 1. Ejecuta `npm run env:check` para diagnosticar
 2. Verifica la consola de Neon: https://console.neon.tech
 3. Revisa que tu proyecto Neon esté activo y no suspendido
-```
+\`\`\`
 
-```json file="" isHidden
+\`\`\`json file="" isHidden
