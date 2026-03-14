@@ -98,6 +98,8 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
         description: description || null,
         internal_notes: internalNotes || null,
         owner_id: ownerId,
+        created_by_id: currentUser.id,
+        updated_by_id: currentUser.id,
         property_type_id: propertyTypeId,
         status,
         address,
@@ -304,6 +306,7 @@ export async function updateProperty(propertyId: string, formData: FormData) {
       virtual_tour: virtualTour || null,
       published,
       sync_to_wordpress: syncToWordPress,
+      updated_by_id: currentUser.id,
       updated_at: new Date().toISOString(),
     })
     .eq("id", propertyId)
@@ -480,6 +483,8 @@ export async function getPropertyById(id: string) {
         province:provinces!province_id(id, name),
         country:countries!country_id(id, name)
       ),
+      createdBy:users!created_by_id(id, email, full_name),
+      updatedBy:users!updated_by_id(id, email, full_name),
       city:cities!city_id(id, name),
       province:provinces!province_id(id, name),
       country:countries!country_id(id, name),
