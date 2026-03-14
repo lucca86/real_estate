@@ -214,6 +214,8 @@ export async function updateProperty(propertyId: string, formData: FormData) {
   const currency = formData.get("currency") as string
   const rentalPrice = formData.get("rentalPrice") as string
   const amenities = formData.get("amenities") as string
+  const description = formData.get("description") as string
+  const internalNotes = formData.get("internalNotes") as string
   const imagesJson = formData.get("images") as string
   const isFeatured = formData.get("isFeatured") === "true"
   const propertyLabel = formData.get("propertyLabel") as string
@@ -267,6 +269,7 @@ export async function updateProperty(propertyId: string, formData: FormData) {
     .update({
       title,
       description: description || null,
+      internal_notes: internalNotes || null,
       owner_id: ownerId,
       property_type_id: propertyTypeId,
       status,
