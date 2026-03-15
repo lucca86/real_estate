@@ -482,8 +482,8 @@ export async function getPropertyById(id: string) {
         province:provinces!province_id(id, name),
         country:countries!country_id(id, name)
       ),
-      createdBy:users!created_by_id(id, email, full_name),
-      updatedBy:users!updated_by_id(id, email, full_name),
+      createdBy:users!created_by_id(id, email, name),
+      updatedBy:users!updated_by_id(id, email, name),
       city:cities!city_id(id, name),
       province:provinces!province_id(id, name),
       country:countries!country_id(id, name),

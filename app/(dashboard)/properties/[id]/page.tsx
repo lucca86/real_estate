@@ -283,7 +283,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Creado por</span>
                   <span className="font-medium">
-                    {property.createdBy?.full_name || property.createdBy?.email || "Sistema"}
+                    {property.createdBy?.name || property.createdBy?.email || "Sistema"}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -304,7 +304,7 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Actualizado por</span>
                   <span className="font-medium">
-                    {property.updatedBy?.full_name || property.updatedBy?.email || "Sistema"}
+                    {property.updatedBy?.name || property.updatedBy?.email || "Sistema"}
                   </span>
                 </div>
                 <div className="flex justify-between">
