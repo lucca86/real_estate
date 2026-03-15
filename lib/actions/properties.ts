@@ -216,7 +216,6 @@ export async function updateProperty(propertyId: string, formData: FormData) {
   const currency = formData.get("currency") as string
   const rentalPrice = formData.get("rentalPrice") as string
   const amenities = formData.get("amenities") as string
-  const description = formData.get("description") as string
   const internalNotes = formData.get("internalNotes") as string
   const imagesJson = formData.get("images") as string
   const isFeatured = formData.get("isFeatured") === "true"
