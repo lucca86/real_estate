@@ -278,47 +278,37 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
             <CardHeader>
               <CardTitle>Información de Auditoría</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4 text-sm">
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Creado por</span>
-                  <span className="font-medium">
-                    {property.createdBy?.name || property.createdBy?.email || "Sistema"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Fecha de creación</span>
-                  <span className="font-medium">
-                    {new Date(property.created_at).toLocaleDateString("es-AR", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                </div>
+            <CardContent className="space-y-6">
+              <div className="space-y-3">
+                <p className="text-xs font-semibold uppercase text-muted-foreground">Creado por</p>
+                <p className="text-lg font-bold">
+                  {property.createdBy?.name || property.createdBy?.email || "Sistema"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(property.created_at).toLocaleDateString("es-AR", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
               </div>
               <Separator />
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Actualizado por</span>
-                  <span className="font-medium">
-                    {property.updatedBy?.name || property.updatedBy?.email || "Sistema"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Última actualización</span>
-                  <span className="font-medium">
-                    {new Date(property.updated_at).toLocaleDateString("es-AR", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                </div>
+              <div className="space-y-3">
+                <p className="text-xs font-semibold uppercase text-muted-foreground">Actualizado por</p>
+                <p className="text-lg font-bold">
+                  {property.updatedBy?.name || property.updatedBy?.email || "Sistema"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(property.updated_at).toLocaleDateString("es-AR", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
               </div>
             </CardContent>
           </Card>

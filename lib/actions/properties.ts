@@ -479,8 +479,6 @@ export async function getPropertyById(id: string) {
         owner_type,
         real_estate_agency
       ),
-      createdBy:users!created_by_id(id, email, name),
-      updatedBy:users!updated_by_id(id, email, name),
       city:cities!city_id(id, name),
       province:provinces!province_id(id, name),
       country:countries!country_id(id, name),
@@ -500,7 +498,33 @@ export async function getPropertyById(id: string) {
     return null
   }
 
-  return property
+  // Obtener datos del usuario que creó la propiedad
+  let createdBy = null
+  if (property.created_by_id) {
+    const { data: createdByUser } = await supabase
+      .from("users")
+      .select("id, email, name")
+      .eq("id", property.created_by_id)
+      .single()
+    createdBy = createdByUser
+  }
+
+  // Obtener datos del usuario que actualizó la propiedad
+  let updatedBy = null
+  if (property.updated_by_id) {
+    const { data: updatedByUser } = await supabase
+      .from("users")
+      .select("id, email, name")
+      .eq("id", property.updated_by_id)
+      .single()
+    updatedBy = updatedByUser
+  }
+
+  return {
+    ...property,
+    createdBy,
+    updatedBy,
+  }
 }
 
 const parseArrayField = (value: any): string[] => {
