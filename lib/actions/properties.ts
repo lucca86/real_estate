@@ -477,10 +477,7 @@ export async function getPropertyById(id: string) {
         first_name,
         last_name,
         owner_type,
-        real_estate_agency,
-        city:cities!city_id(id, name),
-        province:provinces!province_id(id, name),
-        country:countries!country_id(id, name)
+        real_estate_agency
       ),
       createdBy:users!created_by_id(id, email, name),
       updatedBy:users!updated_by_id(id, email, name),
