@@ -54,86 +54,102 @@ function expandAbbreviations(text: string): string {
 }
 
 /**
- * Geocode an address using Nominatim (OpenStreetMap)
- * Free service, no API key required
+ * Geocode an address using Nominatim structured search (OpenStreetMap)
+ * Uses separate fields for street, city and state to get precise results
  */
 export async function geocodeAddress(address: string, city?: string, state?: string): Promise<GeocodingResult | null> {
   try {
+    // Strategy 1: Structured search (most precise - city and state as separate params)
+    if (city && state) {
+      const normalizedCity =
+        city === "Ciudad Autónoma de Buenos Aires" || city === "Capital" ? "Buenos Aires" : city
+
+      const params = new URLSearchParams({
+        street: address,
+        city: normalizedCity,
+        state: state,
+        country: "Argentina",
+        format: "json",
+        limit: "5",
+        addressdetails: "1",
+      })
+      const url = `https://nominatim.openstreetmap.org/search?${params.toString()}`
+
+      const response = await fetch(url, {
+        headers: { "User-Agent": "Real Estate Management App" },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data && data.length > 0) {
+          // Filter results to those that match city
+          const filtered = data.filter((r: any) => {
+            const addr = r.address || {}
+            const resultCity = (addr.city || addr.town || addr.municipality || "").toLowerCase()
+            return resultCity.includes(normalizedCity.toLowerCase())
+          })
+          const best = filtered.length > 0 ? filtered[0] : data[0]
+          return {
+            latitude: Number.parseFloat(best.lat),
+            longitude: Number.parseFloat(best.lon),
+            displayName: best.display_name,
+          }
+        }
+      }
+    }
+
+    // Strategy 2: Free-text search with city+state embedded in the query
+    if (city && state) {
+      const normalizedCity =
+        city === "Ciudad Autónoma de Buenos Aires" || city === "Capital" ? "Buenos Aires" : city
+      const q = `${address}, ${normalizedCity}, ${state}, Argentina`
+      const params = new URLSearchParams({
+        q,
+        format: "json",
+        limit: "10",
+        countrycodes: "ar",
+        addressdetails: "1",
+      })
+      const url = `https://nominatim.openstreetmap.org/search?${params.toString()}`
+
+      const response = await fetch(url, {
+        headers: { "User-Agent": "Real Estate Management App" },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data && data.length > 0) {
+          // Filter strictly by city match
+          const filtered = data.filter((r: any) => {
+            const addr = r.address || {}
+            const resultCity = (addr.city || addr.town || addr.municipality || "").toLowerCase()
+            return resultCity.includes(normalizedCity.toLowerCase())
+          })
+          const best = filtered.length > 0 ? filtered[0] : null
+          if (best) {
+            return {
+              latitude: Number.parseFloat(best.lat),
+              longitude: Number.parseFloat(best.lon),
+              displayName: best.display_name,
+            }
+          }
+        }
+      }
+    }
+
+    // Strategy 3: Fallback - free-text only (least precise)
     const encodedAddress = encodeURIComponent(address)
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=20&countrycodes=ar&addressdetails=1`
-
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=1&countrycodes=ar&addressdetails=1`
     const response = await fetch(url, {
-      headers: {
-        "User-Agent": "Real Estate Management App",
-      },
+      headers: { "User-Agent": "Real Estate Management App" },
     })
-
-    if (!response.ok) {
-      console.error("Geocoding API error:", response.statusText)
-      return null
-    }
-
+    if (!response.ok) return null
     const data = await response.json()
-
-    if (!data || data.length === 0) {
-      return null
-    }
-
-    const scoredResults = data.map((result: any) => {
-      const displayName = result.display_name.toLowerCase()
-      const addressDetails = result.address || {}
-      let score = 0
-
-      if (city && state) {
-        const normalizedCity = city === "Ciudad Autónoma de Buenos Aires" || city === "Capital" ? "Buenos Aires" : city
-        const resultCity = addressDetails.city || addressDetails.town || addressDetails.municipality || ""
-        const resultState = addressDetails.state || ""
-
-        // Boost score if city matches
-        if (
-          resultCity.toLowerCase().includes(normalizedCity.toLowerCase()) ||
-          displayName.includes(normalizedCity.toLowerCase())
-        ) {
-          score += 100
-        }
-
-        // Boost score if state matches
-        if (resultState.toLowerCase().includes(state.toLowerCase()) || displayName.includes(state.toLowerCase())) {
-          score += 50
-        }
-      }
-
-      // Prefer results with house numbers
-      if (addressDetails.house_number) {
-        score += 50
-      }
-
-      // Prefer results with road/street names
-      if (addressDetails.road) {
-        score += 30
-      }
-
-      // Use OSM importance score
-      if (result.importance) {
-        score += result.importance * 10
-      }
-
-      // Prefer building/residential results
-      if (result.type === "house" || result.type === "building" || result.type === "residential") {
-        score += 40
-      }
-
-      return { ...result, score }
-    })
-
-    scoredResults.sort((a: any, b: any) => b.score - a.score)
-
-    const result = scoredResults[0]
-
+    if (!data || data.length === 0) return null
     return {
-      latitude: Number.parseFloat(result.lat),
-      longitude: Number.parseFloat(result.lon),
-      displayName: result.display_name,
+      latitude: Number.parseFloat(data[0].lat),
+      longitude: Number.parseFloat(data[0].lon),
+      displayName: data[0].display_name,
     }
   } catch (error) {
     console.error("Geocoding error:", error)
@@ -157,29 +173,27 @@ export async function geocodeProperty(
   const correctedAddress = correctStreetName(address)
   const expandedAddress = expandAbbreviations(correctedAddress)
 
-  const strategies = [
-    `${expandedAddress}, ${normalizedCity}, ${state}, ${country}`,
-    neighborhood ? `${expandedAddress}, ${neighborhood}, ${normalizedCity}, ${state}, ${country}` : null,
-    address !== expandedAddress ? `${address}, ${normalizedCity}, ${state}, ${country}` : null,
-    `${expandedAddress}, ${normalizedCity}, ${country}`,
-    `${expandedAddress.replace(/\d+/g, "").trim()}, ${normalizedCity}, ${state}, ${country}`,
-    `${expandedAddress.split(",")[0]}, ${normalizedCity}, ${country}`,
-    `${normalizedCity}, ${state}, ${country}`,
-  ].filter(Boolean) as string[]
+  // Strategy 1: structured search with corrected/expanded address
+  const result1 = await geocodeAddress(expandedAddress, normalizedCity, state)
+  if (result1) return result1
 
-  for (let i = 0; i < strategies.length; i++) {
-    const strategyAddress = strategies[i]
+  await new Promise((resolve) => setTimeout(resolve, 500))
 
-    const result = await geocodeAddress(strategyAddress, normalizedCity, state)
-    if (result) {
-      return result
-    }
-
-    if (i < strategies.length - 1) {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-    }
+  // Strategy 2: try with original address (in case corrections broke something)
+  if (address !== expandedAddress) {
+    const result2 = await geocodeAddress(address, normalizedCity, state)
+    if (result2) return result2
+    await new Promise((resolve) => setTimeout(resolve, 500))
   }
 
-  console.error("All geocoding strategies failed")
+  // Strategy 3: street name only (no house number) with city+state
+  const streetOnly = expandedAddress.replace(/\s+\d+.*$/, "").trim()
+  if (streetOnly !== expandedAddress) {
+    const result3 = await geocodeAddress(streetOnly, normalizedCity, state)
+    if (result3) return result3
+    await new Promise((resolve) => setTimeout(resolve, 500))
+  }
+
+  console.error("All geocoding strategies failed for:", address, normalizedCity, state)
   return null
 }
