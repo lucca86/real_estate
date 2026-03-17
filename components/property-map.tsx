@@ -91,13 +91,16 @@ export function PropertiesMap({
 
         const L = await import("leaflet")
 
-        // Fix Leaflet default marker icons — prevent auto-detected imagePath from being prepended
-        delete (L.Icon.Default.prototype as any)._getIconUrl
-        ;(L.Icon.Default as any).imagePath = ""
-        L.Icon.Default.mergeOptions({
-          iconUrl: `${window.location.origin}/leaflet/marker-icon.png`,
-          iconRetinaUrl: `${window.location.origin}/leaflet/marker-icon-2x.png`,
-          shadowUrl: `${window.location.origin}/leaflet/marker-shadow.png`,
+        // SVG marker icon — no external PNG files needed
+        const svgMarker = L.divIcon({
+          html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36">
+            <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24S24 21 24 12C24 5.373 18.627 0 12 0z" fill="#2563eb"/>
+            <circle cx="12" cy="12" r="5" fill="white"/>
+          </svg>`,
+          className: "",
+          iconSize: [24, 36],
+          iconAnchor: [12, 36],
+          popupAnchor: [0, -36],
         })
 
         if (!mapRef.current) {
@@ -140,6 +143,7 @@ export function PropertiesMap({
 
           const marker = L.marker([lat, lng], {
             draggable: draggable,
+            icon: svgMarker,
           })
 
           marker.bindPopup(`
