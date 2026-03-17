@@ -28,9 +28,8 @@ export default async function EditPropertyPage({
     notFound()
   }
 
-  if (propertyData.created_by_id && propertyData.created_by_id !== user.id && user.role === "VENDEDOR") {
-    redirect("/properties")
-  }
+  // Solo bloquear si el usuario no está autenticado (ya chequeado arriba)
+  // Todos los roles (ADMIN, SUPERVISOR, VENDEDOR) pueden editar cualquier propiedad
 
   const property = {
     id: propertyData.id,
@@ -85,7 +84,14 @@ export default async function EditPropertyPage({
     updatedAt: new Date(propertyData.updated_at),
   }
 
-  const imagesToSync = (propertyData.images || []).filter((img: any) => img.syncToWordPress === true)
+  // Considera que hay imágenes para sincronizar si:
+  // 1. Hay al menos una imagen, Y
+  // 2. Al menos una tiene syncToWordPress === true, o ninguna tiene el flag explícito (compatibilidad con imágenes antiguas)
+  const images = propertyData.images || []
+  const imagesWithExplicitFlag = images.filter((img: any) => typeof img === "object" && img !== null && "syncToWordPress" in img)
+  const imagesToSync = imagesWithExplicitFlag.length > 0
+    ? images.filter((img: any) => img.syncToWordPress === true)
+    : images // si ninguna tiene el flag, todas se sincronizan
   const hasImagesToSync = imagesToSync.length > 0
 
   return (

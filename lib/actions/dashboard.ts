@@ -2,6 +2,58 @@
 
 import { createAdminClient } from "@/lib/supabase/server"
 
+export async function getAgentRanking(period: "week" | "month" | "year" | "all" = "week") {
+  const supabase = await createAdminClient()
+
+  try {
+    let fromDate: string | null = null
+    const now = new Date()
+
+    if (period === "week") {
+      const d = new Date(now)
+      d.setDate(d.getDate() - 7)
+      fromDate = d.toISOString()
+    } else if (period === "month") {
+      const d = new Date(now)
+      d.setMonth(d.getMonth() - 1)
+      fromDate = d.toISOString()
+    } else if (period === "year") {
+      const d = new Date(now)
+      d.setFullYear(d.getFullYear() - 1)
+      fromDate = d.toISOString()
+    }
+
+    let query = supabase
+      .from("properties")
+      .select("created_by_id, users!created_by_id(name)")
+
+    if (fromDate) {
+      query = query.gte("created_at", fromDate)
+    }
+
+    const { data, error } = await query
+
+    if (error || !data) return []
+
+    // Agrupar por usuario
+    const counts: Record<string, { name: string; count: number }> = {}
+    for (const row of data) {
+      const userId = row.created_by_id
+      if (!userId) continue
+      const name = (row.users as any)?.name || "Sin nombre"
+      if (!counts[userId]) counts[userId] = { name, count: 0 }
+      counts[userId].count++
+    }
+
+    return Object.values(counts)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10)
+  } catch (error) {
+    console.error("[getAgentRanking] Error:", error)
+    return []
+  }
+}
+
 export async function getDashboardStats() {
   const supabase = await createAdminClient()
 
@@ -20,8 +72,8 @@ export async function getDashboardStats() {
     const { count: upcomingAppointments } = await supabase
       .from("appointments")
       .select("*", { count: "exact", head: true })
-      .gte("scheduled_date", new Date().toISOString())
-      .not("status", "eq", "CANCELADA")
+      .in("status", ["PENDIENTE", "CONFIRMADA"])
+      .gte("scheduled_date", new Date().toISOString().split("T")[0])
 
     const { data: propertiesByType } = await supabase.from("properties").select(`
         property_type_id,
@@ -50,33 +102,6 @@ export async function getDashboardStats() {
       return acc
     }, {})
 
-    // Ranking of agents by properties created
-    const { data: propertiesByAgent } = await supabase
-      .from("properties")
-      .select("created_by_id")
-      .not("created_by_id", "is", null)
-
-    const agentIdCounts: Record<string, number> = {}
-    propertiesByAgent?.forEach((p: any) => {
-      if (p.created_by_id) {
-        agentIdCounts[p.created_by_id] = (agentIdCounts[p.created_by_id] || 0) + 1
-      }
-    })
-
-    const agentIds = Object.keys(agentIdCounts)
-    let agentRanking: { name: string; count: number }[] = []
-
-    if (agentIds.length > 0) {
-      const { data: agentUsers } = await supabase
-        .from("users")
-        .select("id, name")
-        .in("id", agentIds)
-
-      agentRanking = (agentUsers || [])
-        .map((u: any) => ({ name: u.name, count: agentIdCounts[u.id] || 0 }))
-        .sort((a, b) => b.count - a.count)
-    }
-
     const { data: recentProperties } = await supabase
       .from("properties")
       .select(`
@@ -85,8 +110,8 @@ export async function getDashboardStats() {
         price,
         currency,
         created_at,
-        property_types(name),
-        cities(name)
+        propertyType:property_types!property_type_id(name),
+        city:cities!city_id(name)
       `)
       .order("created_at", { ascending: false })
       .limit(5)
@@ -98,20 +123,19 @@ export async function getDashboardStats() {
         price: prop.price,
         currency: prop.currency,
         created_at: prop.created_at,
-        property_types: prop.property_types?.[0] || null,
-        cities: prop.cities?.[0] || null,
+        property_types: prop.propertyType || null,
+        cities: prop.city || null,
       })) || []
 
     const chartData = {
-      propertyTypes: Object.entries(propertyTypeCounts || {}).map(([name, count]) => ({
+      propertyTypes: Object.entries(propertyTypeCounts ?? {}).map(([name, count]) => ({
         name,
-        count,
+        count: count as number,
       })),
-      transactionTypes: Object.entries(transactionCounts || {}).map(([name, count]) => ({
+      transactionTypes: Object.entries(transactionCounts ?? {}).map(([name, count]) => ({
         name,
-        count,
+        count: count as number,
       })),
-      agentRanking,
     }
 
     return {
@@ -138,7 +162,6 @@ export async function getDashboardStats() {
       charts: {
         propertyTypes: [],
         transactionTypes: [],
-        agentRanking: [],
       },
       recentProperties: [],
     }

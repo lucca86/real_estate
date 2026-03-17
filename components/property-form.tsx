@@ -574,9 +574,13 @@ export function PropertyForm({
       }
     })
 
-    // Explicitly append images as JSON string as per PropertyImageUpload component's expected format
+    // Ensure internalNotes is always sent (even if empty string)
+    finalFormData.set("internalNotes", formData.internalNotes ?? "")
+    console.log("[v0] internalNotes being sent:", formData.internalNotes)
+
+    // Explicitly set images — use set (not append) to avoid duplicates
     if (images.length > 0) {
-      finalFormData.append("images", JSON.stringify(images))
+      finalFormData.set("images", JSON.stringify(images))
     }
 
     try {

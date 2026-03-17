@@ -1,9 +1,7 @@
 "use client"
 
-import { useState, useTransition, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Pie, PieChart, Cell, LabelList } from "recharts"
-import { getAgentRanking, type RankingPeriod } from "@/lib/actions/agent-ranking"
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, Pie, PieChart, Cell } from "recharts"
 
 const COLORS = [
   "#3b82f6", // blue-500
@@ -25,7 +23,6 @@ const TRANSACTION_COLORS = {
 interface DashboardChartsProps {
   propertyTypes: { name: string; count: number }[]
   transactionTypes: { name: string; count: number }[]
-  agentRanking: { name: string; count: number }[]
 }
 
 const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }: any) => {
@@ -64,25 +61,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null
 }
 
-const PERIOD_LABELS: { value: RankingPeriod; label: string }[] = [
-  { value: "week", label: "Semana" },
-  { value: "month", label: "Mes" },
-  { value: "year", label: "Año" },
-  { value: "all", label: "Todo" },
-]
-
-export function DashboardCharts({ propertyTypes, transactionTypes, agentRanking: initialAgentRanking }: DashboardChartsProps) {
-  const [period, setPeriod] = useState<RankingPeriod>("all")
-  const [agentRanking, setAgentRanking] = useState(initialAgentRanking)
-  const [isPending, startTransition] = useTransition()
-
-  useEffect(() => {
-    startTransition(async () => {
-      const data = await getAgentRanking(period)
-      setAgentRanking(data)
-    })
-  }, [period])
-
+export function DashboardCharts({ propertyTypes = [], transactionTypes = [] }: DashboardChartsProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {/* Property Types Chart */}
@@ -172,79 +151,6 @@ export function DashboardCharts({ propertyTypes, transactionTypes, agentRanking:
           ) : (
             <div className="flex h-[300px] items-center justify-center text-muted-foreground">
               No hay datos disponibles
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      {/* Agent Ranking Chart - full width */}
-      <Card className="md:col-span-2">
-        <CardHeader>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <CardTitle>Ranking de Agentes por Propiedades Creadas</CardTitle>
-              <CardDescription>
-                {period === "week" && "Última semana"}
-                {period === "month" && "Último mes"}
-                {period === "year" && "Último año"}
-                {period === "all" && "Todos los tiempos"}
-              </CardDescription>
-            </div>
-            <div className="flex gap-1 rounded-lg border p-1 self-start">
-              {PERIOD_LABELS.map(({ value, label }) => (
-                <button
-                  key={value}
-                  onClick={() => setPeriod(value)}
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                    period === value
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isPending ? (
-            <div className="flex h-[200px] items-center justify-center text-muted-foreground text-sm">
-              Cargando...
-            </div>
-          ) : agentRanking.length > 0 ? (
-            <ResponsiveContainer width="100%" height={Math.max(agentRanking.length * 56, 220)}>
-              <BarChart
-                layout="vertical"
-                data={agentRanking}
-                margin={{ top: 4, right: 48, left: 4, bottom: 4 }}
-              >
-                <XAxis type="number" hide />
-                <YAxis type="category" dataKey="name" hide />
-                <Bar dataKey="count" radius={[0, 6, 6, 0]} maxBarSize={40}>
-                  {/* Agent name inside the bar, left aligned */}
-                  <LabelList
-                    dataKey="name"
-                    position="insideLeft"
-                    style={{ fill: "#fff", fontSize: 13, fontWeight: 600 }}
-                    offset={12}
-                  />
-                  {/* Count outside the bar, right aligned */}
-                  <LabelList
-                    dataKey="count"
-                    position="right"
-                    formatter={(v: number) => `${v} prop.`}
-                    style={{ fill: "#a1a1aa", fontSize: 13, fontWeight: 700 }}
-                    offset={8}
-                  />
-                  {agentRanking.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex h-[200px] items-center justify-center text-muted-foreground">
-              No hay propiedades creadas en este período.
             </div>
           )}
         </CardContent>

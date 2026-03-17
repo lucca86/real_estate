@@ -1,5 +1,6 @@
 "use client"
 
+import "leaflet/dist/leaflet.css"
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
@@ -39,123 +40,6 @@ interface PropertiesMapProps {
   defaultZoom?: number
   draggable?: boolean
   onMarkerDrag?: (lat: number, lng: number) => void
-}
-
-// Single property map component
-interface PropertyMapProps {
-  latitude: number | null
-  longitude: number | null
-  title?: string
-  address?: string
-  draggable?: boolean
-  onMarkerDrag?: (lat: number, lng: number) => void
-}
-
-export function PropertyMap({
-  latitude,
-  longitude,
-  title,
-  address,
-  draggable = false,
-  onMarkerDrag,
-}: PropertyMapProps) {
-  const mapRef = useRef<HTMLDivElement>(null)
-  const mapInstanceRef = useRef<any>(null)
-  const markerRef = useRef<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!mapRef.current || mapInstanceRef.current) return
-
-    const initTimeout = setTimeout(async () => {
-      try {
-        if (!latitude || !longitude || !isValidCoordinate(latitude, longitude)) {
-          setError("Coordenadas inválidas o no disponibles")
-          setIsLoading(false)
-          return
-        }
-
-        const L = await import("leaflet")
-
-        if (!mapRef.current) {
-          setError("Map container not found")
-          return
-        }
-
-        const map = L.map(mapRef.current, {
-          center: [latitude, longitude],
-          zoom: 15,
-          scrollWheelZoom: true,
-          zoomControl: true,
-          preferCanvas: false,
-        })
-
-        mapInstanceRef.current = map
-
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          maxZoom: 19,
-          minZoom: 1,
-        }).addTo(map)
-
-        const marker = L.marker([latitude, longitude], {
-          draggable: draggable,
-        })
-
-        if (title) {
-          marker.bindPopup(title)
-        }
-
-        if (draggable && onMarkerDrag) {
-          marker.on("dragend", () => {
-            const position = marker.getLatLng()
-            onMarkerDrag(position.lat, position.lng)
-          })
-        }
-
-        marker.addTo(map)
-        markerRef.current = marker
-
-        setTimeout(() => {
-          map.invalidateSize()
-          setIsLoading(false)
-        }, 300)
-      } catch (err) {
-        setError("Error initializing map")
-        setIsLoading(false)
-      }
-    }, 200)
-
-    return () => {
-      clearTimeout(initTimeout)
-      if (markerRef.current) {
-        markerRef.current.remove()
-        markerRef.current = null
-      }
-
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove()
-        mapInstanceRef.current = null
-      }
-    }
-  }, [latitude, longitude, title, draggable, onMarkerDrag])
-
-  return (
-    <div className="relative h-[400px] w-full">
-      {isLoading && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-muted/50 rounded-lg">
-          <div className="text-sm text-muted-foreground">Cargando mapa...</div>
-        </div>
-      )}
-      {error && (
-        <div className="absolute top-4 left-1/2 z-10 -translate-x-1/2 rounded-lg bg-destructive/10 px-4 py-2">
-          <div className="text-sm text-destructive">{error}</div>
-        </div>
-      )}
-      <div ref={mapRef} className="h-full w-full rounded-lg border border-border" />
-    </div>
-  )
 }
 
 export function PropertiesMap({
@@ -207,6 +91,18 @@ export function PropertiesMap({
 
         const L = await import("leaflet")
 
+        // SVG marker icon — no external PNG files needed
+        const svgMarker = L.divIcon({
+          html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="24" height="36">
+            <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 24 12 24S24 21 24 12C24 5.373 18.627 0 12 0z" fill="#2563eb"/>
+            <circle cx="12" cy="12" r="5" fill="white"/>
+          </svg>`,
+          className: "",
+          iconSize: [24, 36],
+          iconAnchor: [12, 36],
+          popupAnchor: [0, -36],
+        })
+
         if (!mapRef.current) {
           setError("Map container not found")
           return
@@ -247,17 +143,42 @@ export function PropertiesMap({
 
           const marker = L.marker([lat, lng], {
             draggable: draggable,
+            icon: svgMarker,
           })
+
+          marker.bindPopup(`
+            <div class="text-sm">
+              <strong>${property.address}</strong><br/>
+              ${property.city}<br/>
+              <span class="text-xs text-muted-foreground">
+                ${lat.toFixed(6)}, ${lng.toFixed(6)}
+              </span>
+            </div>
+          `)
 
           marker.on("click", () => {
             setSelectedProperty(property)
             map.setView([lat, lng], 16, { animate: true })
+            marker.openPopup()
           })
 
           if (draggable && onMarkerDrag) {
-            marker.on("dragend", () => {
-              const position = marker.getLatLng()
-              onMarkerDrag(position.lat, position.lng)
+            marker.on("dragend", (event) => {
+              const newPos = event.target.getLatLng()
+              onMarkerDrag(newPos.lat, newPos.lng)
+
+              marker.setPopupContent(`
+                <div class="text-sm">
+                  <strong>${property.address}</strong><br/>
+                  ${property.city}<br/>
+                  <span class="text-xs text-muted-foreground">
+                    ${newPos.lat.toFixed(6)}, ${newPos.lng.toFixed(6)}
+                  </span>
+                  <br/>
+                  <span class="text-xs text-green-600">✓ Ubicación actualizada</span>
+                </div>
+              `)
+              marker.openPopup()
             })
           }
 
@@ -266,7 +187,13 @@ export function PropertiesMap({
         })
 
         setTimeout(() => {
-          map.invalidateSize()
+          if (mapInstanceRef.current && mapRef.current) {
+            try {
+              mapInstanceRef.current.invalidateSize()
+            } catch (err) {
+              console.error("[v0] Error invalidating map size:", err)
+            }
+          }
           setIsLoading(false)
         }, 300)
       } catch (err) {
@@ -354,3 +281,5 @@ export function PropertiesMap({
     </div>
   )
 }
+
+export { PropertiesMap as PropertyMap }
