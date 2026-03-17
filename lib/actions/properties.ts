@@ -217,7 +217,6 @@ export async function updateProperty(propertyId: string, formData: FormData) {
   const rentalPrice = formData.get("rentalPrice") as string
   const amenities = formData.get("amenities") as string
   const internalNotes = formData.get("internalNotes") as string
-  console.log("[v0] internalNotes received in updateProperty:", internalNotes)
   const imagesJson = formData.get("images") as string
   const isFeatured = formData.get("isFeatured") === "true"
   const propertyLabel = formData.get("propertyLabel") as string
@@ -498,8 +497,6 @@ export async function getPropertyById(id: string) {
     console.error("Property not found with id:", id)
     return null
   }
-
-  console.log("[v0] getPropertyById internal_notes:", (property as any).internal_notes, "id:", id)
 
   // Obtener datos del usuario que creó la propiedad
   let createdBy = null

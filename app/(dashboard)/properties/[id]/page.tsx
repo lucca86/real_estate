@@ -146,16 +146,6 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                 <p className="text-sm leading-relaxed text-muted-foreground">{property.description}</p>
               </div>
 
-              {property.internal_notes && (
-                <>
-                  <Separator />
-                  <div className="rounded-lg bg-amber-50 p-4 dark:bg-amber-950/20">
-                    <h3 className="mb-2 font-semibold text-amber-900 dark:text-amber-100">Notas Internas</h3>
-                    <p className="text-sm leading-relaxed text-amber-800 dark:text-amber-200">{property.internal_notes}</p>
-                  </div>
-                </>
-              )}
-
               <Separator />
 
               <div>

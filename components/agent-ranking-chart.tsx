@@ -22,16 +22,16 @@ const PERIOD_DESCRIPTIONS: Record<Period, string> = {
 }
 
 const BAR_COLORS = [
-  "#3b82f6", // blue
-  "#22c55e", // green
-  "#f59e0b", // amber
-  "#a855f7", // purple
-  "#ec4899", // pink
-  "#14b8a6", // teal
-  "#f97316", // orange
-  "#6366f1", // indigo
-  "#84cc16", // lime
-  "#ef4444", // red
+  "#3b82f6",
+  "#22c55e",
+  "#f59e0b",
+  "#a855f7",
+  "#ec4899",
+  "#14b8a6",
+  "#f97316",
+  "#6366f1",
+  "#84cc16",
+  "#ef4444",
 ]
 
 interface AgentData {
@@ -95,7 +95,11 @@ export function AgentRankingChart({ initialData }: AgentRankingChartProps) {
                   <div className="flex-1">
                     <div
                       className="flex items-center rounded px-3 py-1.5 text-sm font-medium text-white transition-all duration-500"
-                      style={{ width: `${widthPct}%`, backgroundColor: color, minWidth: "fit-content" }}
+                      style={{
+                        width: `${widthPct}%`,
+                        backgroundColor: color,
+                        minWidth: "fit-content",
+                      }}
                     >
                       {agent.name}
                     </div>
