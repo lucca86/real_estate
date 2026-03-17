@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/lib/auth"
-import { getDashboardStats } from "@/lib/actions/dashboard"
+import { getDashboardStats, getAgentRanking } from "@/lib/actions/dashboard"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Building2, Users, UserCircle, Calendar, Home } from "lucide-react"
 import Link from "next/link"
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { redirect } from "next/navigation"
 import { DashboardCharts } from "@/components/dashboard-charts"
 import { RecentProperties } from "@/components/recent-properties"
+import { AgentRankingChart } from "@/components/agent-ranking-chart"
 
 export default async function DashboardPage() {
   const user = await getCurrentUser()
@@ -15,7 +16,10 @@ export default async function DashboardPage() {
     redirect("/login")
   }
 
-  const dashboardData = await getDashboardStats()
+  const [dashboardData, agentRanking] = await Promise.all([
+    getDashboardStats(),
+    getAgentRanking("week"),
+  ])
 
   return (
     <div className="space-y-6">
@@ -95,6 +99,8 @@ export default async function DashboardPage() {
         propertyTypes={dashboardData.charts.propertyTypes}
         transactionTypes={dashboardData.charts.transactionTypes}
       />
+
+      <AgentRankingChart initialData={agentRanking} />
 
       <RecentProperties properties={dashboardData.recentProperties} />
 

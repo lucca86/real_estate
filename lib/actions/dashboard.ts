@@ -2,6 +2,58 @@
 
 import { createAdminClient } from "@/lib/supabase/server"
 
+export async function getAgentRanking(period: "week" | "month" | "year" | "all" = "week") {
+  const supabase = await createAdminClient()
+
+  try {
+    let fromDate: string | null = null
+    const now = new Date()
+
+    if (period === "week") {
+      const d = new Date(now)
+      d.setDate(d.getDate() - 7)
+      fromDate = d.toISOString()
+    } else if (period === "month") {
+      const d = new Date(now)
+      d.setMonth(d.getMonth() - 1)
+      fromDate = d.toISOString()
+    } else if (period === "year") {
+      const d = new Date(now)
+      d.setFullYear(d.getFullYear() - 1)
+      fromDate = d.toISOString()
+    }
+
+    let query = supabase
+      .from("properties")
+      .select("created_by_id, users!created_by_id(name)")
+
+    if (fromDate) {
+      query = query.gte("created_at", fromDate)
+    }
+
+    const { data, error } = await query
+
+    if (error || !data) return []
+
+    // Agrupar por usuario
+    const counts: Record<string, { name: string; count: number }> = {}
+    for (const row of data) {
+      const userId = row.created_by_id
+      if (!userId) continue
+      const name = (row.users as any)?.name || "Sin nombre"
+      if (!counts[userId]) counts[userId] = { name, count: 0 }
+      counts[userId].count++
+    }
+
+    return Object.values(counts)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10)
+  } catch (error) {
+    console.error("[getAgentRanking] Error:", error)
+    return []
+  }
+}
+
 export async function getDashboardStats() {
   const supabase = await createAdminClient()
 

@@ -28,9 +28,8 @@ export default async function EditPropertyPage({
     notFound()
   }
 
-  if (propertyData.created_by_id && propertyData.created_by_id !== user.id && user.role === "VENDEDOR") {
-    redirect("/properties")
-  }
+  // Solo bloquear si el usuario no está autenticado (ya chequeado arriba)
+  // Todos los roles (ADMIN, SUPERVISOR, VENDEDOR) pueden editar cualquier propiedad
 
   const property = {
     id: propertyData.id,
