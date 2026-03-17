@@ -75,13 +75,13 @@ export async function getDashboardStats() {
       })) || []
 
     const chartData = {
-      propertyTypes: Object.entries(propertyTypeCounts || {}).map(([name, count]) => ({
+      propertyTypes: Object.entries(propertyTypeCounts ?? {}).map(([name, count]) => ({
         name,
-        count,
+        count: count as number,
       })),
-      transactionTypes: Object.entries(transactionCounts || {}).map(([name, count]) => ({
+      transactionTypes: Object.entries(transactionCounts ?? {}).map(([name, count]) => ({
         name,
-        count,
+        count: count as number,
       })),
     }
 

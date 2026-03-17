@@ -61,7 +61,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null
 }
 
-export function DashboardCharts({ propertyTypes, transactionTypes }: DashboardChartsProps) {
+export function DashboardCharts({ propertyTypes = [], transactionTypes = [] }: DashboardChartsProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {/* Property Types Chart */}
