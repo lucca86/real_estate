@@ -499,6 +499,8 @@ export async function getPropertyById(id: string) {
     return null
   }
 
+  console.log("[v0] getPropertyById internal_notes:", (property as any).internal_notes, "id:", id)
+
   // Obtener datos del usuario que creó la propiedad
   let createdBy = null
   if (property.created_by_id) {
