@@ -187,8 +187,6 @@ export async function updateProperty(propertyId: string, formData: FormData) {
     throw new Error("No estás autenticado")
   }
 
-  console.log("[v0] updateProperty - currentUser.id:", currentUser.id, "name:", currentUser.name)
-
   const supabase = await createClient()
 
   const { data: property, error: fetchError } = await supabase
@@ -501,29 +499,25 @@ export async function getPropertyById(id: string) {
     return null
   }
 
-  console.log("[v0] property.created_by_id:", property.created_by_id, "property.updated_by_id:", property.updated_by_id)
-
   // Obtener datos del usuario que creó la propiedad
   let createdBy = null
   if (property.created_by_id) {
-    const { data: createdByUser, error: createdByError } = await supabase
+    const { data: createdByUser } = await supabase
       .from("users")
       .select("id, email, name")
       .eq("id", property.created_by_id)
       .single()
-    console.log("[v0] createdByUser:", createdByUser, "error:", createdByError)
     createdBy = createdByUser
   }
 
   // Obtener datos del usuario que actualizó la propiedad
   let updatedBy = null
   if (property.updated_by_id) {
-    const { data: updatedByUser, error: updatedByError } = await supabase
+    const { data: updatedByUser } = await supabase
       .from("users")
       .select("id, email, name")
       .eq("id", property.updated_by_id)
       .single()
-    console.log("[v0] updatedByUser:", updatedByUser, "error:", updatedByError)
     updatedBy = updatedByUser
   }
 

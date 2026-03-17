@@ -275,14 +275,14 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
 
           {/* Auditoría */}
           <Card>
-            <CardHeader>
-              <CardTitle>Información de Auditoría</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Auditoría</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Creado por</p>
-                <p className="font-semibold">
-                  {property.createdBy?.name || property.createdBy?.email || "Sin información"}
+            <CardContent className="space-y-4">
+              <div className="space-y-0.5">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Creado por</p>
+                <p className="text-base font-semibold leading-tight">
+                  {property.createdBy?.name || property.createdBy?.email || "—"}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {new Date(property.created_at).toLocaleDateString("es-AR", {
@@ -295,10 +295,10 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                 </p>
               </div>
               <Separator />
-              <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actualizado por</p>
-                <p className="font-semibold">
-                  {property.updatedBy?.name || property.updatedBy?.email || "Sin información"}
+              <div className="space-y-0.5">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Actualizado por</p>
+                <p className="text-base font-semibold leading-tight">
+                  {property.updatedBy?.name || property.updatedBy?.email || "—"}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {new Date(property.updated_at).toLocaleDateString("es-AR", {
@@ -314,9 +314,9 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
           </Card>
 
           {/* Notas Internas */}
-          <Card>
+          <Card className="border-amber-200 dark:border-amber-800">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">
                 Notas Internas
               </CardTitle>
             </CardHeader>
