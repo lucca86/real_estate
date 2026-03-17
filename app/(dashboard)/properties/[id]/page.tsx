@@ -314,16 +314,20 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
           </Card>
 
           {/* Notas Internas */}
-          {property.internal_notes && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Notas Internas</CardTitle>
-              </CardHeader>
-              <CardContent>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Notas Internas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {property.internal_notes ? (
                 <p className="text-sm leading-relaxed">{property.internal_notes}</p>
-              </CardContent>
-            </Card>
-          )}
+              ) : (
+                <p className="text-sm italic text-muted-foreground">No hay notas internas</p>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
