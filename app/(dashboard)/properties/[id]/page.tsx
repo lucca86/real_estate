@@ -273,16 +273,16 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
 
           {property.owner && <PropertyContactCard owner={property.owner} />}
 
-          {/* Stats */}
+          {/* Auditoría */}
           <Card>
             <CardHeader>
               <CardTitle>Información de Auditoría</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-3">
-                <p className="text-xs font-semibold uppercase text-muted-foreground">Creado por</p>
-                <p className="text-lg font-bold">
-                  {property.createdBy?.name || property.createdBy?.email || "Sistema"}
+              <div className="space-y-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Creado por</p>
+                <p className="font-semibold">
+                  {property.createdBy?.name || property.createdBy?.email || "Sin información"}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {new Date(property.created_at).toLocaleDateString("es-AR", {
@@ -295,10 +295,10 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                 </p>
               </div>
               <Separator />
-              <div className="space-y-3">
-                <p className="text-xs font-semibold uppercase text-muted-foreground">Actualizado por</p>
-                <p className="text-lg font-bold">
-                  {property.updatedBy?.name || property.updatedBy?.email || "Sistema"}
+              <div className="space-y-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Actualizado por</p>
+                <p className="font-semibold">
+                  {property.updatedBy?.name || property.updatedBy?.email || "Sin información"}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {new Date(property.updated_at).toLocaleDateString("es-AR", {
@@ -312,6 +312,18 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
               </div>
             </CardContent>
           </Card>
+
+          {/* Notas Internas */}
+          {property.internal_notes && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Notas Internas</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm leading-relaxed">{property.internal_notes}</p>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
