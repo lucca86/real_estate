@@ -1,5 +1,6 @@
 "use client"
 
+import "leaflet/dist/leaflet.css"
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"

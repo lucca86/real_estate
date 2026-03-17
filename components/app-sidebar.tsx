@@ -174,7 +174,8 @@ export function AppSidebar({ user, permissions = {}, onNavigate }: AppSidebarPro
             alt="Gestión Inmobiliaria RE"
             width={200}
             height={40}
-            className="h-10 w-auto object-contain"
+            style={{ width: "auto", height: "40px" }}
+            className="object-contain"
             priority
           />
         )}
