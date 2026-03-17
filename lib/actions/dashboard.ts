@@ -55,9 +55,10 @@ export async function getDashboardStats() {
         id,
         title,
         price,
+        currency,
         created_at,
-        property_types(name),
-        cities(name)
+        propertyType:property_types!property_type_id(name),
+        city:cities!city_id(name)
       `)
       .order("created_at", { ascending: false })
       .limit(5)
@@ -67,9 +68,10 @@ export async function getDashboardStats() {
         id: prop.id,
         title: prop.title,
         price: prop.price,
+        currency: prop.currency,
         created_at: prop.created_at,
-        property_types: prop.property_types?.[0] || null,
-        cities: prop.cities?.[0] || null,
+        property_types: prop.propertyType || null,
+        cities: prop.city || null,
       })) || []
 
     const chartData = {
