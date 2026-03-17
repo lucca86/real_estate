@@ -305,7 +305,6 @@ export async function updateProperty(propertyId: string, formData: FormData) {
       virtual_tour: virtualTour || null,
       published,
       sync_to_wordpress: syncToWordPress,
-      created_by_id: currentUser.id,
       updated_by_id: currentUser.id,
       updated_at: new Date().toISOString(),
     })
