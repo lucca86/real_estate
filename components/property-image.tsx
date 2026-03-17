@@ -43,6 +43,7 @@ export function PropertyImage({
       height={fill ? undefined : 600}
       priority={priority}
       loading={priority ? "eager" : "lazy"}
+      fetchPriority={priority ? "high" : "auto"}
       onError={() => setError(true)}
       onClick={onClick}
       style={{ objectFit: "cover" }}

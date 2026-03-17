@@ -91,6 +91,14 @@ export function PropertiesMap({
 
         const L = await import("leaflet")
 
+        // Fix Leaflet default marker icons — use local assets to avoid CDN/Tracking Prevention issues
+        delete (L.Icon.Default.prototype as any)._getIconUrl
+        L.Icon.Default.mergeOptions({
+          iconUrl: "/leaflet/marker-icon.png",
+          iconRetinaUrl: "/leaflet/marker-icon-2x.png",
+          shadowUrl: "/leaflet/marker-shadow.png",
+        })
+
         if (!mapRef.current) {
           setError("Map container not found")
           return

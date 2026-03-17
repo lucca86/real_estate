@@ -169,15 +169,15 @@ export function AppSidebar({ user, permissions = {}, onNavigate }: AppSidebarPro
       {/* Logo */}
       <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-4">
         {mounted && (
-          <Image
-            src={logoSrc || "/placeholder.svg"}
-            alt="Gestión Inmobiliaria RE"
-            width={200}
-            height={40}
-            style={{ width: "auto", height: "40px" }}
-            className="object-contain"
-            priority
-          />
+          <div className="relative h-10 w-[200px]">
+            <Image
+              src={logoSrc || "/placeholder.svg"}
+              alt="Gestión Inmobiliaria RE"
+              fill
+              className="object-contain object-left"
+              priority
+            />
+          </div>
         )}
         {!mounted && <div className="h-10 w-[200px]" />}
       </div>
