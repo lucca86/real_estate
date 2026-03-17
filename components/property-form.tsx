@@ -53,6 +53,7 @@ interface Property {
   id?: string
   title?: string
   description?: string | null
+  internalNotes?: string | null
   ownerId?: string
   owner?: { id: string; name: string }
   propertyTypeId?: string
@@ -128,6 +129,7 @@ interface PropertyFormProps {
 interface PropertyFormData {
   title?: string
   description?: string | null
+  internalNotes?: string | null
   ownerId?: string
   propertyTypeId?: string
   status?: string
@@ -342,6 +344,7 @@ export function PropertyForm({
     ownerEmail: editProperty?.ownerEmail,
     ownerPhone: editProperty?.ownerPhone,
     createdBy: editProperty?.createdBy || userId || "",
+    internalNotes: editProperty?.internalNotes || "",
   })
 
   const scrollRef = useRef<HTMLFormElement>(null)
@@ -1666,6 +1669,27 @@ export function PropertyForm({
               disabled={false}
             />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/20">
+        <CardHeader>
+          <CardTitle className="text-amber-900 dark:text-amber-100">Notas Internas</CardTitle>
+          <CardDescription className="text-amber-700 dark:text-amber-300">
+            Información privada solo visible para agentes y administradores. No se publica ni sincroniza con WordPress.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Textarea
+            id="internalNotes"
+            name="internalNotes"
+            rows={4}
+            value={formData.internalNotes ?? ""}
+            onChange={(e) => setFormData((prev) => ({ ...prev, internalNotes: e.target.value }))}
+            disabled={isSubmitting}
+            placeholder="Ej: El propietario prefiere contacto por WhatsApp, la llave está en recepción, precio negociable..."
+            className="border-amber-200 bg-white dark:border-amber-700 dark:bg-transparent"
+          />
         </CardContent>
       </Card>
 

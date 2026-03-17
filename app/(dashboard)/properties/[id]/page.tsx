@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Building2, MapPin, Bed, Bath, Car, Maximize, Calendar, ChevronLeft, Edit, Ruler, StickyNote } from "lucide-react"
+import { Building2, MapPin, Bed, Bath, Car, Maximize, Calendar, ChevronLeft, Edit, Ruler } from "lucide-react"
 import Link from "next/link"
 import { ImageGallery } from "@/components/image-gallery"
 import { PropertiesMap } from "@/components/properties-map"
@@ -146,6 +146,16 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
                 <p className="text-sm leading-relaxed text-muted-foreground">{property.description}</p>
               </div>
 
+              {property.internal_notes && (
+                <>
+                  <Separator />
+                  <div className="rounded-lg bg-amber-50 p-4 dark:bg-amber-950/20">
+                    <h3 className="mb-2 font-semibold text-amber-900 dark:text-amber-100">Notas Internas</h3>
+                    <p className="text-sm leading-relaxed text-amber-800 dark:text-amber-200">{property.internal_notes}</p>
+                  </div>
+                </>
+              )}
+
               <Separator />
 
               <div>
@@ -263,55 +273,61 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
 
           {property.owner && <PropertyContactCard owner={property.owner} />}
 
-          {/* Stats */}
+          {/* Auditoría */}
           <Card>
-            <CardHeader>
-              <CardTitle>Estadísticas</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Auditoría</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <div className="flex flex-col gap-1">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Publicada</span>
-                  <span className="font-medium">{new Date(property.created_at).toLocaleDateString("es-AR")}</span>
-                </div>
-                {property.createdBy && (
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Creada por</span>
-                    <span className="font-medium">{property.createdBy.name}</span>
-                  </div>
-                )}
+            <CardContent className="space-y-4">
+              <div className="space-y-0.5">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Creado por</p>
+                <p className="text-base font-semibold leading-tight">
+                  {property.createdBy?.name || property.createdBy?.email || "—"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(property.created_at).toLocaleDateString("es-AR", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
               </div>
-              <div className="flex flex-col gap-1">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Actualizada</span>
-                  <span className="font-medium">{new Date(property.updated_at).toLocaleDateString("es-AR")}</span>
-                </div>
-                {property.updatedBy && (
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Modificada por</span>
-                    <span className="font-medium">{property.updatedBy.name}</span>
-                  </div>
-                )}
+              <Separator />
+              <div className="space-y-0.5">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Actualizado por</p>
+                <p className="text-base font-semibold leading-tight">
+                  {property.updatedBy?.name || property.updatedBy?.email || "—"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(property.updated_at).toLocaleDateString("es-AR", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
               </div>
             </CardContent>
           </Card>
 
-          {/* Internal Notes */}
-          {property.internal_notes && (
-            <Card className="border-l-4 border-l-amber-500/50 bg-amber-50/5">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <StickyNote className="h-4 w-4 text-amber-600" />
-                  Notas Internas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-                  {property.internal_notes}
-                </p>
-              </CardContent>
-            </Card>
-          )}
+          {/* Notas Internas */}
+          <Card className="border-amber-200 dark:border-amber-800">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                Notas Internas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {property.internal_notes ? (
+                <p className="text-sm leading-relaxed">{property.internal_notes}</p>
+              ) : (
+                <p className="text-sm italic text-muted-foreground">No hay notas internas</p>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

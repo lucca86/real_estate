@@ -20,6 +20,7 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
 
     const title = formData.get("title") as string
     const description = formData.get("description") as string
+    const internalNotes = formData.get("internalNotes") as string
     const ownerId = formData.get("ownerId") as string
     const propertyTypeId = formData.get("propertyTypeId") as string
     const status = formData.get("status") as string
@@ -95,7 +96,10 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
         id: crypto.randomUUID(),
         title,
         description: description || null,
+        internal_notes: internalNotes || null,
         owner_id: ownerId,
+        created_by_id: currentUser.id,
+        updated_by_id: currentUser.id,
         property_type_id: propertyTypeId,
         status,
         address,
@@ -212,6 +216,7 @@ export async function updateProperty(propertyId: string, formData: FormData) {
   const currency = formData.get("currency") as string
   const rentalPrice = formData.get("rentalPrice") as string
   const amenities = formData.get("amenities") as string
+  const internalNotes = formData.get("internalNotes") as string
   const imagesJson = formData.get("images") as string
   const isFeatured = formData.get("isFeatured") === "true"
   const propertyLabel = formData.get("propertyLabel") as string
@@ -265,6 +270,7 @@ export async function updateProperty(propertyId: string, formData: FormData) {
     .update({
       title,
       description: description || null,
+      internal_notes: internalNotes || null,
       owner_id: ownerId,
       property_type_id: propertyTypeId,
       status,
@@ -299,6 +305,7 @@ export async function updateProperty(propertyId: string, formData: FormData) {
       virtual_tour: virtualTour || null,
       published,
       sync_to_wordpress: syncToWordPress,
+      updated_by_id: currentUser.id,
       updated_at: new Date().toISOString(),
     })
     .eq("id", propertyId)
@@ -470,10 +477,7 @@ export async function getPropertyById(id: string) {
         first_name,
         last_name,
         owner_type,
-        real_estate_agency,
-        city:cities!city_id(id, name),
-        province:provinces!province_id(id, name),
-        country:countries!country_id(id, name)
+        real_estate_agency
       ),
       city:cities!city_id(id, name),
       province:provinces!province_id(id, name),
@@ -494,7 +498,33 @@ export async function getPropertyById(id: string) {
     return null
   }
 
-  return property
+  // Obtener datos del usuario que creó la propiedad
+  let createdBy = null
+  if (property.created_by_id) {
+    const { data: createdByUser } = await supabase
+      .from("users")
+      .select("id, email, name")
+      .eq("id", property.created_by_id)
+      .single()
+    createdBy = createdByUser
+  }
+
+  // Obtener datos del usuario que actualizó la propiedad
+  let updatedBy = null
+  if (property.updated_by_id) {
+    const { data: updatedByUser } = await supabase
+      .from("users")
+      .select("id, email, name")
+      .eq("id", property.updated_by_id)
+      .single()
+    updatedBy = updatedByUser
+  }
+
+  return {
+    ...property,
+    createdBy,
+    updatedBy,
+  }
 }
 
 const parseArrayField = (value: any): string[] => {
