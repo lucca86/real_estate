@@ -90,7 +90,7 @@ export default async function DashboardPage() {
             <div className="text-2xl font-bold text-rose-600 dark:text-rose-400">
               {dashboardData.stats.upcomingAppointments}
             </div>
-            <p className="text-xs text-muted-foreground">Pendientes</p>
+            <p className="text-xs text-muted-foreground">Pendientes y confirmadas</p>
           </CardContent>
         </Card>
       </div>

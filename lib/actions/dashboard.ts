@@ -72,7 +72,8 @@ export async function getDashboardStats() {
     const { count: upcomingAppointments } = await supabase
       .from("appointments")
       .select("*", { count: "exact", head: true })
-      .gte("date", new Date().toISOString())
+      .in("status", ["PENDIENTE", "CONFIRMADA"])
+      .gte("scheduled_date", new Date().toISOString().split("T")[0])
 
     const { data: propertiesByType } = await supabase.from("properties").select(`
         property_type_id,
