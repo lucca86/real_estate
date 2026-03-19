@@ -517,8 +517,9 @@ export function PropertyForm({
     }
     if (!formData.currency) validationErrors.push("Debe seleccionar una moneda")
 
-    if (!formData.lotSize || formData.lotSize <= 0) {
-      validationErrors.push("El tamaño del lote es requerido y debe ser mayor a 0")
+    // lotSize is optional — only validate if filled in
+    if (formData.lotSize !== undefined && formData.lotSize !== null && formData.lotSize < 0) {
+      validationErrors.push("El tamaño del lote no puede ser negativo")
     }
 
     const selectedPropertyType = propertyTypesList.find((pt) => pt.id === formData.propertyTypeId) // Use renamed state
@@ -1378,14 +1379,16 @@ export function PropertyForm({
                 id="yearBuilt"
                 name="yearBuilt"
                 type="number"
-                max={new Date().getFullYear()}
+                min="1800"
+                max={String(new Date().getFullYear())}
+                inputMode="numeric"
                 value={formData.yearBuilt ?? ""}
                 onChange={(e) => {
                   const val = e.target.value
                   setFormData((prev) => ({ ...prev, yearBuilt: val === "" ? null : Number(val) }))
                 }}
                 disabled={isSubmitting}
-                placeholder="Dejar vacío si no aplica"
+                placeholder="Ej: 2010"
               />
               <p className="text-xs text-muted-foreground">
                 Opcional - Dejar vacío para terrenos o propiedades sin año definido
@@ -1412,23 +1415,19 @@ export function PropertyForm({
             </div>
 
             <div className="space-y-2">
-              {/* Made lot size required with red asterisk */}
-              <Label htmlFor="lotSize">
-                Tamaño del Lote (m²) <span className="text-red-500">*</span>
-              </Label>
+              <Label htmlFor="lotSize">Tamaño del Lote (m²)</Label>
               <Input
                 id="lotSize"
                 name="lotSize"
                 type="number"
                 step="0.01"
-                min="0.01"
+                min="0"
                 value={formData.lotSize ?? ""}
                 onChange={(e) => {
                   const val = e.target.value
                   setFormData((prev) => ({ ...prev, lotSize: val === "" ? undefined : Number(val) }))
                 }}
                 disabled={isSubmitting}
-                required
               />
             </div>
           </div>
