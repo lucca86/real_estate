@@ -34,38 +34,66 @@ export async function getOwners() {
   try {
     const supabase = await createServerClient()
 
+    // Select only the fields needed by OwnersTable — avoid SELECT * to prevent RSC serialization overflow
     const { data: owners, error } = await supabase
       .from("owners")
       .select(`
-        *,
-        city:cities(id, name),
-        province:provinces(id, name),
-        country:countries(id, name)
+        id,
+        name,
+        first_name,
+        last_name,
+        owner_type,
+        real_estate_agency,
+        email,
+        phone,
+        secondary_phone,
+        address,
+        is_active,
+        city_id,
+        province_id,
+        country_id,
+        created_at,
+        city:cities!city_id(id, name),
+        province:provinces!province_id(id, name),
+        country:countries!country_id(id, name)
       `)
       .order("created_at", { ascending: false })
 
     if (error) throw error
 
-    // Get properties count for each owner
-    const ownersWithCounts = await Promise.all(
-      (owners || []).map(async (owner) => {
-        const { count } = await supabase
-          .from("properties")
-          .select("*", { count: "exact", head: true })
-          .eq("owner_id", owner.id)
+    const ownerList = owners || []
 
-        return {
-          ...owner,
-          isActive: owner.is_active,
-          city: Array.isArray(owner.city) ? owner.city[0] : owner.city,
-          province: Array.isArray(owner.province) ? owner.province[0] : owner.province,
-          country: Array.isArray(owner.country) ? owner.country[0] : owner.country,
-          _count: {
-            properties: count || 0,
-          },
-        }
-      }),
-    )
+    // Get property counts in a single query instead of N individual queries
+    const { data: propertyCounts } = await supabase
+      .from("properties")
+      .select("owner_id")
+      .in("owner_id", ownerList.map((o) => o.id).filter(Boolean))
+
+    // Build count map
+    const countMap: Record<string, number> = {}
+    for (const row of propertyCounts || []) {
+      if (row.owner_id) {
+        countMap[row.owner_id] = (countMap[row.owner_id] || 0) + 1
+      }
+    }
+
+    const ownersWithCounts = ownerList.map((owner) => ({
+      id: owner.id,
+      name: owner.name,
+      email: owner.email,
+      phone: owner.phone,
+      address: owner.address,
+      cityId: owner.city_id,
+      provinceId: owner.province_id,
+      countryId: owner.country_id,
+      isActive: owner.is_active,
+      city: Array.isArray(owner.city) ? owner.city[0] ?? null : owner.city ?? null,
+      province: Array.isArray(owner.province) ? owner.province[0] ?? null : owner.province ?? null,
+      country: Array.isArray(owner.country) ? owner.country[0] ?? null : owner.country ?? null,
+      _count: {
+        properties: countMap[owner.id] || 0,
+      },
+    }))
 
     return { success: true, data: ownersWithCounts }
   } catch (error) {
