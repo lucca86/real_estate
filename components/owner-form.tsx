@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -125,16 +125,8 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
     },
   })
 
-  useEffect(() => {
-    if (!owner && countries.length > 0) {
-      // For new owners, ensure default values are set
-      setValue("countryId", defaultCountryId)
-      setValue("provinceId", defaultProvinceId)
-      setValue("cityId", defaultCityId)
-      setSelectedCountryId(defaultCountryId)
-      setSelectedProvinceId(defaultProvinceId)
-    }
-  }, [countries.length, owner, setValue])
+  // No useEffect needed: default values are already set in useForm defaultValues
+  // and selectedCountryId/selectedProvinceId are initialised from owner or defaults above.
 
   const isActive = watch("isActive")
   const cityId = watch("cityId")
@@ -279,11 +271,10 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
               </Label>
               <Input
                 id="firstName"
-                {...register("firstName")}
+                {...register("firstName", {
+                  onChange: (e) => setValue("firstName", capitalizeFirst(e.target.value)),
+                })}
                 placeholder="Juan"
-                onChange={(e) => {
-                  setValue("firstName", capitalizeFirst(e.target.value))
-                }}
               />
               {errors.firstName && <p className="text-sm text-destructive">{errors.firstName.message}</p>}
             </div>
@@ -294,11 +285,10 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
               </Label>
               <Input
                 id="lastName"
-                {...register("lastName")}
+                {...register("lastName", {
+                  onChange: (e) => setValue("lastName", capitalizeFirst(e.target.value)),
+                })}
                 placeholder="Pérez"
-                onChange={(e) => {
-                  setValue("lastName", capitalizeFirst(e.target.value))
-                }}
               />
               {errors.lastName && <p className="text-sm text-destructive">{errors.lastName.message}</p>}
             </div>
