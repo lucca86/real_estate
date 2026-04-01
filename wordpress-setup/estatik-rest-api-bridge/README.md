@@ -124,4 +124,4 @@ Authorization: Basic {base64(username:app_password)}
 - Revisa los logs de WordPress para ver errores específicos
 \`\`\`
 
-```typescript file="" isHidden
+\`\`\`typescript file="" isHidden

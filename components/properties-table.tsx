@@ -29,16 +29,12 @@ interface Property {
   propertyType: { name: string } | null
   owner: { name: string } | null
   wordpress_id: number | null
-  wordpress_url: string | null
   wordpress_synced_at: string | null
-  updated_at: string | null
-  updatedBy: { name: string } | null
 }
 
 interface PropertiesTableProps {
   properties: Property[]
   currentUser: SessionUser
-  canDelete?: boolean
 }
 
 const statusColors: Record<string, string> = {
@@ -78,7 +74,7 @@ const currencyLabels: Record<string, string> = {
   ARS: "Pesos",
 }
 
-function PropertyCard({ property, currentUser, canDelete }: { property: Property; currentUser: SessionUser; canDelete?: boolean }) {
+function PropertyCard({ property, currentUser }: { property: Property; currentUser: SessionUser }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
   const propertyImages = Array.isArray(property.images) ? property.images : []
@@ -187,45 +183,19 @@ function PropertyCard({ property, currentUser, canDelete }: { property: Property
         </div>
 
         <div className="flex items-center justify-between border-t border-border pt-3">
-          <div className="flex flex-col gap-0.5 text-xs">
-            {property.owner?.name && <span className="text-muted-foreground">Propietario: {property.owner.name}</span>}
-            {property.updated_at && property.updatedBy?.name && (
-              <span className="text-muted-foreground">
-                Actualizada: {new Date(property.updated_at).toLocaleString("es-AR", {
+          <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+            {property.owner?.name && <span>Propietario: {property.owner.name}</span>}
+            {property.wordpress_synced_at && property.wordpress_id && property.wordpress_id > 0 ? (
+              <span className="text-green-600">
+                Sincronizada:{" "}
+                {new Date(property.wordpress_synced_at).toLocaleString("es-AR", {
                   day: "2-digit",
                   month: "2-digit",
                   year: "numeric",
                   hour: "2-digit",
                   minute: "2-digit",
-                })} por {property.updatedBy.name}
+                })}
               </span>
-            )}
-            {property.wordpress_synced_at && property.wordpress_id && property.wordpress_id > 0 ? (
-              <div className="flex flex-col gap-0.5">
-                <span className="text-green-600">
-                  Sincronizada:{" "}
-                  {new Date(property.wordpress_synced_at).toLocaleString("es-AR", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-                {property.wordpress_url ? (
-                  <a
-                    href={property.wordpress_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    WP ID: {property.wordpress_id} →
-                  </a>
-                ) : (
-                  <span className="text-muted-foreground">WP ID: {property.wordpress_id}</span>
-                )}
-              </div>
             ) : property.wordpress_synced_at && (!property.wordpress_id || property.wordpress_id === 0) ? (
               <span className="text-orange-600 font-medium">Sincronización: Pendiente (falló)</span>
             ) : null}
@@ -237,7 +207,7 @@ function PropertyCard({ property, currentUser, canDelete }: { property: Property
                 <span className="sr-only">Editar</span>
               </Link>
             </Button>
-            {canDelete && (
+            {(currentUser.role === "ADMIN" || property.ownerId === currentUser.id) && (
               <DeletePropertyButton propertyId={property.id} propertyTitle={property.title} />
             )}
           </div>
@@ -247,7 +217,7 @@ function PropertyCard({ property, currentUser, canDelete }: { property: Property
   )
 }
 
-export function PropertiesTable({ properties, currentUser, canDelete = false }: PropertiesTableProps) {
+export function PropertiesTable({ properties, currentUser }: PropertiesTableProps) {
   return (
     <Card>
       <CardContent className="p-4 sm:p-6">
@@ -266,7 +236,7 @@ export function PropertiesTable({ properties, currentUser, canDelete = false }: 
         ) : (
           <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {properties.map((property) => (
-              <PropertyCard key={property.id} property={property} currentUser={currentUser} canDelete={canDelete} />
+              <PropertyCard key={property.id} property={property} currentUser={currentUser} />
             ))}
           </div>
         )}

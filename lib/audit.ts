@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/server"
+import { createServerClient } from "@/lib/supabase/server"
 import { getCurrentUser } from "@/lib/auth"
 import { headers } from "next/headers"
 
@@ -63,7 +63,7 @@ export async function logAudit(params: {
   metadata?: Record<string, any>
 }) {
   try {
-    const supabase = await createAdminClient()
+    const supabase = await createServerClient()
     const user = await getCurrentUser()
     const headersList = await headers()
 
@@ -96,7 +96,7 @@ export async function logAudit(params: {
  * Gets audit logs with filters
  */
 export async function getAuditLogs(filters?: AuditLogFilters, limit = 100, offset = 0) {
-  const supabase = await createAdminClient()
+  const supabase = await createServerClient()
 
   let query = supabase.from("audit_logs").select("*", { count: "exact" }).order("created_at", { ascending: false })
 
@@ -142,7 +142,7 @@ export async function getAuditLogs(filters?: AuditLogFilters, limit = 100, offse
  * Gets audit statistics
  */
 export async function getAuditStats() {
-  const supabase = await createAdminClient()
+  const supabase = await createServerClient()
 
   // Get total logs count
   const { count: totalLogs } = await supabase.from("audit_logs").select("*", { count: "exact", head: true })
@@ -171,18 +171,18 @@ export async function getAuditStats() {
 
   // Count by module
   const moduleCounts: Record<string, number> = {}
-  moduleStats?.forEach((log: { module: string }) => {
+  moduleStats?.forEach((log) => {
     moduleCounts[log.module] = (moduleCounts[log.module] || 0) + 1
   })
 
   // Count by action
   const actionCounts: Record<string, number> = {}
-  actionStats?.forEach((log: { action: string }) => {
+  actionStats?.forEach((log) => {
     actionCounts[log.action] = (actionCounts[log.action] || 0) + 1
   })
 
   // Unique users
-  const uniqueUsers = new Set(recentUsers?.map((u: { user_id: string | null }) => u.user_id).filter(Boolean))
+  const uniqueUsers = new Set(recentUsers?.map((u) => u.user_id).filter(Boolean))
 
   return {
     totalLogs: totalLogs || 0,

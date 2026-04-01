@@ -2,6 +2,19 @@
 
 Sistema completo de gestión de negocios inmobiliarios con Next.js, TypeScript y PostgreSQL (Neon).
 
+## 🚨 ¿Problemas de Conexión? Lee Esto Primero
+
+Si ves errores como:
+- "Can't reach database server at `ep-xxxxx.neon.tech:5432`"
+- "Connection timeout"
+- "Timed out fetching a new connection from the connection pool"
+
+👉 **[LEE URGENTE-FIX-CONEXION.md](./URGENTE-FIX-CONEXION.md)** 👈
+
+**Solución rápida:** El problema más común es el parámetro `channel_binding=require` en tu URL de Neon. Ábrelo en tu archivo `.env` y elimina `&channel_binding=require` de la URL, dejando solo `?sslmode=require`.
+
+---
+
 ## ✨ Características
 
 - Autenticación robusta con 2FA
@@ -249,6 +262,98 @@ npm run setup:local  # Asistente interactivo
 vercel env pull .env.local  # Descargar de Vercel
 \`\`\`
 
+## 🚢 Despliegue en Producción
+
+El proyecto se despliega automáticamente en Vercel cuando haces push a la rama main.
+
+### ⚠️ IMPORTANTE: Configurar Variables de Entorno en Vercel
+
+**Antes de hacer deploy, DEBES configurar las variables de entorno en Vercel Dashboard:**
+
+#### Paso 1: Obtener URL de Neon
+
+1. Ve a [console.neon.tech](https://console.neon.tech)
+2. Selecciona tu proyecto
+3. Ve a **Connection Details**
+4. Copia la **Connection String** completa
+
+Ejemplo: `postgresql://usuario:password@ep-xxxxx.us-east-2.aws.neon.tech/neondb`
+
+#### Paso 2: Configurar en Vercel
+
+1. Ve a tu proyecto en [Vercel Dashboard](https://vercel.com/dashboard)
+2. Selecciona tu proyecto
+3. Ve a **Settings → Environment Variables**
+4. Agrega las siguientes variables:
+
+\`\`\`env
+# Base de Datos (REQUERIDO)
+DATABASE_URL=postgresql://usuario:password@ep-xxxxx.us-east-2.aws.neon.tech/neondb?sslmode=require
+
+# Autenticación (REQUERIDO)
+JWT_SECRET=tu-secreto-jwt-muy-seguro-aqui-minimo-32-caracteres
+
+# WordPress (Opcional - solo si usas sincronización)
+WORDPRESS_API_URL=https://tu-wordpress.com/wp-json
+WORDPRESS_USERNAME=tu-usuario
+WORDPRESS_APP_PASSWORD=xxxx xxxx xxxx xxxx xxxx xxxx
+\`\`\`
+
+**⚠️ IMPORTANTE:**
+- La URL de Neon DEBE incluir `?sslmode=require` al final
+- El `JWT_SECRET` debe ser diferente al de desarrollo y muy seguro
+- Sin estas variables, el deploy fallará con error de conexión a base de datos
+
+#### Paso 3: Deploy
+
+\`\`\`bash
+git push origin main  # Deploy automático
+\`\`\`
+
+Vercel detecta automáticamente el push y hace deploy.
+
+#### Paso 4: Verificar Deploy
+
+1. Ve a **Deployments** en Vercel
+2. Haz clic en el último deployment
+3. Ve a **Build Logs**
+4. Busca el mensaje: `[v0] Database connected successfully in production`
+
+Si ves este mensaje, ¡todo funciona correctamente! 🎉
+
+### Solución de Problemas en Producción
+
+#### Error: "Can't reach database server at localhost:5432"
+
+**Causa:** Las variables de entorno NO están configuradas en Vercel.
+
+**Solución:** 
+1. Configura `DATABASE_URL` en Vercel Settings → Environment Variables
+2. Redeploy desde Vercel Dashboard
+
+#### Error: "P1001: Can't reach database server"
+
+**Causas posibles:**
+- URL de Neon incorrecta
+- Falta `?sslmode=require` al final de la URL
+- Proyecto de Neon pausado o eliminado
+
+**Solución:**
+1. Verifica que la URL sea correcta
+2. Asegúrate de agregar `?sslmode=require`
+3. Verifica que tu proyecto de Neon esté activo en console.neon.tech
+
+**📖 Guía completa de deployment en producción**: Ver [VERCEL-ENV-SETUP.md](./VERCEL-ENV-SETUP.md)
+
+### Configuración Rápida (Resumen)
+
+1. **Conectar repositorio a Vercel** ✓
+2. **Configurar variables en Vercel Dashboard** (ver arriba)
+3. **Push a GitHub**:
+   \`\`\`bash
+   git push origin main  # Deploy automático
+   \`\`\`
+
 ## 📚 Documentación
 
 - **[ADMIN-SETUP.md](./ADMIN-SETUP.md)** → Guía para crear usuario administrador
@@ -256,21 +361,6 @@ vercel env pull .env.local  # Descargar de Vercel
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** → Guía de despliegue en producción
 - **[NEON-SETUP.md](./NEON-SETUP.md)** → Configuración específica de Neon
 - **[wordpress-setup/README.md](./wordpress-setup/README.md)** → Guía de integración con WordPress
-
-## 🚢 Despliegue en Producción
-
-El proyecto se despliega automáticamente en Vercel cuando haces push a la rama main.
-
-### Configuración Rápida
-
-1. **Conectar repositorio a Vercel**
-2. **Configurar variables de entorno en Vercel Dashboard**
-3. **Push a GitHub**:
-\`\`\`bash
-git push origin main  # Deploy automático
-\`\`\`
-
-**📖 Guía completa de deployment**: Ver [DEPLOYMENT.md](./DEPLOYMENT.md)
 
 ## 🔄 Flujo de Trabajo
 

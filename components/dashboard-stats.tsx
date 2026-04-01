@@ -14,10 +14,10 @@ export async function DashboardStats() {
       { data: revenueData },
       { count: totalUsers }
     ] = await Promise.all([
-      supabase.from('properties').select('*', { count: 'exact', head: true }),
-      supabase.from('properties').select('*', { count: 'exact', head: true }).eq('status', 'ACTIVO'),
-      supabase.from('properties').select('price').in('status', ['VENDIDO', 'ALQUILADO']),
-      supabase.from('users').select('*', { count: 'exact', head: true }).eq('is_active', true)
+      supabase.from('Property').select('*', { count: 'exact', head: true }),
+      supabase.from('Property').select('*', { count: 'exact', head: true }).eq('status', 'ACTIVO'),
+      supabase.from('Property').select('price').in('status', ['VENDIDO', 'ALQUILADO']),
+      supabase.from('User').select('*', { count: 'exact', head: true }).eq('isActive', true)
     ])
 
     const totalRevenue = revenueData?.reduce((sum, prop) => sum + (prop.price || 0), 0) || 0

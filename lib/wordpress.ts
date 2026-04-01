@@ -112,7 +112,7 @@ export class WordPressAPI {
     return data
   }
 
-  async createProperty(property: any): Promise<{ id: number; url: string }> {
+  async createProperty(property: any): Promise<number> {
     console.log("[v0] Creating property via custom plugin:", JSON.stringify(property, null, 2))
 
     const data = await this.request("/estatik-bridge/v1/properties", {
@@ -120,21 +120,7 @@ export class WordPressAPI {
       body: JSON.stringify(property),
     })
 
-    console.log("[v0] Create response:", data)
-
-    // If link is not in response, fetch it from the post endpoint
-    let url = data.link || ""
-    if (!url && data.post_id) {
-      try {
-        const postData = await this.request(`/wp/v2/properties/${data.post_id}`)
-        url = postData.link || ""
-        console.log("[v0] Fetched URL from post endpoint:", url)
-      } catch (error) {
-        console.error("[v0] Could not fetch post URL:", error)
-      }
-    }
-
-    return { id: data.post_id, url }
+    return data.post_id
   }
 
   async updateProperty(wordpressId: number, property: any): Promise<void> {
@@ -159,7 +145,7 @@ export class WordPressAPI {
     })
   }
 
-  async syncProperty(property: any): Promise<{ id: number; url: string }> {
+  async syncProperty(property: any): Promise<number> {
     console.log("[v0] ========================================")
     console.log("[v0] STARTING PROPERTY SYNC")
     console.log("[v0] ========================================")
@@ -470,31 +456,19 @@ export class WordPressAPI {
 
     console.log("[v0] Final payload:", JSON.stringify(payload, null, 2))
 
-    // Check for existing WordPress ID (try both property names for compatibility)
-    const existingId = property.wordpress_id || property.wordpressId
-    console.log("[v0] 🔍 Checking for existing WordPress ID...")
-    console.log("[v0]   - property.wordpress_id:", property.wordpress_id)
-    console.log("[v0]   - property.wordpressId:", property.wordpressId)
-    console.log("[v0]   - existingId resolved to:", existingId)
-    console.log("[v0]   - Will UPDATE?:", !!(existingId && Number(existingId) > 0))
-    
-    if (existingId && Number(existingId) > 0) {
+    if (property.wordpressId || property.wordpress_id) {
+      const existingId = property.wordpressId || property.wordpress_id
       console.log("[v0] 🔄 UPDATING existing WordPress property:", existingId)
       try {
         await this.updateProperty(existingId, payload)
         console.log("[v0] ✅ Property UPDATED successfully (no duplication)")
-        
-        // Get the post URL after update
-        const postData = await this.request(`/wp/v2/properties/${existingId}`)
-        const url = postData.link || ""
-        console.log("[v0] Fetched URL after update:", url)
-        return { id: existingId, url }
+        return existingId
       } catch (error) {
         if (error instanceof Error && error.message === "PROPERTY_NOT_FOUND") {
           console.log("[v0] ⚠ Property not found in WordPress (404), creating new one...")
-          const result = await this.createProperty(payload)
-          console.log("[v0] ✓ New property created with ID:", result.id)
-          return result
+          const newId = await this.createProperty(payload)
+          console.log("[v0] ✓ New property created with ID:", newId)
+          return newId
         }
         console.error("[v0] WordPress API Error:", error)
         throw new Error(
@@ -508,9 +482,9 @@ export class WordPressAPI {
     } else {
       console.log("[v0] ➕ CREATING new WordPress property (no existing ID)")
       try {
-        const result = await this.createProperty(payload)
-        console.log("[v0] ✅ Property CREATED with ID:", result.id)
-        return result
+        const newId = await this.createProperty(payload)
+        console.log("[v0] ✅ Property CREATED with ID:", newId)
+        return newId
       } catch (error) {
         console.error("[v0] WordPress API Error:", error)
         throw new Error(

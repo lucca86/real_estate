@@ -1,4 +1,4 @@
-import { getCurrentUser, checkPermission } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { PropertiesTable } from "@/components/properties-table"
 import { PropertiesFilters } from "@/components/properties-filters"
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Plus, FileText } from "lucide-react"
 import Link from "next/link"
 import { createAdminClient } from "@/lib/supabase/server"
+import { getUserPermissions } from "@/lib/permissions"
 import { PropertiesPagination } from "@/components/properties-pagination"
 
 export default async function PropertiesPage({
@@ -19,10 +20,8 @@ export default async function PropertiesPage({
     redirect("/login")
   }
 
-  const [canCreate, canDelete] = await Promise.all([
-    checkPermission("properties.create"),
-    checkPermission("properties.delete"),
-  ])
+  const permissions = await getUserPermissions(user.id)
+  const canCreate = permissions["properties.create"]
 
   const params = await searchParams
 
@@ -38,7 +37,6 @@ export default async function PropertiesPage({
   const bathrooms = params.bathrooms as string
   const activeOnly = params.activeOnly !== "false"
   const syncedOnly = params.syncedOnly === "true"
-  const updatedBy = params.updatedBy as string
 
   const page = params.page ? Number.parseInt(params.page as string) : 1
   const limit = params.limit ? Number.parseInt(params.limit as string) : 12
@@ -96,10 +94,6 @@ export default async function PropertiesPage({
     countQuery = countQuery.not("wordpress_id", "is", null)
   }
 
-  if (updatedBy) {
-    countQuery = countQuery.eq("updated_by_id", updatedBy)
-  }
-
   const { count } = await countQuery
 
   let query = supabase
@@ -111,7 +105,6 @@ export default async function PropertiesPage({
       city:cities!city_id(name),
       province:provinces!province_id(name),
       wordpress_id,
-      wordpress_url,
       wordpress_synced_at
     `)
     .order("created_at", { ascending: false })
@@ -165,34 +158,11 @@ export default async function PropertiesPage({
     query = query.not("wordpress_id", "is", null)
   }
 
-  if (updatedBy) {
-    query = query.eq("updated_by_id", updatedBy)
-  }
-
   const { data: properties, error } = await query
 
   if (error) {
-    console.error("[v0] Error fetching properties:", error)
-    return <div>Error al cargar propiedades</div>
+    console.log("[v0] Error fetching properties:", error)
   }
-
-  // Load all updatedBy users in a single query to avoid N+1 and stack overflow
-  const userIds = [...new Set((properties || []).map((p: any) => p.updated_by_id).filter(Boolean))]
-  let usersMap: Record<string, { name: string }> = {}
-  if (userIds.length > 0) {
-    const { data: users } = await supabase
-      .from("users")
-      .select("id, name")
-      .in("id", userIds)
-    if (users) {
-      usersMap = Object.fromEntries(users.map((u) => [u.id, { name: u.name }]))
-    }
-  }
-
-  const propertiesWithUsers = (properties || []).map((property: any) => ({
-    ...property,
-    updatedBy: property.updated_by_id ? (usersMap[property.updated_by_id] ?? null) : null,
-  }))
 
   const totalPages = count ? Math.ceil(count / limit) : 0
 
@@ -227,7 +197,7 @@ export default async function PropertiesPage({
         </aside>
 
         <main className="flex-1 space-y-4 min-w-0">
-              <PropertiesTable properties={propertiesWithUsers || []} currentUser={user} canDelete={canDelete} />
+          <PropertiesTable properties={properties || []} currentUser={user} />
 
           {totalPages > 1 && (
             <PropertiesPagination

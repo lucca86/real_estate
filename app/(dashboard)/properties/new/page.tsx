@@ -1,4 +1,4 @@
-import { getCurrentUser, checkPermission } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { PropertyForm } from "@/components/property-form"
 import { ChevronLeft } from "lucide-react"
@@ -11,8 +11,6 @@ export default async function NewPropertyPage() {
   if (!user) {
     redirect("/login")
   }
-
-  const canDeleteImages = await checkPermission("images.delete")
 
   return (
     <div className="space-y-6">
@@ -27,7 +25,7 @@ export default async function NewPropertyPage() {
         <p className="text-muted-foreground">Agrega una nueva propiedad al inventario</p>
       </div>
 
-      <PropertyForm canDeleteImages={canDeleteImages} />
+      <PropertyForm />
     </div>
   )
 }

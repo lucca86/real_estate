@@ -4,9 +4,6 @@ import { jwtVerify } from "jose"
 import { hash, compare } from "bcryptjs"
 import { authenticator } from "otplib"
 
-// Centralised permission check — use this everywhere instead of hardcoding role strings
-export { checkPermission, checkPermissions } from "@/lib/permissions"
-
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || "your-secret-key-change-this-in-production")
 
 export interface SessionUser {

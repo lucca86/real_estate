@@ -34,66 +34,66 @@ export async function getOwners() {
   try {
     const supabase = await createServerClient()
 
+    // Select only the fields needed by OwnersTable — avoid SELECT * to prevent RSC serialization overflow
     const { data: owners, error } = await supabase
       .from("owners")
       .select(`
-        *,
-        city:cities(id, name),
-        province:provinces(id, name),
-        country:countries(id, name)
+        id,
+        name,
+        first_name,
+        last_name,
+        owner_type,
+        real_estate_agency,
+        email,
+        phone,
+        secondary_phone,
+        address,
+        is_active,
+        city_id,
+        province_id,
+        country_id,
+        created_at,
+        city:cities!city_id(id, name),
+        province:provinces!province_id(id, name),
+        country:countries!country_id(id, name)
       `)
       .order("created_at", { ascending: false })
 
     if (error) throw error
 
-    // Get properties count for each owner
-    const ownersWithCounts = await Promise.all(
-      (owners || []).map(async (owner) => {
-        const { count } = await supabase
-          .from("properties")
-          .select("*", { count: "exact", head: true })
-          .eq("owner_id", owner.id)
+    const ownerList = owners || []
 
-        const city = Array.isArray(owner.city) ? owner.city[0] : owner.city
-        const province = Array.isArray(owner.province) ? owner.province[0] : owner.province
-        const country = Array.isArray(owner.country) ? owner.country[0] : owner.country
+    // Get property counts in a single query instead of N individual queries
+    const { data: propertyCounts } = await supabase
+      .from("properties")
+      .select("owner_id")
+      .in("owner_id", ownerList.map((o) => o.id).filter(Boolean))
 
-        // Build an explicit plain object — avoids circular reference errors
-        // when Next.js serializes the RSC payload (spread of Supabase rows can
-        // include non-serializable internal references)
-        return {
-          id: owner.id,
-          name: owner.name ?? "",
-          first_name: owner.first_name ?? "",
-          last_name: owner.last_name ?? "",
-          owner_type: owner.owner_type ?? "Propietario",
-          real_estate_agency: owner.real_estate_agency ?? null,
-          email: owner.email ?? null,
-          phone: owner.phone ?? "",
-          secondary_phone: owner.secondary_phone ?? null,
-          address: owner.address ?? null,
-          city_id: owner.city_id ?? null,
-          province_id: owner.province_id ?? null,
-          country_id: owner.country_id ?? null,
-          cityId: owner.city_id ?? null,
-          provinceId: owner.province_id ?? null,
-          countryId: owner.country_id ?? null,
-          id_number: owner.id_number ?? null,
-          tax_id: owner.tax_id ?? null,
-          notes: owner.notes ?? null,
-          is_active: owner.is_active ?? true,
-          isActive: owner.is_active ?? true,
-          created_at: owner.created_at ?? null,
-          updated_at: owner.updated_at ?? null,
-          city: city ? { id: city.id, name: city.name } : null,
-          province: province ? { id: province.id, name: province.name } : null,
-          country: country ? { id: country.id, name: country.name } : null,
-          _count: {
-            properties: count || 0,
-          },
-        }
-      }),
-    )
+    // Build count map
+    const countMap: Record<string, number> = {}
+    for (const row of propertyCounts || []) {
+      if (row.owner_id) {
+        countMap[row.owner_id] = (countMap[row.owner_id] || 0) + 1
+      }
+    }
+
+    const ownersWithCounts = ownerList.map((owner) => ({
+      id: owner.id,
+      name: owner.name,
+      email: owner.email,
+      phone: owner.phone,
+      address: owner.address,
+      cityId: owner.city_id,
+      provinceId: owner.province_id,
+      countryId: owner.country_id,
+      isActive: owner.is_active,
+      city: Array.isArray(owner.city) ? owner.city[0] ?? null : owner.city ?? null,
+      province: Array.isArray(owner.province) ? owner.province[0] ?? null : owner.province ?? null,
+      country: Array.isArray(owner.country) ? owner.country[0] ?? null : owner.country ?? null,
+      _count: {
+        properties: countMap[owner.id] || 0,
+      },
+    }))
 
     return { success: true, data: ownersWithCounts }
   } catch (error) {

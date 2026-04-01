@@ -26,7 +26,6 @@ interface PropertyImageUploadProps {
   images: PropertyImage[]
   onChange: (images: PropertyImage[]) => void
   maxImages?: number
-  canDeleteImages?: boolean
 }
 
 const getImageUrl = (image: any): string => {
@@ -65,7 +64,7 @@ const getImageUrl = (image: any): string => {
   return "/placeholder.svg"
 }
 
-export function PropertyImageUpload({ images, onChange, maxImages = 12, canDeleteImages = false }: PropertyImageUploadProps) {
+export function PropertyImageUpload({ images, onChange, maxImages = 12 }: PropertyImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState<{ [key: string]: number }>({})
@@ -385,7 +384,7 @@ export function PropertyImageUpload({ images, onChange, maxImages = 12, canDelet
                             />
                           </div>
 
-                          <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-black/40 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/40 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none">
                             <div className="absolute inset-0 flex items-center justify-center gap-2 pointer-events-auto">
                               <Button
                                 type="button"
@@ -401,33 +400,20 @@ export function PropertyImageUpload({ images, onChange, maxImages = 12, canDelet
                               >
                                 <Star className={`h-4 w-4 ${image.isCover ? "fill-current text-yellow-500" : ""}`} />
                               </Button>
-                              {canDeleteImages ? (
-                                <Button
-                                  type="button"
-                                  size="icon"
-                                  variant="destructive"
-                                  onClick={(e) => {
-                                    e.preventDefault()
-                                    e.stopPropagation()
-                                    deleteImage(image)
-                                  }}
-                                  title="Eliminar imagen"
-                                  className="shadow-lg"
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              ) : (
-                                <Button
-                                  type="button"
-                                  size="icon"
-                                  variant="secondary"
-                                  disabled
-                                  title="Solo administradores y supervisores pueden eliminar imágenes"
-                                  className="shadow-lg opacity-40 cursor-not-allowed"
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              )}
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="destructive"
+                                onClick={(e) => {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  deleteImage(image)
+                                }}
+                                title="Eliminar imagen"
+                                className="shadow-lg"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
                             </div>
 
                             <div className="absolute bottom-2 left-2 right-2 flex items-center gap-2 rounded bg-black/70 p-2 backdrop-blur-sm pointer-events-auto">
