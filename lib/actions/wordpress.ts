@@ -37,27 +37,11 @@ export async function syncPropertyToWordPress(propertyId: string) {
     throw new Error("Propiedad no encontrada")
   }
 
-  console.log("[v0] Property fetched successfully:", {
-    id: property.id,
-    title: property.title,
-    images: property.images?.length || 0,
-    lot_size: property.lot_size,
-    area: property.area,
-    property_type: property.property_type?.name,
-    transaction_type: property.transaction_type,
-    status: property.status,
-  })
-
   const rawImages = property.images || []
   const allImages = rawImages.map(parseImage)
   const imagesToSync = allImages.filter((img: any) => img.syncToWordPress === true)
 
-  console.log("[v0] Total images:", allImages.length)
-  console.log("[v0] Images marked for WordPress sync:", imagesToSync.length)
-  console.log("[v0] First image syncToWordPress value:", allImages[0]?.syncToWordPress)
-
   if (imagesToSync.length === 0) {
-    console.log("[v0] WARNING: No images marked for WordPress sync")
     return {
       success: false,
       warning:

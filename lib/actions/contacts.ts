@@ -85,9 +85,6 @@ export async function createContact(formData: FormData) {
   const isActive = formData.get("isActive") === "true"
   const serviceIds = formData.get("serviceIds") as string
 
-  console.log("createContact - company:", company)
-  console.log("createContact - serviceIds:", serviceIds)
-
   const { data: contact, error: contactError } = await supabase
     .from("Contact")
     .insert({
@@ -111,8 +108,6 @@ export async function createContact(formData: FormData) {
     return { success: false, error: contactError.message }
   }
 
-  console.log("Created contact:", contact)
-
   if (serviceIds && contact) {
     const services = JSON.parse(serviceIds) as string[]
     const contactServices = services.map((serviceId) => ({
@@ -125,8 +120,6 @@ export async function createContact(formData: FormData) {
 
     if (servicesError) {
       console.error("Error assigning services:", servicesError)
-    } else {
-      console.log("Successfully assigned services")
     }
   }
 

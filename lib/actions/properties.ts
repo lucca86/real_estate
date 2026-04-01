@@ -11,21 +11,14 @@ import type { ActionResult } from "@/types/action-result"
 import { logAudit } from "@/lib/audit"
 
 export async function createProperty(formData: FormData): Promise<ActionResult<PropertyWithDetails>> {
-  console.log("[v0] createProperty called")
-
   const currentUser = await getCurrentUser()
   if (!currentUser) {
-    console.log("[v0] No authenticated user")
     return { success: false, error: "No autenticado. Por favor inicia sesión." }
   }
-
-  console.log("[v0] User authenticated:", currentUser.id)
 
   const supabase = await createClient()
 
   try {
-    // Extract form data
-    console.log("[v0] Extracting form data")
 
     const title = formData.get("title") as string
     const description = formData.get("description") as string
@@ -64,10 +57,7 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
     const backMeters = formData.get("backMeters") ? Number.parseFloat(formData.get("backMeters") as string) : null
     const adrema = formData.get("adrema") as string
 
-    console.log("[v0] Form data extracted:", { title, ownerId, propertyTypeId, status, cityId })
-
     if (!title || !ownerId || !propertyTypeId || !status || !address || !cityId || !countryId || !provinceId) {
-      console.log("[v0] Missing required fields")
       return { success: false, error: "Faltan campos requeridos" }
     }
 
@@ -100,8 +90,6 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
     const parsedYearBuilt = yearBuilt ? Number.parseInt(yearBuilt) : null
 
     const pricePerM2 = price && parsedArea ? Number.parseFloat(price) / parsedArea : null
-
-    console.log("[v0] About to insert into database")
 
     const { data: newProperty, error } = await supabase
       .from("properties")
@@ -158,8 +146,6 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
       throw new Error(`Error al crear la propiedad: ${error.message}`)
     }
 
-    console.log("[v0] Property created successfully:", newProperty?.id)
-
     if (syncToWordPress && newProperty) {
       try {
         const imagesToSync = sortedImages.filter((img: any) => img.syncToWordPress === true)
@@ -196,7 +182,6 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
     return { success: true, data: newProperty as PropertyWithDetails }
   } catch (error: any) {
     console.error("[v0] Error in createProperty:", error)
-    console.error("[v0] Error stack:", error.stack)
     return {
       success: false,
       error: error.message || "Error desconocido al crear la propiedad",
