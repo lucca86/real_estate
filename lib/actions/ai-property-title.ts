@@ -15,8 +15,6 @@ interface PropertyDetails {
 }
 
 export async function generatePropertyTitle(details: PropertyDetails) {
-  console.log("[v0] generatePropertyTitle called with:", details)
-
   try {
     // Template patterns for different property types
     const templates = {
@@ -153,8 +151,6 @@ export async function generatePropertyTitle(details: PropertyDetails) {
     if (title.length > 80) {
       title = title.substring(0, 77) + "..."
     }
-
-    console.log("[v0] Generated title:", title)
 
     return { success: true, title }
   } catch (error) {

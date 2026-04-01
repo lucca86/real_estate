@@ -49,20 +49,15 @@ export async function updateAppointmentSetting(
     }
   }
 
-  console.log("[v0] Authenticated user:", user.id)
-
   // Verificar permisos (solo ADMIN y SUPERVISOR pueden gestionar configuración)
   const canManage = hasPermission(user, "SUPERVISOR")
   
   if (!canManage) {
-    console.error("[v0] ✗ User does not have permission to manage appointment_settings")
     return {
       success: false,
       error: "No tienes permisos para actualizar la configuración",
     }
   }
-
-  console.log("[v0] ✓ User has permission to manage appointment_settings")
 
   const is_open = formData.get("is_open") === "true"
   const start_time = formData.get("start_time") as string | null
@@ -70,16 +65,6 @@ export async function updateAppointmentSetting(
   const min_duration = Number.parseInt(formData.get("min_duration") as string)
   const max_duration = Number.parseInt(formData.get("max_duration") as string)
   const duration_interval = Number.parseInt(formData.get("duration_interval") as string)
-
-  console.log("[v0] updateAppointmentSetting called with:", {
-    id,
-    is_open,
-    start_time,
-    end_time,
-    min_duration,
-    max_duration,
-    duration_interval,
-  })
 
   // Validaciones
   if (is_open && (!start_time || !end_time)) {
@@ -127,8 +112,6 @@ export async function updateAppointmentSetting(
     updated_at: new Date().toISOString(),
   }
 
-  console.log("[v0] Updating database with:", updateData)
-
   const { error, data } = await supabase
     .from("appointment_settings")
     .update(updateData)
@@ -142,8 +125,6 @@ export async function updateAppointmentSetting(
       error: "Error al actualizar la configuración",
     }
   }
-
-  console.log("[v0] ✓ Database updated successfully:", data)
 
   revalidatePath("/settings/appointments")
   revalidatePath("/settings")

@@ -51,10 +51,6 @@ export async function syncPropertyToWordPress(propertyId: string) {
   }
 
   try {
-    console.log("[v0] Calling wordpressAPI.syncProperty...")
-    console.log("[v0] Property wordpress_id from database:", property.wordpress_id)
-    console.log("[v0] Property wordpress_url from database:", property.wordpress_url)
-
     const syncData = {
       id: property.id,
       wordpressId: property.wordpress_id,
@@ -88,11 +84,7 @@ export async function syncPropertyToWordPress(propertyId: string) {
       published: property.published,
     }
 
-    console.log("[v0] Sync data prepared with", imagesToSync.length, "images")
-
     const result = await wordpressAPI.syncProperty(syncData)
-
-    console.log("[v0] WordPress sync successful! WordPress ID:", result.id, "URL:", result.url)
 
     const { error: updateError } = await adminClient
       .from("properties")
@@ -104,9 +96,7 @@ export async function syncPropertyToWordPress(propertyId: string) {
       .eq("id", propertyId)
 
     if (updateError) {
-      console.log("[v0] ERROR updating property with wordpress_id:", updateError)
-    } else {
-      console.log("[v0] Property updated with WordPress ID")
+      console.error("Error updating property with wordpress_id:", updateError)
     }
 
     revalidatePath("/properties")

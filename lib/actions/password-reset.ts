@@ -69,10 +69,7 @@ export async function requestPasswordReset(formData: FormData): Promise<Password
     // Send email with reset link
     const resetUrl = `${process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || "http://localhost:3001"}/reset-password?token=${token}`
 
-    // TODO: Implement email sending here
-    // For now, we'll just log it (in production, use a service like Resend or SendGrid)
-    console.log("[v0] Password reset link:", resetUrl)
-    console.log("[v0] Send this link to:", user.email)
+    // TODO: Implement email sending here (use a service like Resend or SendGrid)
 
     return {
       success: true,
