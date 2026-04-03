@@ -11,7 +11,9 @@ export default async function NewOwnerPage() {
   }
 
   const supabase = await createServerClient()
-  
+
+  const defaultProvinceId = "f54e20b7-d5f8-4ae1-81f9-a09b2e2ee8f3"
+
   const [
     { data: countries },
     { data: provinces },
@@ -19,7 +21,7 @@ export default async function NewOwnerPage() {
   ] = await Promise.all([
     supabase.from('countries').select('id, name').eq('is_active', true).order('name'),
     supabase.from('provinces').select('id, name, country_id').eq('is_active', true).order('name'),
-    supabase.from('cities').select('id, name, province_id').eq('is_active', true).order('name')
+    supabase.from('cities').select('id, name, province_id').eq('is_active', true).eq('province_id', defaultProvinceId).order('name')
   ])
 
   return (

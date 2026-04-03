@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -97,6 +97,27 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
 
   const [selectedCountryId, setSelectedCountryId] = useState(owner?.country_id || defaultCountryId)
   const [selectedProvinceId, setSelectedProvinceId] = useState(owner?.province_id || defaultProvinceId)
+  // Cities loaded from the server initially (pre-filtered for the current province),
+  // then refreshed client-side via /api/cities when the user changes province.
+  const [availableCities, setAvailableCities] = useState<Array<{ id: string; name: string; province_id: string }>>(cities)
+  const [loadingCities, setLoadingCities] = useState(false)
+
+  const fetchCities = useCallback(async (provinceId: string) => {
+    if (!provinceId) {
+      setAvailableCities([])
+      return
+    }
+    setLoadingCities(true)
+    try {
+      const res = await fetch(`/api/cities?provinceId=${provinceId}`)
+      const data = await res.json()
+      setAvailableCities(Array.isArray(data) ? data : [])
+    } catch {
+      setAvailableCities([])
+    } finally {
+      setLoadingCities(false)
+    }
+  }, [])
 
   const {
     register,
@@ -144,14 +165,12 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
     setValue("provinceId", value)
     setSelectedProvinceId(value)
     setValue("cityId", "")
+    fetchCities(value)
   }
 
   const handleCityChange = (value: string) => {
     setValue("cityId", value)
   }
-
-  const filteredProvinces = provinces.filter((p) => p.country_id === selectedCountryId)
-  const filteredCities = cities.filter((c) => c.province_id === selectedProvinceId)
 
   const provincesByCountry = provinces.reduce(
     (acc, province) => {
@@ -166,17 +185,16 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
     {} as Record<string, typeof provinces>,
   )
 
-  const citiesByProvince = filteredCities.reduce(
+  const citiesByProvince = availableCities.reduce(
     (acc, city) => {
-      const provinceName =
-        city.province?.name || provinces.find((p) => p.id === city.province_id)?.name || "Sin provincia"
+      const provinceName = provinces.find((p) => p.id === city.province_id)?.name || "Sin provincia"
       if (!acc[provinceName]) {
         acc[provinceName] = []
       }
       acc[provinceName].push(city)
       return acc
     },
-    {} as Record<string, typeof filteredCities>,
+    {} as Record<string, typeof availableCities>,
   )
 
   const onSubmit = async (data: OwnerFormData) => {
@@ -271,9 +289,7 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
               </Label>
               <Input
                 id="firstName"
-                {...register("firstName", {
-                  onChange: (e) => setValue("firstName", capitalizeFirst(e.target.value)),
-                })}
+                {...register("firstName")}
                 placeholder="Juan"
               />
               {errors.firstName && <p className="text-sm text-destructive">{errors.firstName.message}</p>}
@@ -285,9 +301,7 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
               </Label>
               <Input
                 id="lastName"
-                {...register("lastName", {
-                  onChange: (e) => setValue("lastName", capitalizeFirst(e.target.value)),
-                })}
+                {...register("lastName")}
                 placeholder="Pérez"
               />
               {errors.lastName && <p className="text-sm text-destructive">{errors.lastName.message}</p>}
@@ -398,14 +412,14 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
 
             <div className="space-y-2">
               <Label htmlFor="cityId">Ciudad</Label>
-              <Select value={cityId} onValueChange={handleCityChange} disabled={!selectedProvinceId}>
+              <Select value={cityId} onValueChange={handleCityChange} disabled={!selectedProvinceId || loadingCities}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar ciudad..." />
+                  <SelectValue placeholder={loadingCities ? "Cargando..." : "Seleccionar ciudad..."} />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(citiesByProvince).map(([provinceName, provinceCities]) => (
                     <SelectGroup key={provinceName}>
-                      <SelectLabel className="text-xs font-semibold text-primary">📍 {provinceName}</SelectLabel>
+                      <SelectLabel className="text-xs font-semibold text-primary">{provinceName}</SelectLabel>
                       {provinceCities.map((city) => (
                         <SelectItem key={city.id} value={city.id} className="pl-6">
                           {city.name}

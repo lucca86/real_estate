@@ -26,10 +26,13 @@ export default async function EditOwnerPage({
 
   const supabase = await createServerClient()
 
+  const defaultProvinceId = "f54e20b7-d5f8-4ae1-81f9-a09b2e2ee8f3"
+  const provinceIdForCities = ownerRaw.province_id || defaultProvinceId
+
   const [{ data: countries }, { data: provinces }, { data: cities }] = await Promise.all([
     supabase.from("countries").select("id, name").eq("is_active", true).order("name"),
     supabase.from("provinces").select("id, name, country_id").eq("is_active", true).order("name"),
-    supabase.from("cities").select("id, name, province_id").eq("is_active", true).order("name"),
+    supabase.from("cities").select("id, name, province_id").eq("is_active", true).eq("province_id", provinceIdForCities).order("name"),
   ])
 
   const owner = {
