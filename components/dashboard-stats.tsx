@@ -3,8 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { createServerClient } from "@/lib/supabase/server"
 
 export async function DashboardStats() {
-  console.log("[v0] DashboardStats: Starting to fetch stats")
-
   try {
     const supabase = await createServerClient()
 
@@ -49,8 +47,6 @@ export async function DashboardStats() {
       },
     ]
 
-    console.log("[v0] DashboardStats: Successfully fetched stats")
-
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
@@ -68,8 +64,6 @@ export async function DashboardStats() {
       </div>
     )
   } catch (error) {
-    console.error("[v0] DashboardStats: Error fetching stats:", error)
-
     // Return placeholder stats
     const placeholderStats = [
       { title: "Total Propiedades", value: 0, icon: Building2, description: "0 disponibles" },

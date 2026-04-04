@@ -2,7 +2,7 @@
 
 import { Input } from "@/components/ui/input"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -24,19 +24,7 @@ type CitiesTableProps = {
 }
 
 export function CitiesTableWithFilters({ cities }: CitiesTableProps) {
-  useEffect(() => {
-    console.log("=== CITIES DATA DEBUG ===")
-    console.log("Total cities received:", cities.length)
-    console.log("First city sample:", cities[0])
-    console.log(
-      "All is_active values:",
-      cities.map((c) => ({ name: c.name, is_active: c.is_active, type: typeof c.is_active })),
-    )
-    console.log(
-      "All province names:",
-      cities.map((c) => ({ name: c.name, province: c.province?.name })),
-    )
-  }, [cities])
+
 
   const [searchTerm, setSearchTerm] = useState("")
   const [provinceFilter, setProvinceFilter] = useState<string>("Todos")
@@ -44,12 +32,7 @@ export function CitiesTableWithFilters({ cities }: CitiesTableProps) {
   const [sortColumn, setSortColumn] = useState<"name" | "province" | null>(null)
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
 
-  useEffect(() => {
-    console.log("=== FILTER CHANGE ===")
-    console.log("Province filter:", provinceFilter)
-    console.log("Status filter:", statusFilter)
-    console.log("Search term:", searchTerm)
-  }, [provinceFilter, statusFilter, searchTerm])
+
 
   const provinces = useMemo(() => {
     const uniqueProvinces = new Set<string>()
@@ -62,36 +45,17 @@ export function CitiesTableWithFilters({ cities }: CitiesTableProps) {
   }, [cities])
 
   const filteredAndSortedCities = useMemo(() => {
-    console.log("=== FILTERING CITIES ===")
-    console.log("Province filter value:", provinceFilter)
-
     const filtered = cities.filter((city) => {
-      // Search filter
       const matchesSearch = city.name.toLowerCase().includes(searchTerm.toLowerCase())
-
-      // Province filter - explicit comparison
       const cityProvinceName = city.province?.name || ""
       const matchesProvince = provinceFilter === "Todos" || cityProvinceName === provinceFilter
-
-      console.log(
-        `City: ${city.name}, Province: ${cityProvinceName}, Filter: ${provinceFilter}, Matches: ${matchesProvince}`,
-      )
-
-      // Convert any possible value to boolean (handles boolean, number, or string)
       const cityIsActive = Boolean(city.is_active)
       const matchesStatus =
         statusFilter === "Todos" ||
         (statusFilter === "Activo" && cityIsActive) ||
         (statusFilter === "Inactivo" && !cityIsActive)
-
       return matchesSearch && matchesProvince && matchesStatus
     })
-
-    console.log("Filtered cities count:", filtered.length)
-    console.log(
-      "Filtered cities:",
-      filtered.map((c) => c.name),
-    )
 
     // Sort
     if (sortColumn) {

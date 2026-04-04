@@ -7,6 +7,7 @@ import { randomUUID } from "crypto"
 import { getCurrentUser } from "@/lib/auth"
 import { checkPermission, type Permission } from "@/lib/permissions"
 import { createAdminClient } from "@/lib/supabase/admin" // Import admin client for conflict checks to bypass RLS
+import { serverLog } from "@/lib/server-log"
 
 // Esquema de validación para citas
 const appointmentSchema = z
@@ -112,7 +113,7 @@ async function isWithinWorkHours(date: Date): Promise<{ valid: boolean; message?
     .single()
 
   if (error || !settings) {
-    console.error("[v0] Error fetching appointment settings:", error)
+    serverLog.error("Error fetching appointment settings:", error)
     return { valid: false, message: "No se pudo verificar el horario de atención" }
   }
 
@@ -325,12 +326,7 @@ export async function createAppointment(data: AppointmentFormData): Promise<Appo
       .single()
 
     if (insertError) {
-      console.error("[v0] ✗ INSERT FAILED:", {
-        message: insertError.message,
-        details: insertError.details,
-        hint: insertError.hint,
-        code: insertError.code,
-      })
+      serverLog.error("INSERT FAILED:", insertError.message, insertError.code ?? "")
       throw insertError
     }
 
@@ -339,7 +335,7 @@ export async function createAppointment(data: AppointmentFormData): Promise<Appo
     revalidatePath("/appointments")
     return { success: true, data: appointment }
   } catch (error) {
-    console.error("[v0] Error creating appointment:", error)
+    serverLog.error("Error creating appointment:", error)
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -404,7 +400,7 @@ export async function getAppointments(filters?: {
     const { data: appointments, error } = await query
 
     if (error) {
-      console.error("[v0] Error fetching appointments:", error)
+      serverLog.error("Error fetching appointments:", error)
       return { success: false, error: "Error al obtener las citas" }
     }
 
@@ -457,7 +453,7 @@ export async function getAppointments(filters?: {
 
     return { success: true, data: transformedAppointments }
   } catch (error) {
-    console.error("[v0] Error fetching appointments:", error)
+    serverLog.error("Error fetching appointments:", error)
     return { success: false, error: "Error al obtener las citas" }
   }
 }
@@ -509,7 +505,7 @@ export async function getAppointmentById(id: string) {
 
     return { success: true, data: transformedAppointment }
   } catch (error) {
-    console.error("[v0] Error fetching appointment:", error)
+    serverLog.error("Error fetching appointment:", error)
     return { success: false, error: "Error al obtener la cita" }
   }
 }
@@ -611,14 +607,14 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
       .single()
 
     if (error || !updatedAppointment) {
-      console.error("[v0] Error updating appointment:", error)
+      serverLog.error("Error updating appointment:", error)
       return { success: false, error: "Error al actualizar la cita" }
     }
 
     revalidatePath("/appointments")
     return { success: true, data: updatedAppointment }
   } catch (error) {
-    console.error("[v0] Error updating appointment:", error)
+    serverLog.error("Error updating appointment:", error)
     return { success: false, error: "Error al actualizar la cita" }
   }
 }
@@ -649,14 +645,14 @@ export async function deleteAppointment(id: string) {
     const { error } = await supabase.from("appointments").delete().eq("id", id)
 
     if (error) {
-      console.error("[v0] Error deleting appointment:", error)
+      serverLog.error("Error deleting appointment:", error)
       return { success: false, error: "Error al eliminar la cita" }
     }
 
     revalidatePath("/appointments")
     return { success: true }
   } catch (error) {
-    console.error("[v0] Error deleting appointment:", error)
+    serverLog.error("Error deleting appointment:", error)
     return { success: false, error: "Error al eliminar la cita" }
   }
 }
@@ -678,14 +674,14 @@ export async function updateAppointmentStatus(id: string, status: AppointmentSta
       .single()
 
     if (error || !appointment) {
-      console.error("[v0] Error updating appointment status:", error)
+      serverLog.error("Error updating appointment status:", error)
       return { success: false, error: "Error al actualizar el estado de la cita" }
     }
 
     revalidatePath("/appointments")
     return { success: true, data: appointment }
   } catch (error) {
-    console.error("[v0] Error updating appointment status:", error)
+    serverLog.error("Error updating appointment status:", error)
     return { success: false, error: "Error al actualizar el estado de la cita" }
   }
 }

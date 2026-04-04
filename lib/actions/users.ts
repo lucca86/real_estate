@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache"
 import { randomUUID } from "crypto"
 import { put } from "@vercel/blob"
 import { logAudit } from "@/lib/audit"
+import { serverLog } from "@/lib/server-log"
 
 export async function createUser(formData: FormData) {
   try {
@@ -68,7 +69,7 @@ export async function createUser(formData: FormData) {
 
     const { error } = await supabase.from("users").insert(newUser)
     if (error) {
-      console.error("[v0] Supabase insert error:", error)
+      serverLog.error("Supabase insert error:", error)
       throw error
     }
 
@@ -82,7 +83,7 @@ export async function createUser(formData: FormData) {
     revalidatePath("/users")
     return { success: true }
   } catch (error) {
-    console.error("[v0] Error creating user:", error)
+    serverLog.error("Error creating user:", error)
     throw error
   }
 }
@@ -155,7 +156,7 @@ export async function updateUser(userId: string, formData: FormData) {
     revalidatePath(`/users/${userId}/edit`)
     return { success: true }
   } catch (error) {
-    console.error("[v0] Error updating user:", error)
+    serverLog.error("Error updating user:", error)
     throw error
   }
 }
@@ -203,7 +204,7 @@ export async function deleteUser(userId: string) {
     revalidatePath("/users")
     return { success: true, wasDeactivated: false }
   } catch (error: any) {
-    console.error("[v0] Error deleting user:", error)
+    serverLog.error("Error deleting user:", error)
     return { success: false, error: error.message || "Error al eliminar usuario" }
   }
 }
@@ -243,14 +244,14 @@ export async function updateProfile(formData: FormData) {
     const { error } = await supabase.from("users").update(updateData).eq("id", userId)
 
     if (error) {
-      console.error("[v0] Error updating profile:", error)
+      serverLog.error("Error updating profile:", error)
       return { error: error.message }
     }
 
     revalidatePath("/profile")
     return { success: true }
   } catch (error) {
-    console.error("[v0] Error in updateProfile:", error)
+    serverLog.error("Error in updateProfile:", error)
     return { error: "Error al actualizar el perfil" }
   }
 }
@@ -303,14 +304,14 @@ export async function changeUserPassword(
       .eq("id", userId)
 
     if (error) {
-      console.error("[v0] Error updating password:", error)
+      serverLog.error("Error updating password:", error)
       return { error: "Error al actualizar la contraseña" }
     }
 
     revalidatePath(`/users/${userId}/edit`)
     return { success: true, message: "Contraseña actualizada exitosamente" }
   } catch (error) {
-    console.error("[v0] Error in changeUserPassword:", error)
+    serverLog.error("Error in changeUserPassword:", error)
     return { error: "Error al cambiar la contraseña" }
   }
 }

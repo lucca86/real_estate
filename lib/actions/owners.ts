@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { createServerClient } from "@/lib/supabase/server"
 import { z } from "zod"
 import crypto from "crypto"
+import { serverLog } from "@/lib/server-log"
 
 const ownerSchema = z.object({
   firstName: z.string().min(1, "El nombre es requerido"),
@@ -97,7 +98,7 @@ export async function getOwners() {
 
     return { success: true, data: ownersWithCounts }
   } catch (error) {
-    console.error("[getOwners] Error:", error)
+    serverLog.error("[getOwners]", error)
     return { success: false, error: "Error al obtener propietarios" }
   }
 }
@@ -122,7 +123,7 @@ export async function getOwnerById(id: string) {
 
     return { success: true, data: owner }
   } catch (error) {
-    console.error("[getOwnerById] Error:", error)
+    serverLog.error("[getOwnerById]", error)
     return { success: false, error: "Error al obtener propietario" }
   }
 }
@@ -171,7 +172,7 @@ export async function createOwner(formData: FormData) {
     revalidatePath("/owners")
     return { success: true, owner: { id: owner.id, name: owner.name } }
   } catch (error) {
-    console.error("[createOwner] Error:", error)
+    serverLog.error("[createOwner]", error)
     return { success: false, error: "Error al crear propietario" }
   }
 }
@@ -225,7 +226,7 @@ export async function updateOwner(
     revalidatePath(`/owners/${id}`)
     return { success: true, data: owner }
   } catch (error) {
-    console.error("[updateOwner] Error:", error)
+    serverLog.error("[updateOwner]", error)
     return { success: false, error: "Error al actualizar propietario" }
   }
 }
@@ -257,7 +258,7 @@ export async function deleteOwner(id: string) {
     revalidatePath("/owners")
     return { success: true, message: "Propietario eliminado correctamente" }
   } catch (error) {
-    console.error("[deleteOwner] Error:", error)
+    serverLog.error("[deleteOwner]", error)
     return { success: false, error: "Error al eliminar propietario" }
   }
 }

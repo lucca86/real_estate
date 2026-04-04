@@ -2,6 +2,7 @@
 
 import { createAdminClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { serverLog } from "@/lib/server-log"
 
 export async function getAllContacts() {
   const adminClient = await createAdminClient()
@@ -9,7 +10,7 @@ export async function getAllContacts() {
   const { data: contacts, error } = await adminClient.from("Contact").select("*").order("lastName", { ascending: true })
 
   if (error) {
-    console.error("Error fetching contacts:", error)
+    serverLog.error("Error fetching contacts:", error)
     return []
   }
 
@@ -27,7 +28,7 @@ export async function getAllContacts() {
     .in("contactId", contactIds)
 
   if (servicesError) {
-    console.error("Error fetching contact services:", servicesError)
+    serverLog.error("Error fetching contact services:", servicesError)
     return contacts.map((contact) => ({
       ...contact,
       services: [],
@@ -50,7 +51,7 @@ export async function getContactById(id: string) {
   const { data: contact, error } = await supabase.from("Contact").select("*").eq("id", id).single()
 
   if (error) {
-    console.error("Error fetching contact:", error)
+    serverLog.error("Error fetching contact:", error)
     return null
   }
 
@@ -62,7 +63,7 @@ export async function getContactById(id: string) {
     .eq("contactId", id)
 
   if (servicesError) {
-    console.error("Error fetching contact services:", servicesError)
+    serverLog.error("Error fetching contact services:", servicesError)
   }
 
   return {
@@ -104,7 +105,7 @@ export async function createContact(formData: FormData) {
     .single()
 
   if (contactError) {
-    console.error("Error creating contact:", contactError)
+    serverLog.error("Error creating contact:", contactError)
     return { success: false, error: contactError.message }
   }
 
@@ -119,7 +120,7 @@ export async function createContact(formData: FormData) {
     const { error: servicesError } = await supabase.from("ContactService").insert(contactServices)
 
     if (servicesError) {
-      console.error("Error assigning services:", servicesError)
+      serverLog.error("Error assigning services:", servicesError)
     }
   }
 
@@ -158,7 +159,7 @@ export async function updateContact(id: string, formData: FormData) {
     .eq("id", id)
 
   if (contactError) {
-    console.error("Error updating contact:", contactError)
+    serverLog.error("Error updating contact:", contactError)
     return { success: false, error: contactError.message }
   }
 
@@ -175,7 +176,7 @@ export async function updateContact(id: string, formData: FormData) {
     const { error: servicesError } = await supabase.from("ContactService").insert(contactServices)
 
     if (servicesError) {
-      console.error("Error updating services:", servicesError)
+      serverLog.error("Error updating services:", servicesError)
     }
   }
 
@@ -189,7 +190,7 @@ export async function deleteContact(id: string) {
   const { error } = await supabase.from("Contact").delete().eq("id", id)
 
   if (error) {
-    console.error("Error deleting contact:", error)
+    serverLog.error("Error deleting contact:", error)
 
     if (error.code === "23503") {
       const { error: updateError } = await supabase
@@ -198,7 +199,7 @@ export async function deleteContact(id: string) {
         .eq("id", id)
 
       if (updateError) {
-        console.error("Error deactivating contact:", updateError)
+        serverLog.error("Error deactivating contact:", updateError)
         return { success: false, error: updateError.message }
       }
 
@@ -227,7 +228,7 @@ export async function getAllServices() {
     .order("name", { ascending: true })
 
   if (error) {
-    console.error("Error fetching services:", error)
+    serverLog.error("Error fetching services:", error)
     return []
   }
 
