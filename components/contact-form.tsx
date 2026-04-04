@@ -34,6 +34,7 @@ export function ContactForm({ services, contact }: ContactFormProps) {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -52,17 +53,11 @@ export function ContactForm({ services, contact }: ContactFormProps) {
   const onSubmit = async (data: any) => {
     setIsSubmitting(true)
 
-    console.log("[v0] Form data:", data)
-    console.log("[v0] Selected services:", selectedServices)
-
     const formData = new FormData()
     Object.entries(data).forEach(([key, value]) => {
       formData.append(key, String(value))
     })
     formData.append("serviceIds", JSON.stringify(selectedServices))
-
-    console.log("[v0] FormData company:", formData.get("company"))
-    console.log("[v0] FormData serviceIds:", formData.get("serviceIds"))
 
     const result = contact ? await updateContact(contact.id, formData) : await createContact(formData)
 
@@ -192,7 +187,11 @@ export function ContactForm({ services, contact }: ContactFormProps) {
           </div>
 
           <div className="flex items-center space-x-2">
-            <Checkbox id="isActive" {...register("isActive")} defaultChecked={contact?.isActive ?? true} />
+            <Checkbox
+              id="isActive"
+              checked={watch("isActive") as boolean}
+              onCheckedChange={(checked) => setValue("isActive", !!checked)}
+            />
             <Label htmlFor="isActive" className="cursor-pointer">
               Contacto activo
             </Label>

@@ -7,6 +7,7 @@ import { randomUUID } from "crypto"
 import { getCurrentUser } from "@/lib/auth"
 import { checkPermission, type Permission } from "@/lib/permissions"
 import { createAdminClient } from "@/lib/supabase/admin" // Import admin client for conflict checks to bypass RLS
+import { serverLog } from "@/lib/server-log"
 
 // Esquema de validación para citas
 const appointmentSchema = z
@@ -91,12 +92,6 @@ function getArgentinaDateTime(date: Date): { day: number; hours: number; minutes
 async function isWithinWorkHours(date: Date): Promise<{ valid: boolean; message?: string }> {
   const { day, hours, minutes } = getArgentinaDateTime(date)
 
-  console.log("[v0] Validating work hours (Argentina time):", {
-    day,
-    hours: hours.toFixed(2),
-    date: date.toISOString(),
-  })
-
   // Domingo siempre cerrado
   if (day === 0) {
     return { valid: false, message: "No se pueden agendar citas los domingos" }
@@ -118,7 +113,7 @@ async function isWithinWorkHours(date: Date): Promise<{ valid: boolean; message?
     .single()
 
   if (error || !settings) {
-    console.error("[v0] Error fetching appointment settings:", error)
+    serverLog.error("Error fetching appointment settings:", error)
     return { valid: false, message: "No se pudo verificar el horario de atención" }
   }
 
@@ -143,13 +138,6 @@ async function isWithinWorkHours(date: Date): Promise<{ valid: boolean; message?
   const startMinutes = startHour * 60 + startMin
   const endMinutes = endHour * 60 + endMin
 
-  console.log("[v0] Work hours check:", {
-    currentMinutes,
-    startMinutes,
-    endMinutes,
-    isWithin: currentMinutes >= startMinutes && currentMinutes < endMinutes
-  })
-
   if (currentMinutes >= startMinutes && currentMinutes < endMinutes) {
     return { valid: true }
   }
@@ -168,13 +156,6 @@ async function checkScheduleConflict(
   duration: number,
   excludeAppointmentId?: string,
 ): Promise<{ hasConflict: boolean; message?: string }> {
-  console.log("[v0] Checking conflicts for:", {
-    agentId,
-    scheduledAt: scheduledAt.toISOString(),
-    duration,
-    excludeAppointmentId,
-  })
-
   const endTime = new Date(scheduledAt.getTime() + duration * 60000)
 
   const dayStart = new Date(scheduledAt)
@@ -200,8 +181,6 @@ async function checkScheduleConflict(
   }
 
   const { data: existingAppointments } = await query
-
-  console.log("[v0] Found existing appointments:", existingAppointments?.length || 0)
 
   for (const existing of existingAppointments || []) {
     const existingStart = new Date(existing.scheduled_date)
@@ -230,39 +209,24 @@ async function checkScheduleConflict(
 // Crear una nueva cita
 export async function createAppointment(data: AppointmentFormData): Promise<AppointmentResult> {
   try {
-    console.log("[v0] ========== CREATING APPOINTMENT ==========")
-    console.log("[v0] Raw data received:", JSON.stringify(data, null, 2))
-
     const currentUser = await getCurrentUser()
     if (!currentUser) {
-      console.log("[v0] ✗ User not authenticated")
       return { success: false, error: "Usuario no autenticado" }
     }
-    console.log("[v0] ✓ Current user:", currentUser.id, currentUser.email)
 
     const hasPermission = await checkPermission("appointments.create")
     if (!hasPermission) {
-      console.log("[v0] ✗ User does not have permission to create appointments")
       return { success: false, error: "No tienes permisos para crear citas" }
     }
-    console.log("[v0] ✓ User has permission to create appointments")
 
     const validatedData = appointmentSchema.parse(data)
-    console.log("[v0] ✓ Validation passed")
 
     const scheduledDate = new Date(validatedData.scheduledAt)
-    console.log("[v0] Scheduled at (ISO):", scheduledDate.toISOString())
-    console.log(
-      "[v0] Scheduled at (Argentina):",
-      scheduledDate.toLocaleString("es-AR", { timeZone: ARGENTINA_TIMEZONE }),
-    )
 
     const now = new Date()
     if (scheduledDate < now) {
-      console.log("[v0] ✗ Date is in the past")
       return { success: false, error: "No se pueden agendar citas en el pasado" }
     }
-    console.log("[v0] ✓ Date is in the future")
 
     // Verificar que la duración esté dentro de los límites configurados
     const { day } = getArgentinaDateTime(scheduledDate)
@@ -296,34 +260,28 @@ export async function createAppointment(data: AppointmentFormData): Promise<Appo
     
     const workHoursCheck = await isWithinWorkHours(scheduledDate)
     if (!workHoursCheck.valid) {
-      console.log("[v0] ✗ Work hours check failed:", workHoursCheck.message)
       return {
         success: false,
         error: workHoursCheck.message || "Horario no disponible",
       }
     }
-    console.log("[v0] ✓ Work hours check passed")
 
     const endTime = new Date(scheduledDate.getTime() + validatedData.duration * 60000)
     const endTimeCheck = await isWithinWorkHours(endTime)
     if (!endTimeCheck.valid) {
-      console.log("[v0] ✗ End time check failed:", endTimeCheck.message)
       return {
         success: false,
         error: `La cita terminaría fuera del horario de atención (${endTimeCheck.message})`,
       }
     }
-    console.log("[v0] ✓ End time check passed")
 
     const conflictCheck = await checkScheduleConflict(validatedData.agentId, scheduledDate, validatedData.duration)
     if (conflictCheck.hasConflict) {
-      console.log("[v0] ✗ Conflict detected - blocking creation:", conflictCheck.message)
       return {
         success: false,
         error: conflictCheck.message || "El agente ya tiene una cita en ese horario",
       }
     }
-    console.log("[v0] ✓ No conflicts found")
 
     const [propertyResult, clientResult, agentResult] = await Promise.all([
       validatedData.propertyId
@@ -340,31 +298,14 @@ export async function createAppointment(data: AppointmentFormData): Promise<Appo
     const agent = agentResult.data
 
     if (validatedData.propertyId && !property) {
-      console.log("[v0] ✗ Property not found")
       return { success: false, error: "La propiedad no existe" }
     }
 
     if (!agent) {
-      console.log("[v0] ✗ Agent not found")
       return { success: false, error: "El agente no existe" }
     }
-    console.log("[v0] ✓ All entities verified")
 
     const appointmentId = randomUUID()
-
-    console.log("[v0] Attempting INSERT with data:", {
-      id: appointmentId,
-      property_id: validatedData.propertyId || null,
-      other_location: validatedData.otherLocation || null,
-      client_id: validatedData.clientId || null,
-      contact_name: validatedData.contactName || null,
-      agent_id: validatedData.agentId,
-      scheduled_date: scheduledDate.toISOString(),
-      duration: validatedData.duration,
-      status: validatedData.status,
-      notes: validatedData.notes || null,
-      created_by: currentUser.id, // Added created_by field
-    })
 
     const { data: appointment, error: insertError } = await supabase
       .from("appointments")
@@ -384,31 +325,17 @@ export async function createAppointment(data: AppointmentFormData): Promise<Appo
       .select()
       .single()
 
-    console.log("[v0] INSERT result:", {
-      success: !insertError,
-      error: insertError,
-      appointment,
-    })
-
     if (insertError) {
-      console.error("[v0] ✗ INSERT FAILED:", {
-        message: insertError.message,
-        details: insertError.details,
-        hint: insertError.hint,
-        code: insertError.code,
-      })
+      serverLog.error("INSERT FAILED:", insertError.message, insertError.code ?? "")
       throw insertError
     }
-
-    console.log("[v0] ✓ INSERT successful")
 
     // TODO: Implementar sistema de notificaciones por email si se requiere
 
     revalidatePath("/appointments")
     return { success: true, data: appointment }
   } catch (error) {
-    console.error("[v0] Error creating appointment:", error)
-    console.error("[v0] Full error details:", JSON.stringify(error, null, 2))
+    serverLog.error("Error creating appointment:", error)
     if (error instanceof z.ZodError) {
       return {
         success: false,
@@ -473,7 +400,7 @@ export async function getAppointments(filters?: {
     const { data: appointments, error } = await query
 
     if (error) {
-      console.error("[v0] Error fetching appointments:", error)
+      serverLog.error("Error fetching appointments:", error)
       return { success: false, error: "Error al obtener las citas" }
     }
 
@@ -526,7 +453,7 @@ export async function getAppointments(filters?: {
 
     return { success: true, data: transformedAppointments }
   } catch (error) {
-    console.error("[v0] Error fetching appointments:", error)
+    serverLog.error("Error fetching appointments:", error)
     return { success: false, error: "Error al obtener las citas" }
   }
 }
@@ -578,7 +505,7 @@ export async function getAppointmentById(id: string) {
 
     return { success: true, data: transformedAppointment }
   } catch (error) {
-    console.error("[v0] Error fetching appointment:", error)
+    serverLog.error("Error fetching appointment:", error)
     return { success: false, error: "Error al obtener la cita" }
   }
 }
@@ -586,8 +513,6 @@ export async function getAppointmentById(id: string) {
 // Actualizar una cita
 export async function updateAppointment(id: string, data: Partial<AppointmentInput>) {
   try {
-    console.log("[v0] Updating appointment:", id, data)
-
     const supabase = await createServerClient()
     const { data: existing } = await supabase
       .from("appointments")
@@ -682,18 +607,14 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
       .single()
 
     if (error || !updatedAppointment) {
-      console.error("[v0] Error updating appointment:", error)
+      serverLog.error("Error updating appointment:", error)
       return { success: false, error: "Error al actualizar la cita" }
     }
-
-    console.log("[v0] Appointment updated successfully:", updatedAppointment.id)
-
-    // TODO: Implementar sistema de notificaciones por email si se requiere
 
     revalidatePath("/appointments")
     return { success: true, data: updatedAppointment }
   } catch (error) {
-    console.error("[v0] Error updating appointment:", error)
+    serverLog.error("Error updating appointment:", error)
     return { success: false, error: "Error al actualizar la cita" }
   }
 }
@@ -724,14 +645,14 @@ export async function deleteAppointment(id: string) {
     const { error } = await supabase.from("appointments").delete().eq("id", id)
 
     if (error) {
-      console.error("[v0] Error deleting appointment:", error)
+      serverLog.error("Error deleting appointment:", error)
       return { success: false, error: "Error al eliminar la cita" }
     }
 
     revalidatePath("/appointments")
     return { success: true }
   } catch (error) {
-    console.error("[v0] Error deleting appointment:", error)
+    serverLog.error("Error deleting appointment:", error)
     return { success: false, error: "Error al eliminar la cita" }
   }
 }
@@ -753,14 +674,14 @@ export async function updateAppointmentStatus(id: string, status: AppointmentSta
       .single()
 
     if (error || !appointment) {
-      console.error("[v0] Error updating appointment status:", error)
+      serverLog.error("Error updating appointment status:", error)
       return { success: false, error: "Error al actualizar el estado de la cita" }
     }
 
     revalidatePath("/appointments")
     return { success: true, data: appointment }
   } catch (error) {
-    console.error("[v0] Error updating appointment status:", error)
+    serverLog.error("Error updating appointment status:", error)
     return { success: false, error: "Error al actualizar el estado de la cita" }
   }
 }

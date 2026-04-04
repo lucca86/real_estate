@@ -71,12 +71,6 @@ export class WordPressAPI {
     const url = `${this.baseUrl}${endpoint}`
     const credentials = Buffer.from(`${this.username}:${this.password}`).toString("base64")
 
-    console.log("[v0] WordPress API Request:", {
-      url,
-      method: options.method || "GET",
-      hasBody: !!options.body,
-    })
-
     const response = await fetch(url, {
       ...options,
       headers: {
@@ -88,7 +82,6 @@ export class WordPressAPI {
 
     if (!response.ok) {
       const error = await response.text()
-      console.error("[v0] WordPress API Error Response:", error)
       let errorMessage = `WordPress API error: ${response.status}`
 
       try {
@@ -108,19 +101,14 @@ export class WordPressAPI {
     }
 
     const data = await response.json()
-    console.log("[v0] WordPress API Response:", JSON.stringify(data, null, 2))
     return data
   }
 
   async createProperty(property: any): Promise<{ id: number; url: string }> {
-    console.log("[v0] Creating property via custom plugin:", JSON.stringify(property, null, 2))
-
     const data = await this.request("/estatik-bridge/v1/properties", {
       method: "POST",
       body: JSON.stringify(property),
     })
-
-    console.log("[v0] Create response:", data)
 
     // If link is not in response, fetch it from the post endpoint
     let url = data.link || ""
@@ -128,9 +116,8 @@ export class WordPressAPI {
       try {
         const postData = await this.request(`/wp/v2/properties/${data.post_id}`)
         url = postData.link || ""
-        console.log("[v0] Fetched URL from post endpoint:", url)
-      } catch (error) {
-        console.error("[v0] Could not fetch post URL:", error)
+      } catch {
+        // Could not fetch post URL — non-fatal
       }
     }
 
@@ -138,8 +125,6 @@ export class WordPressAPI {
   }
 
   async updateProperty(wordpressId: number, property: any): Promise<void> {
-    console.log("[v0] Updating property via custom plugin:", wordpressId, JSON.stringify(property, null, 2))
-
     try {
       await this.request(`/estatik-bridge/v1/properties/${wordpressId}`, {
         method: "PUT",
@@ -160,16 +145,6 @@ export class WordPressAPI {
   }
 
   async syncProperty(property: any): Promise<{ id: number; url: string }> {
-    console.log("[v0] ========================================")
-    console.log("[v0] STARTING PROPERTY SYNC")
-    console.log("[v0] ========================================")
-    console.log("[v0] Property ID:", property.id)
-    console.log("[v0] WordPress ID:", property.wordpressId)
-    console.log("[v0] Property Title:", property.title)
-    console.log("[v0] Transaction Type:", property.transactionType)
-    console.log("[v0] Status:", property.status)
-    console.log("[v0] ========================================")
-
     const payload: any = {
       title: property.title,
       content: property.description || "",
@@ -186,7 +161,6 @@ export class WordPressAPI {
           : property.propertyType?.name || String(property.propertyType)
 
       payload.taxonomies.es_type = [typeName]
-      console.log("[v0] Added es_type (by name):", typeName)
     }
 
     if (property.transactionType) {
@@ -196,9 +170,6 @@ export class WordPressAPI {
         ]
       if (categoryId) {
         payload.taxonomies.es_category = [categoryId]
-        console.log("[v0] Added es_category:", { enum: property.transactionType, wordpressId: categoryId })
-      } else {
-        console.warn("[v0] ⚠ Unknown transactionType:", property.transactionType)
       }
     }
 
@@ -206,9 +177,6 @@ export class WordPressAPI {
       const statusId = WORDPRESS_TAXONOMY_MAP.status[property.status as keyof typeof WORDPRESS_TAXONOMY_MAP.status]
       if (statusId) {
         payload.taxonomies.es_status = [statusId]
-        console.log("[v0] Added es_status:", { enum: property.status, wordpressId: statusId })
-      } else {
-        console.warn("[v0] ⚠ Unknown status:", property.status)
       }
     }
 
@@ -221,14 +189,7 @@ export class WordPressAPI {
         payload.meta.es_property_features = cleanFeatures.join(", ")
         // Also add as a serialized array meta (some themes expect this)
         payload.meta.es_property_feature_list = cleanFeatures
-        console.log("[v0] 🏷️ Added es_feature taxonomy (array):", payload.taxonomies.es_feature)
-        console.log("[v0] 📝 Added es_property_features meta (string):", payload.meta.es_property_features)
-        console.log("[v0] 📋 Added es_property_feature_list meta (array):", payload.meta.es_property_feature_list)
-      } else {
-        console.log("[v0] ⚠️ No valid features to sync")
       }
-    } else {
-      console.log("[v0] ℹ️ No features provided or empty array")
     }
 
     if (property.amenities && Array.isArray(property.amenities) && property.amenities.length > 0) {
@@ -240,14 +201,7 @@ export class WordPressAPI {
         payload.meta.es_property_amenities = cleanAmenities.join(", ")
         // Also add as a serialized array meta (some themes expect this)
         payload.meta.es_property_amenity_list = cleanAmenities
-        console.log("[v0] 🏷️ Added es_amenity taxonomy (array):", payload.taxonomies.es_amenity)
-        console.log("[v0] 📝 Added es_property_amenities meta (string):", payload.meta.es_property_amenities)
-        console.log("[v0] 📋 Added es_property_amenity_list meta (array):", payload.meta.es_property_amenity_list)
-      } else {
-        console.log("[v0] ⚠️ No valid amenities to sync")
       }
-    } else {
-      console.log("[v0] ℹ️ No amenities provided or empty array")
     }
 
     if (property.propertyLabel) {
@@ -266,12 +220,10 @@ export class WordPressAPI {
 
       if (labelSlug) {
         payload.taxonomies.es_label = [labelSlug]
-        console.log("[v0] Added es_label:", { enum: property.propertyLabel, slug: labelSlug })
       }
     }
 
     if (property.images && property.images.length > 0) {
-      console.log(`[v0] Starting upload of ${property.images.length} images marked for WordPress...`)
       const imageIds: number[] = []
 
       for (let i = 0; i < property.images.length; i++) {
@@ -281,9 +233,8 @@ export class WordPressAPI {
         if (typeof imageObj === "string") {
           try {
             imageObj = JSON.parse(imageObj)
-          } catch (e) {
+          } catch {
             // If it fails to parse, assume it's already a plain URL string
-            console.log(`[v0] Image ${i + 1} is a plain URL string`)
           }
         }
 
@@ -291,37 +242,25 @@ export class WordPressAPI {
         const imageUrl = typeof imageObj === "string" ? imageObj : imageObj?.url
 
         if (!imageUrl || typeof imageUrl !== "string") {
-          console.warn(`[v0] ⚠️ Skipping image ${i + 1}: no valid URL found`)
           continue
         }
 
-        console.log(`[v0] ⬆️ Uploading image ${i + 1}/${property.images.length}`)
-        console.log(`[v0] 📥 Image URL: ${imageUrl}`)
         const filename = `property-${property.id}-${Date.now()}-${i + 1}.jpg`
 
         try {
           const imageId = await this.uploadImage(imageUrl, filename)
-
           if (imageId) {
             imageIds.push(imageId)
-            console.log(`[v0] ✅ Successfully uploaded image ${i + 1} with WordPress ID: ${imageId}`)
-          } else {
-            console.error(`[v0] ❌ Upload returned undefined for image ${i + 1}`)
           }
-        } catch (error) {
-          console.error(`[v0] ❌ Error uploading image ${i + 1}:`, error)
+        } catch {
+          // Non-fatal image upload error
         }
       }
 
       if (imageIds.length > 0) {
         payload.meta._thumbnail_id = String(imageIds[0])
         payload.meta.es_property_gallery = imageIds.map((id) => String(id))
-        console.log(`[v0] 🖼️ Set featured image: ${imageIds[0]}, Gallery: [${imageIds.join(",")}]`)
-      } else {
-        console.warn(`[v0] ⚠️ No images were successfully uploaded`)
       }
-    } else {
-      console.log(`[v0] No images to upload (images array empty or undefined)`)
     }
 
     if (property.price) payload.meta.es_property_price = String(property.price)
@@ -349,11 +288,7 @@ export class WordPressAPI {
       const formattedPrice = currencyInfo.format(property.price || 0)
       payload.meta.es_property_price_formatted = formattedPrice
 
-      console.log("[v0] Added currency:", {
-        original: property.currency,
-        mapped: mappedCurrency,
-        formatted: formattedPrice,
-      })
+
     }
     if (property.bedrooms) payload.meta.es_property_bedrooms = String(property.bedrooms)
     if (property.bathrooms) payload.meta.es_property_bathrooms = String(property.bathrooms)
@@ -367,9 +302,6 @@ export class WordPressAPI {
     const isLand = property.propertyType?.toLowerCase().includes("terreno")
     if (property.yearBuilt && property.yearBuilt > 0) {
       payload.meta.es_property_year_built = String(property.yearBuilt)
-      console.log(`[v0] Added es_property_year_built: ${property.yearBuilt}`)
-    } else {
-      console.log(`[v0] Skipping es_property_year_built (value: ${property.yearBuilt})`)
     }
 
     if (property.yearRemodeled) payload.meta.es_property_year_remodeled = String(property.yearRemodeled)
@@ -377,13 +309,11 @@ export class WordPressAPI {
 
     if (property.openHouse !== undefined) {
       payload.meta.es_property_is_open_house = property.openHouse ? "1" : "0"
-      console.log("[v0] 📝 Added es_property_is_open_house meta:", payload.meta.es_property_is_open_house)
     }
 
     if (property.pricePerM2) {
       const pricePerSqft = property.pricePerM2 / 10.764
       payload.meta.es_property_price_per_sqft = String(Math.round(pricePerSqft))
-      console.log("[v0] 📝 Added es_property_price_per_sqft meta:", payload.meta.es_property_price_per_sqft)
     }
 
     const extractName = (value: any): string | undefined => {
@@ -402,11 +332,9 @@ export class WordPressAPI {
 
     if (addressParts.length > 0) {
       payload.meta.es_property_address = addressParts.join(", ")
-      console.log("[v0] 📝 Added es_property_address meta:", payload.meta.es_property_address)
     }
 
     if (property.zipCode) payload.meta.es_property_postal_code = String(property.zipCode)
-    console.log("[v0] 📝 Added es_property_postal_code meta:", payload.meta.es_property_postal_code)
 
     let latitude = property.latitude
     let longitude = property.longitude
@@ -415,19 +343,15 @@ export class WordPressAPI {
       const addressParts = [property.address, property.city, property.state, property.country].filter(Boolean)
       if (addressParts.length > 0) {
         const fullAddress = addressParts.join(", ")
-        console.log(`[v0] No coordinates found, attempting to geocode address: ${fullAddress}`)
-
         try {
           const { geocodeAddress } = await import("./geocoding")
           const coords = await geocodeAddress(fullAddress)
-
           if (coords) {
             latitude = coords.latitude
             longitude = coords.longitude
-            console.log(`[v0] Geocoding successful: ${latitude}, ${longitude}`)
           }
-        } catch (error) {
-          console.error("[v0] Geocoding error:", error)
+        } catch {
+          // Geocoding failed — non-fatal
         }
       }
     }
@@ -449,13 +373,8 @@ export class WordPressAPI {
       : []
 
     const addressComponentsJson = JSON.stringify(addressComponents)
-    console.log(`[v0] 📝 Address components JSON length: ${addressComponentsJson.length} chars`)
-
     if (addressComponentsJson.length < 500) {
       payload.meta.es_property_address_components = addressComponentsJson
-      console.log(`[v0] 📝 Added es_property_address_components (${addressComponentsJson.length} chars)`)
-    } else {
-      console.log(`[v0] ⚠️ Skipping es_property_address_components (too long: ${addressComponentsJson.length} chars)`)
     }
 
     const keywords = [property.title]
@@ -466,37 +385,22 @@ export class WordPressAPI {
       keywords.push(String(property.id))
     }
     payload.meta.es_property_keywords = keywords.join(", ")
-    console.log("[v0] 📝 Added es_property_keywords meta:", payload.meta.es_property_keywords)
-
-    console.log("[v0] Final payload:", JSON.stringify(payload, null, 2))
 
     // Check for existing WordPress ID (try both property names for compatibility)
     const existingId = property.wordpress_id || property.wordpressId
-    console.log("[v0] 🔍 Checking for existing WordPress ID...")
-    console.log("[v0]   - property.wordpress_id:", property.wordpress_id)
-    console.log("[v0]   - property.wordpressId:", property.wordpressId)
-    console.log("[v0]   - existingId resolved to:", existingId)
-    console.log("[v0]   - Will UPDATE?:", !!(existingId && Number(existingId) > 0))
     
     if (existingId && Number(existingId) > 0) {
-      console.log("[v0] 🔄 UPDATING existing WordPress property:", existingId)
       try {
         await this.updateProperty(existingId, payload)
-        console.log("[v0] ✅ Property UPDATED successfully (no duplication)")
-        
         // Get the post URL after update
         const postData = await this.request(`/wp/v2/properties/${existingId}`)
         const url = postData.link || ""
-        console.log("[v0] Fetched URL after update:", url)
         return { id: existingId, url }
       } catch (error) {
         if (error instanceof Error && error.message === "PROPERTY_NOT_FOUND") {
-          console.log("[v0] ⚠ Property not found in WordPress (404), creating new one...")
           const result = await this.createProperty(payload)
-          console.log("[v0] ✓ New property created with ID:", result.id)
           return result
         }
-        console.error("[v0] WordPress API Error:", error)
         throw new Error(
           error instanceof Error && error.message.includes("create_failed")
             ? `Error de WordPress: ${error.message}. Verifica que todas las taxonomías (tipo, categoría, estado) existan en WordPress.`
@@ -506,13 +410,10 @@ export class WordPressAPI {
         )
       }
     } else {
-      console.log("[v0] ➕ CREATING new WordPress property (no existing ID)")
       try {
         const result = await this.createProperty(payload)
-        console.log("[v0] ✅ Property CREATED with ID:", result.id)
         return result
       } catch (error) {
-        console.error("[v0] WordPress API Error:", error)
         throw new Error(
           error instanceof Error && error.message.includes("create_failed")
             ? `Error de WordPress: ${error.message}. Verifica que todas las taxonomías (tipo, categoría, estado) existan en WordPress.`
@@ -554,65 +455,34 @@ export class WordPressAPI {
   }
 
   async debugProperty(wordpressId: number): Promise<any> {
-    console.log(`[v0] Debugging property ${wordpressId}...`)
     const data = await this.request(`/estatik-bridge/v1/properties/${wordpressId}/debug`)
-    console.log("[v0] Property debug data:", JSON.stringify(data, null, 2))
     return data
   }
 
   async uploadImage(imageUrl: string, filename: string): Promise<number | undefined> {
     try {
-      console.log(`[v0] 📥 Downloading image from: ${imageUrl}`)
-
       const imageResponse = await fetch(imageUrl)
-      if (!imageResponse.ok) {
-        console.error(`[v0] ❌ Failed to download image: ${imageUrl}, status: ${imageResponse.status}`)
-        return undefined
-      }
+      if (!imageResponse.ok) return undefined
 
       const imageBuffer = await imageResponse.arrayBuffer()
-      console.log(`[v0] ✅ Downloaded image, size: ${imageBuffer.byteLength} bytes`)
-
-      if (imageBuffer.byteLength === 0) {
-        console.error(`[v0] ❌ Image download resulted in 0 bytes`)
-        return undefined
-      }
+      if (imageBuffer.byteLength === 0) return undefined
 
       const imageBlob = new Blob([imageBuffer])
-
       const formData = new FormData()
       formData.append("file", imageBlob, filename)
 
       const credentials = Buffer.from(`${this.username}:${this.password}`).toString("base64")
-
-      console.log(`[v0] ⬆️ Uploading to WordPress Media Library: ${filename}`)
       const uploadResponse = await fetch(`${this.baseUrl}/wp/v2/media`, {
         method: "POST",
-        headers: {
-          Authorization: `Basic ${credentials}`,
-        },
+        headers: { Authorization: `Basic ${credentials}` },
         body: formData,
       })
 
-      if (!uploadResponse.ok) {
-        const error = await uploadResponse.text()
-        console.error(`[v0] ❌ Failed to upload image to WordPress:`, {
-          status: uploadResponse.status,
-          statusText: uploadResponse.statusText,
-          error,
-        })
-        return undefined
-      }
+      if (!uploadResponse.ok) return undefined
 
       const mediaData = await uploadResponse.json()
-      console.log(`[v0] ✅ Image uploaded successfully:`, {
-        id: mediaData.id,
-        url: mediaData.source_url,
-        filename: filename,
-      })
       return mediaData.id
-    } catch (error) {
-      console.error(`[v0] ❌ Error uploading image:`, error)
+    } catch {
       return undefined
     }
   }
