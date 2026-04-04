@@ -69,7 +69,7 @@ export async function geocodeAddress(address: string, city?: string, state?: str
     })
 
     if (!response.ok) {
-      console.error("Geocoding API error:", response.statusText)
+
       return null
     }
 
@@ -135,8 +135,7 @@ export async function geocodeAddress(address: string, city?: string, state?: str
       longitude: Number.parseFloat(result.lon),
       displayName: result.display_name,
     }
-  } catch (error) {
-    console.error("Geocoding error:", error)
+  } catch {
     return null
   }
 }
@@ -180,6 +179,5 @@ export async function geocodeProperty(
     }
   }
 
-  console.error("All geocoding strategies failed")
   return null
 }

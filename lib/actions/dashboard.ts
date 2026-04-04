@@ -125,8 +125,7 @@ export async function getDashboardStats() {
       charts: chartData,
       recentProperties: transformedRecentProperties,
     }
-  } catch (error) {
-    console.error("[v0] Error fetching dashboard stats:", error)
+  } catch {
     return {
       stats: {
         totalProperties: 0,

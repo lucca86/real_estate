@@ -64,8 +64,7 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
     let parsedImages: any[] = []
     try {
       parsedImages = imagesJson ? JSON.parse(imagesJson) : []
-    } catch (e) {
-      console.error("[v0] Error parsing images:", e)
+    } catch {
       return { success: false, error: "Error al procesar las imágenes" }
     }
 
@@ -141,10 +140,7 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
       .select()
       .single()
 
-    if (error) {
-      console.error("[v0] Database insert error:", error)
-      throw new Error(`Error al crear la propiedad: ${error.message}`)
-    }
+    if (error) throw new Error(`Error al crear la propiedad: ${error.message}`)
 
     if (syncToWordPress && newProperty) {
       try {
@@ -161,7 +157,6 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
 
         await syncPropertyToWordPress(newProperty.id)
       } catch (wpError: any) {
-        console.error("Error in WordPress sync process:", wpError)
         return {
           success: true,
           data: newProperty as PropertyWithDetails,
@@ -181,7 +176,6 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
     revalidatePath("/properties")
     return { success: true, data: newProperty as PropertyWithDetails }
   } catch (error: any) {
-    console.error("[v0] Error in createProperty:", error)
     return {
       success: false,
       error: error.message || "Error desconocido al crear la propiedad",
@@ -362,7 +356,6 @@ export async function updateProperty(propertyId: string, formData: FormData) {
         try {
           await syncPropertyToWordPress(updatedProperty.id)
         } catch (syncError) {
-          console.error("[v0] WordPress sync failed:", syncError)
           revalidatePath("/properties")
           revalidatePath("/catalog")
           revalidatePath(`/properties/${propertyId}/edit`)
@@ -375,7 +368,6 @@ export async function updateProperty(propertyId: string, formData: FormData) {
       }
     }
   } catch (syncError) {
-    console.error("[v0] WordPress sync failed:", syncError)
     revalidatePath("/properties")
     revalidatePath("/catalog")
     revalidatePath(`/properties/${propertyId}/edit`)
@@ -437,8 +429,7 @@ export async function deleteProperty(propertyId: string) {
     if (property.wordpress_id && property.wordpress_id > 0) {
       try {
         await wordpressAPI.deleteProperty(property.wordpress_id)
-      } catch (wpError) {
-        console.error("[v0] Error deleting from WordPress:", wpError)
+      } catch {
         // Continue with local deletion even if WordPress fails
       }
     }
@@ -452,10 +443,7 @@ export async function deleteProperty(propertyId: string) {
           .update({ is_active: false })
           .eq("id", propertyId)
 
-        if (updateError) {
-          console.error("Error deactivating property:", updateError)
-          return { success: false, error: `Error al desactivar propiedad: ${updateError.message}` }
-        }
+        if (updateError) return { success: false, error: `Error al desactivar propiedad: ${updateError.message}` }
 
         revalidatePath("/")
         revalidatePath("/properties")
@@ -467,7 +455,6 @@ export async function deleteProperty(propertyId: string) {
         }
       }
 
-      console.error("Error deleting property:", deleteError)
       return { success: false, error: `Error deleting property: ${deleteError.message}` }
     }
 
@@ -482,7 +469,6 @@ export async function deleteProperty(propertyId: string) {
     revalidatePath("/dashboard")
     return { success: true, wasDeactivated: false }
   } catch (error: any) {
-    console.error("Error in deleteProperty:", error)
     return { success: false, error: error.message || "Error al eliminar propiedad" }
   }
 }
@@ -522,10 +508,7 @@ export async function getPropertyById(id: string) {
     .eq("id", id)
     .maybeSingle()
 
-  if (error) {
-    console.error("Error fetching property:", error)
-    return null
-  }
+  if (error) return null
 
   if (!property) {
     return null

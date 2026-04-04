@@ -154,7 +154,6 @@ export async function generatePropertyTitle(details: PropertyDetails) {
 
     return { success: true, title }
   } catch (error) {
-    console.error("[v0] Error generating property title:", error)
     return {
       success: false,
       error: error instanceof Error ? error.message : "Error al generar el título",

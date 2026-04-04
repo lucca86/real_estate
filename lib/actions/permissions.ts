@@ -35,10 +35,7 @@ export async function updatePermissions(updates: PermissionUpdate[]) {
         },
       )
 
-      if (upsertError) {
-        console.error("Error upserting permission:", upsertError)
-        return { error: `Error al actualizar permiso ${update.permission}: ${upsertError.message}` }
-      }
+      if (upsertError) return { error: `Error al actualizar permiso ${update.permission}: ${upsertError.message}` }
 
       // Log to audit table
       await supabase.from("permissions_audit").insert({
@@ -52,8 +49,7 @@ export async function updatePermissions(updates: PermissionUpdate[]) {
     revalidatePath("/settings/permissions")
 
     return { success: true }
-  } catch (error) {
-    console.error("Error updating permissions:", error)
+  } catch {
     return { error: "Error al actualizar permisos" }
   }
 }
@@ -157,8 +153,7 @@ export async function resetRolePermissions(role: string) {
     revalidatePath("/settings/permissions")
 
     return { success: true }
-  } catch (error) {
-    console.error("Error resetting permissions:", error)
+  } catch {
     return { error: "Error al resetear permisos" }
   }
 }
@@ -181,10 +176,7 @@ export async function getPermissionsAudit(limit = 50) {
     .order("changed_at", { ascending: false })
     .limit(limit)
 
-  if (error) {
-    console.error("Error fetching audit:", error)
-    return { error: "Error al obtener auditoría" }
-  }
+  if (error) return { error: "Error al obtener auditoría" }
 
   return { data }
 }

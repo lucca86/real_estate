@@ -45,17 +45,16 @@ export function normalizeCoordinate(lat: number, lng: number): { lat: number; ln
 
   // Check if fixed coordinates are valid
   if (isValidCoordinate(fixedLat, fixedLng)) {
-    console.warn(`[v0] Fixed invalid coordinates: [${lat}, ${lng}] -> [${fixedLat}, ${fixedLng}]`)
+
     return { lat: fixedLat, lng: fixedLng }
   }
 
   // Try swapping lat/lng in case they're reversed
   if (isValidCoordinate(lng, lat)) {
-    console.warn(`[v0] Swapped lat/lng: [${lat}, ${lng}] -> [${lng}, ${lat}]`)
+
     return { lat: lng, lng: lat }
   }
 
-  console.error(`[v0] Could not fix invalid coordinates: [${lat}, ${lng}]`)
   return null
 }
 

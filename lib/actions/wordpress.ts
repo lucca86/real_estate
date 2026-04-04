@@ -95,19 +95,13 @@ export async function syncPropertyToWordPress(propertyId: string) {
       })
       .eq("id", propertyId)
 
-    if (updateError) {
-      console.error("Error updating property with wordpress_id:", updateError)
-    }
+    // Non-fatal: log suppressed to avoid serialization errors
 
     revalidatePath("/properties")
     revalidatePath(`/properties/${propertyId}`)
 
     return { success: true, wordpressId: result.id }
   } catch (error) {
-    console.error("[v0] ========================================")
-    console.error("[v0] WordPress sync FAILED!")
-    console.error("[v0] Error:", error)
-    console.error("[v0] ========================================")
     throw new Error(error instanceof Error ? error.message : "Error al sincronizar con WordPress")
   }
 }
@@ -200,7 +194,6 @@ export async function syncAllPropertiesToWordPress() {
     } catch (error) {
       results.failed++
       results.errors.push(`${property.title}: ${error instanceof Error ? error.message : "Error desconocido"}`)
-      console.error(`[v0] Error syncing property ${property.id}:`, error)
     }
   }
 
@@ -245,7 +238,6 @@ export async function deletePropertyFromWordPress(propertyId: string) {
 
     return { success: true }
   } catch (error) {
-    console.error("[v0] WordPress delete error:", error)
     throw new Error(error instanceof Error ? error.message : "Error al eliminar de WordPress")
   }
 }

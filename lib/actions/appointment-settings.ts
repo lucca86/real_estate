@@ -24,10 +24,7 @@ export async function getAppointmentSettings(): Promise<AppointmentSetting[]> {
     .select("*")
     .order("day_type")
 
-  if (error) {
-    console.error("Error fetching appointment settings:", error)
-    return []
-  }
+  if (error) return []
 
   return data || []
 }
@@ -42,7 +39,6 @@ export async function updateAppointmentSetting(
   const user = await getCurrentUser()
   
   if (!user) {
-    console.error("[v0] ✗ No authenticated user")
     return {
       success: false,
       error: "No estás autenticado",
@@ -119,7 +115,6 @@ export async function updateAppointmentSetting(
     .select()
 
   if (error) {
-    console.error("[v0] ✗ Error updating appointment setting:", error)
     return {
       success: false,
       error: "Error al actualizar la configuración",

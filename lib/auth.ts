@@ -55,8 +55,7 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       role: userData.role as "ADMIN" | "SUPERVISOR" | "VENDEDOR",
       avatar: userData.avatar,
     }
-  } catch (error) {
-    console.error("[getCurrentUser] Error:", error)
+  } catch {
     return null
   }
 }

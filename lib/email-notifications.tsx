@@ -97,12 +97,6 @@ export async function sendAppointmentNotifications(data: AppointmentEmailData): 
     `
 
     // TODO: Implementar envío real de emails
-    // Por ahora, solo registramos en consola
-    console.log("[v0] Email notification (placeholder):")
-    console.log("To Client:", data.clientEmail)
-    console.log("To Agent:", data.agentEmail)
-    console.log("ICS file generated:", icsContent.length, "bytes")
-
     // Simular envío exitoso
     return { success: true }
 
@@ -138,8 +132,7 @@ export async function sendAppointmentNotifications(data: AppointmentEmailData): 
     
     return { success: true }
     */
-  } catch (error) {
-    console.error("[v0] Error sending appointment notifications:", error)
+  } catch {
     return {
       success: false,
       error: "Error al enviar las notificaciones por email",

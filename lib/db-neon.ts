@@ -10,7 +10,7 @@ export function getNeonSQL() {
       throw new Error("DATABASE_URL is not configured")
     }
 
-    console.log("[v0] Creating Neon serverless connection")
+
     sql = neon(url)
   }
 
@@ -23,10 +23,8 @@ export async function testNeonConnection() {
     const sql = getNeonSQL()
     const result = await sql`SELECT NOW() as now, version() as version`
     const rows = result as Array<Record<string, any>>
-    console.log("[v0] Neon connection successful:", rows[0])
     return { success: true, data: rows[0] }
   } catch (error) {
-    console.error("[v0] Neon connection failed:", error)
     return { success: false, error: String(error) }
   }
 }

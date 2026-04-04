@@ -61,10 +61,7 @@ export async function requestPasswordReset(formData: FormData): Promise<Password
       expires_at: expiresAt.toISOString(),
     })
 
-    if (tokenError) {
-      console.error("[v0] Error creating reset token:", tokenError)
-      return { error: "Error al crear el token de recuperación" }
-    }
+    if (tokenError) return { error: "Error al crear el token de recuperación" }
 
     // Send email with reset link
     const resetUrl = `${process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || "http://localhost:3001"}/reset-password?token=${token}`
@@ -77,8 +74,7 @@ export async function requestPasswordReset(formData: FormData): Promise<Password
       // In development, return the token for testing
       ...(process.env.NODE_ENV === "development" && { resetUrl }),
     }
-  } catch (error) {
-    console.error("[v0] Error in requestPasswordReset:", error)
+  } catch {
     return { error: "Error al procesar la solicitud" }
   }
 }
@@ -121,10 +117,7 @@ export async function resetPassword(formData: FormData): Promise<ResetPasswordRe
       .update({ password: hashedPassword })
       .eq("id", resetToken.user_id)
 
-    if (updateError) {
-      console.error("[v0] Error updating password:", updateError)
-      return { error: "Error al actualizar la contraseña" }
-    }
+    if (updateError) return { error: "Error al actualizar la contraseña" }
 
     // Mark token as used
     await supabase.from("password_reset_tokens").update({ used_at: new Date().toISOString() }).eq("id", resetToken.id)
@@ -133,8 +126,7 @@ export async function resetPassword(formData: FormData): Promise<ResetPasswordRe
       success: true,
       message: "Contraseña actualizada exitosamente",
     }
-  } catch (error) {
-    console.error("[v0] Error in resetPassword:", error)
+  } catch {
     return { error: "Error al procesar la solicitud" }
   }
 }
@@ -188,17 +180,13 @@ export async function changePassword(formData: FormData): Promise<ChangePassword
       .update({ password: hashedPassword })
       .eq("id", authUser.id)
 
-    if (updateError) {
-      console.error("[v0] Error updating password:", updateError)
-      return { error: "Error al actualizar la contraseña" }
-    }
+    if (updateError) return { error: "Error al actualizar la contraseña" }
 
     return {
       success: true,
       message: "Contraseña actualizada exitosamente",
     }
-  } catch (error) {
-    console.error("[v0] Error in changePassword:", error)
+  } catch {
     return { error: "Error al procesar la solicitud" }
   }
 }

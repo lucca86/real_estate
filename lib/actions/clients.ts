@@ -41,8 +41,7 @@ export async function getAgents() {
     if (error) throw error
 
     return { success: true, data: agents || [] }
-  } catch (error) {
-    console.error("[getAgents] Error:", error)
+  } catch {
     return { success: false, error: "Error al obtener agentes" }
   }
 }
@@ -124,8 +123,7 @@ export async function getClients() {
     )
 
     return { success: true, data: clientsWithCounts }
-  } catch (error) {
-    console.error("[getClients] Error:", error)
+  } catch {
     return { success: false, error: "Error al obtener clientes" }
   }
 }
@@ -159,8 +157,7 @@ export async function getClientById(id: string) {
     }
 
     return { success: true, data: client }
-  } catch (error) {
-    console.error("[getClientById] Error:", error)
+  } catch {
     return { success: false, error: "Error al obtener cliente" }
   }
 }
@@ -205,7 +202,6 @@ export async function createClient(data: z.infer<typeof clientSchema>) {
     revalidatePath("/clients")
     return { success: true, data: client }
   } catch (error) {
-    console.error("[createClient] Error:", error)
     if (error instanceof z.ZodError) {
       return { success: false, error: error.errors[0].message }
     }
@@ -265,7 +261,6 @@ export async function updateClient(id: string, data: z.infer<typeof clientSchema
     revalidatePath(`/clients/${id}`)
     return { success: true, data: client }
   } catch (error) {
-    console.error("[updateClient] Error:", error)
     if (error instanceof z.ZodError) {
       return { success: false, error: error.errors[0].message }
     }
@@ -314,7 +309,6 @@ export async function deleteClient(id: string) {
     revalidatePath("/clients")
     return { success: true, wasDeactivated: false }
   } catch (error: any) {
-    console.error("[deleteClient] Error:", error)
     return {
       success: false,
       error: error.message || "Error al eliminar cliente",
@@ -340,8 +334,7 @@ export async function reassignClientAgent(clientId: string, newAgentId: string) 
 
     revalidatePath("/clients")
     return { success: true, message: "Agente reasignado exitosamente" }
-  } catch (error) {
-    console.error("[reassignClientAgent] Error:", error)
+  } catch {
     return { success: false, error: "Error al reasignar agente" }
   }
 }

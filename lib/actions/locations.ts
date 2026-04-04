@@ -32,7 +32,6 @@ export async function createCountry(formData: FormData) {
     revalidatePath("/locations")
     return data
   } catch (error: any) {
-    console.error("[createCountry] Error:", error)
     throw new Error(error.message || "Error al crear el país")
   }
 }
@@ -64,7 +63,6 @@ export async function updateCountry(id: string, formData: FormData) {
     revalidatePath("/locations")
     return data
   } catch (error: any) {
-    console.error("[updateCountry] Error:", error)
     throw new Error(error.message || "Error al actualizar el país")
   }
 }
@@ -97,7 +95,6 @@ export async function createProvince(formData: FormData) {
     revalidatePath("/locations")
     return data
   } catch (error: any) {
-    console.error("[createProvince] Error:", error)
     throw new Error(error.message || "Error al crear la provincia")
   }
 }
@@ -125,7 +122,6 @@ export async function updateProvince(id: string, formData: FormData) {
     revalidatePath("/locations")
     return data
   } catch (error: any) {
-    console.error("[updateProvince] Error:", error)
     throw new Error(error.message || "Error al actualizar la provincia")
   }
 }
@@ -158,7 +154,6 @@ export async function createCity(formData: FormData) {
     revalidatePath("/locations")
     return data
   } catch (error: any) {
-    console.error("[createCity] Error:", error)
     throw new Error(error.message || "Error al crear la ciudad")
   }
 }
@@ -186,7 +181,6 @@ export async function updateCity(id: string, formData: FormData) {
     revalidatePath("/locations")
     return data
   } catch (error: any) {
-    console.error("[updateCity] Error:", error)
     throw new Error(error.message || "Error al actualizar la ciudad")
   }
 }
@@ -219,7 +213,6 @@ export async function createNeighborhood(formData: FormData) {
     revalidatePath("/locations")
     return data
   } catch (error: any) {
-    console.error("[createNeighborhood] Error:", error)
     throw new Error(error.message || "Error al crear el barrio")
   }
 }
@@ -247,7 +240,6 @@ export async function updateNeighborhood(id: string, formData: FormData) {
     revalidatePath("/locations")
     return data
   } catch (error: any) {
-    console.error("[updateNeighborhood] Error:", error)
     throw new Error(error.message || "Error al actualizar el barrio")
   }
 }
@@ -264,8 +256,7 @@ export async function getNeighborhoods(cityId: string) {
 
     if (error) throw error
     return data || []
-  } catch (error) {
-    console.error("[getNeighborhoods] Error:", error)
+  } catch {
     return []
   }
 }
@@ -307,7 +298,6 @@ export async function deleteLocation(type: "country" | "province" | "city" | "ne
     revalidatePath("/locations")
     return { success: true, wasDeactivated: false }
   } catch (error: any) {
-    console.error(`[deleteLocation] Error deleting ${type}:`, error)
     return {
       success: false,
       error: error.message || `Error al eliminar el ${type}`,
@@ -327,8 +317,7 @@ export async function getCountries() {
 
     if (error) throw error
     return data || []
-  } catch (error) {
-    console.error("[getCountries] Error:", error)
+  } catch {
     return []
   }
 }
@@ -345,8 +334,7 @@ export async function getProvinces(countryId: string) {
 
     if (error) throw error
     return data || []
-  } catch (error) {
-    console.error("[getProvinces] Error:", error)
+  } catch {
     return []
   }
 }
@@ -363,8 +351,7 @@ export async function getCities(provinceId: string) {
 
     if (error) throw error
     return data || []
-  } catch (error) {
-    console.error("[getCities] Error:", error)
+  } catch {
     return []
   }
 }
@@ -380,7 +367,6 @@ export async function getAllCountries() {
     if (error) throw error
     return { success: true, data: data || [] }
   } catch (error: any) {
-    console.error("[getAllCountries] Error:", error)
     return { success: false, error: error.message }
   }
 }
@@ -401,19 +387,10 @@ export async function getAllProvinces() {
       .eq("is_active", true)
       .order("name", { ascending: true })
 
-    if (error) {
-      console.error("[getAllProvinces] Supabase error:", error)
-      throw error
-    }
+    if (error) throw error
 
     return { success: true, data: data || [] }
   } catch (error: any) {
-    console.error("[getAllProvinces] Error:", {
-      message: error.message,
-      details: error.stack,
-      hint: error.hint || "",
-      code: error.code || "",
-    })
     return { success: false, error: error.message }
   }
 }
@@ -441,10 +418,7 @@ export async function getAllCities() {
       )
       .eq("is_active", true)
 
-    if (error) {
-      console.error("[getAllCities] Error:", error)
-      throw error
-    }
+    if (error) throw error
 
     if (!cities) {
       return []
@@ -475,12 +449,6 @@ export async function getAllCities() {
 
     return transformed
   } catch (error: any) {
-    console.error("[getAllCities] Error:", {
-      message: error.message,
-      details: error.details || "",
-      hint: error.hint || "",
-      code: error.code || "",
-    })
     throw new Error(error.message || "Error al obtener las ciudades")
   }
 }
@@ -508,7 +476,6 @@ export async function getAllNeighborhoods() {
 
     return { success: true, data: transformedData }
   } catch (error: any) {
-    console.error("[getAllNeighborhoods] Error:", error)
     return { success: false, error: error.message }
   }
 }
@@ -521,8 +488,7 @@ export async function getCountryById(id: string) {
 
     if (error) throw error
     return data
-  } catch (error: any) {
-    console.error("[getCountryById] Error:", error)
+  } catch {
     return null
   }
 }
@@ -534,8 +500,7 @@ export async function getCityById(id: string) {
 
     if (error) throw error
     return data
-  } catch (error: any) {
-    console.error("[getCityById] Error:", error)
+  } catch {
     return null
   }
 }
@@ -547,8 +512,7 @@ export async function getProvinceById(id: string) {
 
     if (error) throw error
     return data
-  } catch (error: any) {
-    console.error("[getProvinceById] Error:", error)
+  } catch {
     return null
   }
 }
@@ -560,8 +524,7 @@ export async function getNeighborhoodById(id: string) {
 
     if (error) throw error
     return data
-  } catch (error: any) {
-    console.error("[getNeighborhoodById] Error:", error)
+  } catch {
     return null
   }
 }
@@ -579,8 +542,7 @@ export async function checkCityExists(name: string, provinceId: string, excludeI
 
     if (error) throw error
     return { exists: (data || []).length > 0, matches: data || [] }
-  } catch (error) {
-    console.error("[checkCityExists] Error:", error)
+  } catch {
     return { exists: false, matches: [] }
   }
 }
@@ -598,8 +560,7 @@ export async function checkNeighborhoodExists(name: string, cityId: string, excl
 
     if (error) throw error
     return { exists: (data || []).length > 0, matches: data || [] }
-  } catch (error) {
-    console.error("[checkNeighborhoodExists] Error:", error)
+  } catch {
     return { exists: false, matches: [] }
   }
 }
@@ -621,14 +582,10 @@ export async function checkDuplicateNeighborhood(name: string, cityId: string, e
 
     const { data, error } = await query
 
-    if (error) {
-      console.error("[checkDuplicateNeighborhood] Error:", error)
-      return false
-    }
+    if (error) return false
 
     return data && data.length > 0
-  } catch (error) {
-    console.error("[checkDuplicateNeighborhood] Error:", error)
+  } catch {
     return false
   }
 }
@@ -649,14 +606,10 @@ export async function checkDuplicateCity(name: string, provinceId: string, exclu
 
     const { data, error } = await query
 
-    if (error) {
-      console.error("[checkDuplicateCity] Error:", error)
-      return false
-    }
+    if (error) return false
 
     return data && data.length > 0
-  } catch (error) {
-    console.error("[checkDuplicateCity] Error:", error)
+  } catch {
     return false
   }
 }
@@ -677,14 +630,10 @@ export async function checkDuplicateProvince(name: string, countryId: string, ex
 
     const { data, error } = await query
 
-    if (error) {
-      console.error("[checkDuplicateProvince] Error:", error)
-      return false
-    }
+    if (error) return false
 
     return data && data.length > 0
-  } catch (error) {
-    console.error("[checkDuplicateProvince] Error:", error)
+  } catch {
     return false
   }
 }

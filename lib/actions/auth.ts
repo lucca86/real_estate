@@ -26,8 +26,7 @@ async function findUserByEmail(email: string) {
     }
 
     return userData
-  } catch (error) {
-    console.error("[v0] findUserByEmail error:", error)
+  } catch {
     return null
   }
 }
@@ -80,8 +79,7 @@ export async function signIn(formData: FormData) {
       metadata: { email: user.email, role: user.role },
     })
     return { success: true }
-  } catch (error) {
-    console.error("[v0] signIn error:", error)
+  } catch {
     return { error: "Ocurrió un error al iniciar sesión. Por favor, intenta de nuevo." }
   }
 }

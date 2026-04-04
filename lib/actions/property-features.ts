@@ -32,10 +32,7 @@ export async function getAllPropertyFeatures() {
 
   const { data, error } = await supabase.from("property_features").select("*").order("type").order("name")
 
-  if (error) {
-    console.error("[v0] Error fetching all features:", error)
-    throw error
-  }
+  if (error) throw error
 
   return data as PropertyFeature[]
 }
@@ -45,10 +42,7 @@ export async function getPropertyFeatureById(id: string) {
 
   const { data, error } = await supabase.from("property_features").select("*").eq("id", id).single()
 
-  if (error) {
-    console.error("[v0] Error fetching feature:", error)
-    return null
-  }
+  if (error) return null
 
   return data as PropertyFeature
 }
@@ -61,10 +55,7 @@ export async function createPropertyFeature(formData: FormData) {
 
   const { error } = await supabase.from("property_features").insert({ name, type })
 
-  if (error) {
-    console.error("[v0] Create error:", error)
-    return { success: false, error: error.message }
-  }
+  if (error) return { success: false, error: error.message }
 
   revalidatePath("/property-features")
   return { success: true }
@@ -85,10 +76,7 @@ export async function updatePropertyFeature(id: string, formData: FormData) {
     .select()
     .single()
 
-  if (error) {
-    console.error("[v0] Update error:", error)
-    return { success: false, error: error.message }
-  }
+  if (error) return { success: false, error: error.message }
 
   if (!data) {
     return { success: false, error: "No se encontró la característica" }
@@ -109,10 +97,7 @@ export async function togglePropertyFeatureStatus(id: string, is_active: boolean
     .select()
     .single()
 
-  if (error) {
-    console.error("[v0] Toggle error:", error)
-    return { success: false, error: error.message }
-  }
+  if (error) return { success: false, error: error.message }
 
   if (!data) {
     return { success: false, error: "No se encontró la característica" }
@@ -127,10 +112,7 @@ export async function deletePropertyFeature(id: string) {
 
   const { error } = await supabase.from("property_features").delete().eq("id", id)
 
-  if (error) {
-    console.error("[v0] Delete error:", error)
-    return { success: false, error: error.message }
-  }
+  if (error) return { success: false, error: error.message }
 
   revalidatePath("/property-features")
   return { success: true }
@@ -163,10 +145,7 @@ export async function assignFeaturesToProperty(propertyId: string, featureIds: s
 
     const { error } = await supabase.from("property_feature_assignments").insert(assignments)
 
-    if (error) {
-      console.error("[v0] Assignment error:", error)
-      return { success: false, error: error.message }
-    }
+    if (error) return { success: false, error: error.message }
   }
 
   revalidatePath(`/properties/${propertyId}`)
