@@ -8,21 +8,30 @@ def fetch(url):
     with urllib.request.urlopen(req) as resp:
         return json.loads(resp.read())
 
-# Test 1: Nominatim searching just the city centroid
-print("=== Nominatim: ciudad capital Corrientes (centroide) ===")
-url = "https://nominatim.openstreetmap.org/search?format=json&limit=5&addressdetails=1&q=Corrientes,+Corrientes,+Argentina&countrycodes=ar"
-data = fetch(url)
-for i, r in enumerate(data[:5]):
-    addr = r.get("address", {})
-    print(f"  [{i}] lat={r['lat']} lon={r['lon']} type={r.get('type')}")
-    print(f"       display={r['display_name'][:100]}")
+base = "https://apis.datos.gob.ar/georef/api"
 
-# Test 2: GeoRef localidades - find the centroid of city Corrientes Capital
-print("\n=== GeoRef: localidades de Corrientes ===")
-url2 = "https://apis.datos.gob.ar/georef/api/localidades?nombre=Corrientes&provincia=Corrientes&max=5&campos=completo"
-data2 = fetch(url2)
-locs = data2.get("localidades", [])
-for i, r in enumerate(locs):
-    ub = r.get("centroide", {})
-    print(f"  [{i}] lat={ub.get('lat')} lon={ub.get('lon')}")
-    print(f"       nombre={r.get('nombre')} | prov={r.get('provincia',{}).get('nombre')}")
+tests = [
+    ("direcciones con provincia y max alto",
+     f"{base}/direcciones?direccion=Uruguay+355&provincia=Corrientes&max=20"),
+    ("calles Uruguay en Corrientes provincia",
+     f"{base}/calles?nombre=Uruguay&provincia=Corrientes&max=10&campos=completo"),
+    ("calles Uruguay localidad=Corrientes",
+     f"{base}/calles?nombre=Uruguay&provincia=Corrientes&localidad=Corrientes&max=10&campos=completo"),
+    ("calles Uruguay localidad=Capital",
+     f"{base}/calles?nombre=Uruguay&provincia=Corrientes&localidad=Capital&max=10&campos=completo"),
+]
+
+for label, url in tests:
+    print(f"\n=== {label} ===")
+    try:
+        data = fetch(url)
+        for key, items in data.items():
+            if not isinstance(items, list): continue
+            print(f"  {key}: {len(items)} results")
+            for i, r in enumerate(items[:5]):
+                loc = r.get("localidad", r.get("localidad_censal", {}))
+                ub  = r.get("ubicacion", r.get("centroide", {}))
+                print(f"    [{i}] nombre={r.get('nombre','?')[:50]} | nomenclatura={r.get('nomenclatura','?')[:60]}")
+                print(f"         localidad={loc.get('nombre','?')} | lat={ub.get('lat','?')} lon={ub.get('lon','?')}")
+    except Exception as e:
+        print(f"  ERROR: {e}")
