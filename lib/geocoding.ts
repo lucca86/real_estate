@@ -57,43 +57,42 @@ const NOMINATIM_HEADERS = { "User-Agent": "GestionInmobiliariaRE/1.0" }
 
 /**
  * Score a Nominatim result against expected city and state.
+ * Only uses structured address fields (city/town/municipality/state),
+ * NOT displayName — which can falsely match province names embedded in any result.
  * Returns a numeric score — higher is better.
  */
 function scoreResult(result: any, city?: string, state?: string): number {
-  const addressDetails = result.address || {}
-  const displayName = result.display_name.toLowerCase()
+  const addr = result.address || {}
   let score = 0
 
-  if (city && state) {
-    const normalizedCity = city === "Ciudad Autónoma de Buenos Aires" || city === "Capital" ? "Buenos Aires" : city
-    const resultCity = (
-      addressDetails.city ||
-      addressDetails.town ||
-      addressDetails.village ||
-      addressDetails.municipality ||
-      ""
-    ).toLowerCase()
-    const resultState = (addressDetails.state || "").toLowerCase()
-    const cityLower = normalizedCity.toLowerCase()
-    const stateLower = state.toLowerCase()
+  if (city) {
+    const normalizedCity =
+      city === "Ciudad Autónoma de Buenos Aires" || city === "Capital" ? "Buenos Aires" : city.toLowerCase()
 
-    // City match is critical — heavily penalize mismatches
-    if (resultCity.includes(cityLower) || cityLower.includes(resultCity) || displayName.includes(cityLower)) {
-      score += 200
-    } else {
-      score -= 300 // penalize wrong city hard
-    }
+    // Nominatim returns city name in different fields depending on place type
+    const resultCityRaw =
+      addr.city || addr.town || addr.village || addr.municipality || addr.suburb || addr.county || ""
+    const resultCity = resultCityRaw.toLowerCase()
 
-    // Province/state match
-    if (resultState.includes(stateLower) || displayName.includes(stateLower)) {
-      score += 100
-    } else {
-      score -= 100
+    if (resultCity && (resultCity.includes(normalizedCity) || normalizedCity.includes(resultCity))) {
+      score += 300 // strong match on structured city field
+    } else if (resultCity) {
+      score -= 400 // wrong city — discard
     }
   }
 
-  if (addressDetails.house_number) score += 50
-  if (addressDetails.road) score += 30
+  if (state) {
+    const resultState = (addr.state || "").toLowerCase()
+    const stateLower = state.toLowerCase()
+    if (resultState && (resultState.includes(stateLower) || stateLower.includes(resultState))) {
+      score += 100
+    } else if (resultState) {
+      score -= 150
+    }
+  }
+
+  if (addr.house_number) score += 50
+  if (addr.road) score += 30
   if (result.importance) score += result.importance * 10
   if (result.type === "house" || result.type === "building" || result.type === "residential") score += 40
 
@@ -102,6 +101,7 @@ function scoreResult(result: any, city?: string, state?: string): number {
 
 /**
  * Fetch from Nominatim and return the best-scored result for city/state.
+ * Rejects results where the city clearly doesn't match (score < 0).
  */
 async function fetchNominatim(url: string, city?: string, state?: string): Promise<GeocodingResult | null> {
   try {
@@ -116,8 +116,9 @@ async function fetchNominatim(url: string, city?: string, state?: string): Promi
       .sort((a: any, b: any) => b._score - a._score)
 
     const best = scored[0]
-    // Reject if score is extremely negative (clearly wrong city)
-    if (best._score < -100) return null
+
+    // Reject if the best result has a negative score — wrong city or province
+    if (best._score < 0) return null
 
     return {
       latitude: Number.parseFloat(best.lat),
