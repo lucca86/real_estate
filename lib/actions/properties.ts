@@ -3,10 +3,12 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server"
 import { getCurrentUser } from "@/lib/auth"
 import { syncPropertyToWordPress, deletePropertyFromWordPress } from "./wordpress"
+import { wordpressAPI } from "@/lib/wordpress"
 import crypto from "crypto"
 import { revalidatePath } from "next/cache"
 import type { PropertyWithDetails } from "@/types"
 import type { ActionResult } from "@/types/action-result"
+import { logAudit } from "@/lib/audit"
 
 export async function createProperty(formData: FormData): Promise<ActionResult<PropertyWithDetails>> {
   const currentUser = await getCurrentUser()
@@ -20,7 +22,6 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
 
     const title = formData.get("title") as string
     const description = formData.get("description") as string
-    const internalNotes = formData.get("internalNotes") as string
     const ownerId = formData.get("ownerId") as string
     const propertyTypeId = formData.get("propertyTypeId") as string
     const status = formData.get("status") as string
@@ -63,8 +64,7 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
     let parsedImages: any[] = []
     try {
       parsedImages = imagesJson ? JSON.parse(imagesJson) : []
-    } catch (e) {
-      console.error("[v0] Error parsing images:", e)
+    } catch {
       return { success: false, error: "Error al procesar las imágenes" }
     }
 
@@ -96,10 +96,7 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
         id: crypto.randomUUID(),
         title,
         description: description || null,
-        internal_notes: internalNotes || null,
         owner_id: ownerId,
-        created_by_id: currentUser.id,
-        updated_by_id: currentUser.id,
         property_type_id: propertyTypeId,
         status,
         address,
@@ -129,20 +126,21 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
         property_label: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
         adrema: adrema || null,
         features: parseArrayField(features),
-        videos: videos ? JSON.parse(videos) : [],
-        virtual_tour: virtualTour || null,
-        published,
-        sync_to_wordpress: syncToWordPress,
-        is_featured: isFeatured,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
+      videos: videos ? JSON.parse(videos) : [],
+      virtual_tour: virtualTour || null,
+      published,
+      sync_to_wordpress: syncToWordPress,
+      is_featured: isFeatured,
+      internal_notes: formData.get("internalNotes") as string | null,
+      created_by_id: currentUser.id,
+      updated_by_id: currentUser.id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
       .select()
       .single()
 
-    if (error) {
-      throw new Error(`Error al crear la propiedad: ${error.message}`)
-    }
+    if (error) throw new Error(`Error al crear la propiedad: ${error.message}`)
 
     if (syncToWordPress && newProperty) {
       try {
@@ -159,7 +157,6 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
 
         await syncPropertyToWordPress(newProperty.id)
       } catch (wpError: any) {
-        console.error("Error in WordPress sync process:", wpError)
         return {
           success: true,
           data: newProperty as PropertyWithDetails,
@@ -168,11 +165,17 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
       }
     }
 
+    await logAudit({
+      module: "properties",
+      action: "create",
+      entity_type: "Propiedad",
+      entity_id: newProperty.id,
+      metadata: { title: newProperty.title, status: newProperty.status },
+    })
     revalidatePath("/")
     revalidatePath("/properties")
     return { success: true, data: newProperty as PropertyWithDetails }
   } catch (error: any) {
-    console.error("Error in createProperty:", error)
     return {
       success: false,
       error: error.message || "Error desconocido al crear la propiedad",
@@ -216,7 +219,6 @@ export async function updateProperty(propertyId: string, formData: FormData) {
   const currency = formData.get("currency") as string
   const rentalPrice = formData.get("rentalPrice") as string
   const amenities = formData.get("amenities") as string
-  const internalNotes = formData.get("internalNotes") as string
   const imagesJson = formData.get("images") as string
   const isFeatured = formData.get("isFeatured") === "true"
   const propertyLabel = formData.get("propertyLabel") as string
@@ -270,7 +272,6 @@ export async function updateProperty(propertyId: string, formData: FormData) {
     .update({
       title,
       description: description || null,
-      internal_notes: internalNotes || null,
       owner_id: ownerId,
       property_type_id: propertyTypeId,
       status,
@@ -301,14 +302,15 @@ export async function updateProperty(propertyId: string, formData: FormData) {
       property_label: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
       adrema: adrema || null,
       features: parseArrayField(features),
-      videos: videos ? JSON.parse(videos) : [],
-      virtual_tour: virtualTour || null,
-      published,
-      sync_to_wordpress: syncToWordPress,
-      updated_by_id: currentUser.id,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", propertyId)
+    videos: videos ? JSON.parse(videos) : [],
+    virtual_tour: virtualTour || null,
+    published,
+    sync_to_wordpress: syncToWordPress,
+    internal_notes: formData.get("internalNotes") as string | null,
+    updated_by_id: currentUser.id,
+    updated_at: new Date().toISOString(),
+  })
+  .eq("id", propertyId)
     .select()
     .single()
 
@@ -354,7 +356,6 @@ export async function updateProperty(propertyId: string, formData: FormData) {
         try {
           await syncPropertyToWordPress(updatedProperty.id)
         } catch (syncError) {
-          console.error("WordPress sync failed:", syncError)
           revalidatePath("/properties")
           revalidatePath("/catalog")
           revalidatePath(`/properties/${propertyId}/edit`)
@@ -367,7 +368,6 @@ export async function updateProperty(propertyId: string, formData: FormData) {
       }
     }
   } catch (syncError) {
-    console.error("[v0] WordPress sync failed:", syncError)
     revalidatePath("/properties")
     revalidatePath("/catalog")
     revalidatePath(`/properties/${propertyId}/edit`)
@@ -378,11 +378,70 @@ export async function updateProperty(propertyId: string, formData: FormData) {
     }
   }
 
+  await logAudit({
+    module: "properties",
+    action: "update",
+    entity_type: "Propiedad",
+    entity_id: propertyId,
+    metadata: { title: (updatedProperty as any).title, status: (updatedProperty as any).status },
+  })
   revalidatePath("/properties")
   revalidatePath("/catalog")
   revalidatePath(`/properties/${propertyId}/edit`)
 
   return { success: true, data: updatedProperty }
+}
+
+export async function deletePropertyImage(propertyId: string, imageId: string) {
+  const currentUser = await getCurrentUser()
+
+  if (!currentUser) {
+    return { success: false, error: "No estás autenticado" }
+  }
+
+  if (currentUser.role !== "ADMIN" && currentUser.role !== "SUPERVISOR") {
+    return { success: false, error: "No tienes permisos para eliminar imágenes" }
+  }
+
+  try {
+    const supabase = await createAdminClient()
+
+    const { data: property, error: fetchError } = await supabase
+      .from("properties")
+      .select("id, images")
+      .eq("id", propertyId)
+      .single()
+
+    if (fetchError || !property) {
+      return { success: false, error: "Propiedad no encontrada" }
+    }
+
+    const currentImages: any[] = Array.isArray(property.images) ? property.images : []
+    const updatedImages = currentImages.filter((img: any) => img.id !== imageId)
+
+    // If the removed image was the cover, promote the first remaining image
+    const removedImage = currentImages.find((img: any) => img.id === imageId)
+    if (removedImage?.isCover && updatedImages.length > 0) {
+      updatedImages[0] = { ...updatedImages[0], isCover: true }
+    }
+
+    const { error: updateError } = await supabase
+      .from("properties")
+      .update({ images: updatedImages, updated_at: new Date().toISOString() })
+      .eq("id", propertyId)
+
+    if (updateError) {
+      return { success: false, error: updateError.message }
+    }
+
+    revalidatePath(`/properties/${propertyId}/edit`)
+    revalidatePath(`/properties/${propertyId}`)
+    revalidatePath("/properties")
+
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message || "Error al eliminar imagen" }
+  }
 }
 
 export async function deleteProperty(propertyId: string) {
@@ -392,14 +451,14 @@ export async function deleteProperty(propertyId: string) {
     return { success: false, error: "No estás autenticado" }
   }
 
-  if (currentUser.role !== "ADMIN" && currentUser.role !== "SUPERVISOR") {
+  if (currentUser.role !== "ADMIN" && currentUser.role !== "SUPERVISOR" && currentUser.role !== "VENDEDOR") {
     return { success: false, error: "No tienes permisos para eliminar esta propiedad" }
   }
 
   try {
-    const supabase = await createClient()
+    const supabase = await createAdminClient()
 
-    const { data: property, error: fetchError } = await supabase
+    const { data: property, error: fetchError} = await supabase
       .from("properties")
       .select("*")
       .eq("id", propertyId)
@@ -409,11 +468,20 @@ export async function deleteProperty(propertyId: string) {
       return { success: false, error: "Propiedad no encontrada" }
     }
 
-    if (property.wordpress_id) {
+    // In restricted mode, VENDEDOR can only delete their own properties
+    if (currentUser.role === "VENDEDOR") {
+      const { getPropertyEditMode } = await import("@/lib/actions/system-settings")
+      const editMode = await getPropertyEditMode()
+      if (editMode === "restricted" && property.created_by_id && property.created_by_id !== currentUser.id) {
+        return { success: false, error: "Solo puedes eliminar propiedades que hayas creado" }
+      }
+    }
+
+    // Delete from WordPress first if synced
+    if (property.wordpress_id && property.wordpress_id > 0) {
       try {
-        await deletePropertyFromWordPress(propertyId)
-      } catch (wpError) {
-        console.error("[v0] Error deleting from WordPress:", wpError)
+        await wordpressAPI.deleteProperty(property.wordpress_id)
+      } catch {
         // Continue with local deletion even if WordPress fails
       }
     }
@@ -427,10 +495,7 @@ export async function deleteProperty(propertyId: string) {
           .update({ is_active: false })
           .eq("id", propertyId)
 
-        if (updateError) {
-          console.error("Error deactivating property:", updateError)
-          return { success: false, error: `Error al desactivar propiedad: ${updateError.message}` }
-        }
+        if (updateError) return { success: false, error: `Error al desactivar propiedad: ${updateError.message}` }
 
         revalidatePath("/")
         revalidatePath("/properties")
@@ -442,16 +507,20 @@ export async function deleteProperty(propertyId: string) {
         }
       }
 
-      console.error("Error deleting property:", deleteError)
       return { success: false, error: `Error deleting property: ${deleteError.message}` }
     }
 
+    await logAudit({
+      module: "properties",
+      action: "delete",
+      entity_type: "Propiedad",
+      entity_id: propertyId,
+    })
     revalidatePath("/")
     revalidatePath("/properties")
     revalidatePath("/dashboard")
     return { success: true, wasDeactivated: false }
   } catch (error: any) {
-    console.error("Error in deleteProperty:", error)
     return { success: false, error: error.message || "Error al eliminar propiedad" }
   }
 }
@@ -477,7 +546,10 @@ export async function getPropertyById(id: string) {
         first_name,
         last_name,
         owner_type,
-        real_estate_agency
+        real_estate_agency,
+        city:cities!city_id(id, name),
+        province:provinces!province_id(id, name),
+        country:countries!country_id(id, name)
       ),
       city:cities!city_id(id, name),
       province:provinces!province_id(id, name),
@@ -488,43 +560,37 @@ export async function getPropertyById(id: string) {
     .eq("id", id)
     .maybeSingle()
 
-  if (error) {
-    console.error("Error fetching property:", error)
-    return null
-  }
+  if (error) return null
 
   if (!property) {
-    console.error("Property not found with id:", id)
     return null
   }
 
-  // Obtener datos del usuario que creó la propiedad
+  // Load created_by and updated_by user data (table uses snake_case: created_by_id, updated_by_id)
   let createdBy = null
-  if (property.created_by_id) {
-    const { data: createdByUser } = await supabase
-      .from("users")
-      .select("id, email, name")
-      .eq("id", property.created_by_id)
-      .single()
-    createdBy = createdByUser
-  }
-
-  // Obtener datos del usuario que actualizó la propiedad
   let updatedBy = null
-  if (property.updated_by_id) {
-    const { data: updatedByUser } = await supabase
+
+  const p = property as any
+
+  if (p.created_by_id) {
+    const { data: creator } = await supabase
       .from("users")
-      .select("id, email, name")
-      .eq("id", property.updated_by_id)
+      .select("id, name, email")
+      .eq("id", p.created_by_id)
       .single()
-    updatedBy = updatedByUser
+    createdBy = creator
   }
 
-  return {
-    ...property,
-    createdBy,
-    updatedBy,
+  if (p.updated_by_id) {
+    const { data: updater } = await supabase
+      .from("users")
+      .select("id, name, email")
+      .eq("id", p.updated_by_id)
+      .single()
+    updatedBy = updater
   }
+
+  return { ...property, createdBy, updatedBy }
 }
 
 const parseArrayField = (value: any): string[] => {

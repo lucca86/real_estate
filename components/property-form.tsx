@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, MapPin, Sparkles, Plus } from "lucide-react"
 import { createProperty, updateProperty } from "@/lib/actions/properties"
-import { geocodeProperty } from "@/lib/geocoding"
+import { geocodeAddressAction } from "@/lib/actions/geocoding"
 import { generatePropertyTitle } from "@/lib/actions/ai-property-title"
 import { useToast } from "@/hooks/use-toast"
 import { CreateOwnerDialog } from "@/components/create-owner-dialog"
@@ -649,7 +649,7 @@ export function PropertyForm({
         return
       }
 
-      const result = await geocodeProperty(address, cityName, provinceName, "Argentina", neighborhoodName)
+      const result = await geocodeAddressAction(address, cityName, provinceName)
 
       if (result) {
         setFormData((prev) => ({
@@ -1576,7 +1576,7 @@ export function PropertyForm({
           <CardDescription>Sube hasta {12} imágenes optimizadas automáticamente</CardDescription>
         </CardHeader>
         <CardContent>
-          <PropertyImageUpload images={images} onChange={setImages} maxImages={12} canDeleteImages={canDeleteImages} />
+          <PropertyImageUpload images={images} onChange={setImages} maxImages={12} canDeleteImages={canDeleteImages} propertyId={editProperty?.id} />
         </CardContent>
       </Card>
 

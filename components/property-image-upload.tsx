@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd"
+import { deletePropertyImage } from "@/lib/actions/properties"
 
 interface PropertyImage {
   id: string
@@ -27,6 +28,7 @@ interface PropertyImageUploadProps {
   onChange: (images: PropertyImage[]) => void
   maxImages?: number
   canDeleteImages?: boolean
+  propertyId?: string // if provided, deletion is persisted immediately to the DB
 }
 
 const getImageUrl = (image: any): string => {
@@ -65,7 +67,7 @@ const getImageUrl = (image: any): string => {
   return "/placeholder.svg"
 }
 
-export function PropertyImageUpload({ images, onChange, maxImages = 12, canDeleteImages = false }: PropertyImageUploadProps) {
+export function PropertyImageUpload({ images, onChange, maxImages = 12, canDeleteImages = false, propertyId }: PropertyImageUploadProps) {
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState<{ [key: string]: number }>({})
@@ -247,16 +249,31 @@ export function PropertyImageUpload({ images, onChange, maxImages = 12, canDelet
   }
 
   const deleteImage = async (image: PropertyImage) => {
+    // Optimistic update: remove from UI immediately
     const newImages = images.filter((img) => img.id !== image.id)
-
     if (image.isCover && newImages.length > 0) {
-      newImages[0].isCover = true
+      newImages[0] = { ...newImages[0], isCover: true }
+    }
+    onChange(newImages)
+
+    // If editing an existing property, persist immediately to the DB
+    if (propertyId && propertyId !== "new") {
+      const result = await deletePropertyImage(propertyId, image.id)
+      if (!result.success) {
+        // Rollback on failure
+        onChange(images)
+        toast({
+          title: "Error",
+          description: result.error || "No se pudo eliminar la imagen",
+          variant: "destructive",
+        })
+        return
+      }
     }
 
-    onChange(newImages)
     toast({
-      title: "Éxito",
-      description: "Imagen eliminada correctamente",
+      title: "Imagen eliminada",
+      description: "La imagen fue eliminada correctamente",
     })
   }
 
