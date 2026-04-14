@@ -392,6 +392,58 @@ export async function updateProperty(propertyId: string, formData: FormData) {
   return { success: true, data: updatedProperty }
 }
 
+export async function deletePropertyImage(propertyId: string, imageId: string) {
+  const currentUser = await getCurrentUser()
+
+  if (!currentUser) {
+    return { success: false, error: "No estás autenticado" }
+  }
+
+  if (currentUser.role !== "ADMIN" && currentUser.role !== "SUPERVISOR") {
+    return { success: false, error: "No tienes permisos para eliminar imágenes" }
+  }
+
+  try {
+    const supabase = await createAdminClient()
+
+    const { data: property, error: fetchError } = await supabase
+      .from("properties")
+      .select("id, images")
+      .eq("id", propertyId)
+      .single()
+
+    if (fetchError || !property) {
+      return { success: false, error: "Propiedad no encontrada" }
+    }
+
+    const currentImages: any[] = Array.isArray(property.images) ? property.images : []
+    const updatedImages = currentImages.filter((img: any) => img.id !== imageId)
+
+    // If the removed image was the cover, promote the first remaining image
+    const removedImage = currentImages.find((img: any) => img.id === imageId)
+    if (removedImage?.isCover && updatedImages.length > 0) {
+      updatedImages[0] = { ...updatedImages[0], isCover: true }
+    }
+
+    const { error: updateError } = await supabase
+      .from("properties")
+      .update({ images: updatedImages, updated_at: new Date().toISOString() })
+      .eq("id", propertyId)
+
+    if (updateError) {
+      return { success: false, error: updateError.message }
+    }
+
+    revalidatePath(`/properties/${propertyId}/edit`)
+    revalidatePath(`/properties/${propertyId}`)
+    revalidatePath("/properties")
+
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message || "Error al eliminar imagen" }
+  }
+}
+
 export async function deleteProperty(propertyId: string) {
   const currentUser = await getCurrentUser()
 

@@ -1576,7 +1576,7 @@ export function PropertyForm({
           <CardDescription>Sube hasta {12} imágenes optimizadas automáticamente</CardDescription>
         </CardHeader>
         <CardContent>
-          <PropertyImageUpload images={images} onChange={setImages} maxImages={12} canDeleteImages={canDeleteImages} />
+          <PropertyImageUpload images={images} onChange={setImages} maxImages={12} canDeleteImages={canDeleteImages} propertyId={editProperty?.id} />
         </CardContent>
       </Card>
 
