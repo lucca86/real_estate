@@ -101,7 +101,8 @@ function PropertyCard({ property, currentUser, canDelete }: { property: Property
       key={property.id}
       className="group relative overflow-hidden rounded-lg border border-border transition-all hover:shadow-lg"
     >
-      <Link href={`/properties/${property.id}`}>
+      {/* Image wrapped in link to detail page */}
+      <Link href={`/properties/${property.id}`} tabIndex={-1}>
         <div className="relative aspect-video w-full overflow-hidden bg-muted">
           {propertyImages.length > 0 ? (
             <>

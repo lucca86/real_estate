@@ -23,7 +23,10 @@ export default async function EditPropertyPage({
     redirect("/login")
   }
 
+  console.log("[v0] EditPropertyPage - id:", id, "user.role:", user.role, "user.id:", user.id)
+
   const propertyData = await getPropertyById(id)
+  console.log("[v0] EditPropertyPage - propertyData found:", !!propertyData)
 
   if (!propertyData) {
     notFound()
@@ -33,7 +36,9 @@ export default async function EditPropertyPage({
   // ADMIN and SUPERVISOR can always edit any property
   if (user.role === "VENDEDOR") {
     const editMode = await getPropertyEditMode()
+    console.log("[v0] EditPropertyPage - VENDEDOR editMode:", editMode)
     if (editMode === "restricted" && propertyData.created_by_id && propertyData.created_by_id !== user.id) {
+      console.log("[v0] EditPropertyPage - redirect: VENDEDOR restricted")
       redirect("/properties")
     }
   }
