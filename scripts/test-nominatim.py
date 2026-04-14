@@ -10,28 +10,36 @@ def fetch(url):
 
 base = "https://apis.datos.gob.ar/georef/api"
 
-tests = [
-    ("direcciones con provincia y max alto",
-     f"{base}/direcciones?direccion=Uruguay+355&provincia=Corrientes&max=20"),
-    ("calles Uruguay en Corrientes provincia",
-     f"{base}/calles?nombre=Uruguay&provincia=Corrientes&max=10&campos=completo"),
-    ("calles Uruguay localidad=Corrientes",
-     f"{base}/calles?nombre=Uruguay&provincia=Corrientes&localidad=Corrientes&max=10&campos=completo"),
-    ("calles Uruguay localidad=Capital",
-     f"{base}/calles?nombre=Uruguay&provincia=Corrientes&localidad=Capital&max=10&campos=completo"),
-]
-
-for label, url in tests:
-    print(f"\n=== {label} ===")
-    try:
-        data = fetch(url)
-        for key, items in data.items():
-            if not isinstance(items, list): continue
-            print(f"  {key}: {len(items)} results")
-            for i, r in enumerate(items[:5]):
+# Test GeoJSON format for street geometry
+print("=== formato=geojson para URUGUAY en Capital, Corrientes ===")
+url = f"{base}/calles?nombre=Uruguay&provincia=Corrientes&departamento=Capital&max=1"
+print(f"URL: {url}")
+try:
+    data = fetch(url)
+    calles2 = data.get("calles", [])
+    if calles2:
+        calle = calles2[0]
+        # altura is NESTED: altura.inicio.derecha
+        alt = calle.get("altura", {})
+        alt_inicio = alt.get("inicio", {}).get("derecha", 0)
+        alt_fin = alt.get("fin", {}).get("derecha", alt_inicio)
+        numero = 355
+        clamped = max(alt_inicio, min(alt_fin, numero))
+        print(f"\n  alt_inicio={alt_inicio} alt_fin={alt_fin} numero={numero} → clamped={clamped}")
+        
+        url2 = f"{base}/direcciones?direccion=Uruguay+{clamped}&provincia=Corrientes&departamento=Capital&max=5"
+        print(f"\n=== /direcciones con número clampeado {clamped} ===")
+        print(f"URL: {url2}")
+        try:
+            data2 = fetch(url2)
+            dirs = data2.get("direcciones", [])
+            print(f"  {len(dirs)} resultados")
+            for r in dirs:
+                ub = r.get("ubicacion", {})
                 loc = r.get("localidad", r.get("localidad_censal", {}))
-                ub  = r.get("ubicacion", r.get("centroide", {}))
-                print(f"    [{i}] nombre={r.get('nombre','?')[:50]} | nomenclatura={r.get('nomenclatura','?')[:60]}")
-                print(f"         localidad={loc.get('nombre','?')} | lat={ub.get('lat','?')} lon={ub.get('lon','?')}")
-    except Exception as e:
-        print(f"  ERROR: {e}")
+                print(f"  nomenclatura={r.get('nomenclatura','?')}")
+                print(f"  localidad={loc.get('nombre','?')} lat={ub.get('lat')} lon={ub.get('lon')}")
+        except Exception as e:
+            print(f"  ERROR: {e}")
+except Exception as e:
+    print(f"  ERROR: {e}")
