@@ -38,7 +38,8 @@ export default async function EditPropertyPage({
     }
   }
 
-  const canDeleteImages = await checkPermission("images.delete")
+  // ADMIN and SUPERVISOR can always delete images — avoid async permission lookup that can fail silently
+  const canDeleteImages = user.role === "ADMIN" || user.role === "SUPERVISOR"
 
   const property = {
     id: propertyData.id,
