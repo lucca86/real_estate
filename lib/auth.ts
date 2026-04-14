@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { cookies } from "next/headers"
 import { jwtVerify } from "jose"
 import { hash, compare } from "bcryptjs"
@@ -36,7 +36,9 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
 
     const { payload } = await jwtVerify(token, JWT_SECRET)
 
-    const supabase = await createClient()
+    // Use admin client to bypass RLS — this app uses custom JWT auth, not Supabase Auth,
+    // so auth.uid() is always NULL and RLS policies block the query with the anon key.
+    const supabase = await createAdminClient()
     const { data: userData, error: userError } = await supabase
       .from("users")
       .select("id, email, name, role, is_active, avatar")
