@@ -53,87 +53,76 @@ function expandAbbreviations(text: string): string {
   return expanded
 }
 
+const NOMINATIM_HEADERS = { "User-Agent": "GestionInmobiliariaRE/1.0" }
+
 /**
- * Geocode an address using Nominatim (OpenStreetMap)
- * Free service, no API key required
+ * Score a Nominatim result against expected city and state.
+ * Returns a numeric score — higher is better.
  */
-export async function geocodeAddress(address: string, city?: string, state?: string): Promise<GeocodingResult | null> {
-  try {
-    const encodedAddress = encodeURIComponent(address)
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodedAddress}&format=json&limit=20&countrycodes=ar&addressdetails=1`
+function scoreResult(result: any, city?: string, state?: string): number {
+  const addressDetails = result.address || {}
+  const displayName = result.display_name.toLowerCase()
+  let score = 0
 
-    const response = await fetch(url, {
-      headers: {
-        "User-Agent": "Real Estate Management App",
-      },
-    })
+  if (city && state) {
+    const normalizedCity = city === "Ciudad Autónoma de Buenos Aires" || city === "Capital" ? "Buenos Aires" : city
+    const resultCity = (
+      addressDetails.city ||
+      addressDetails.town ||
+      addressDetails.village ||
+      addressDetails.municipality ||
+      ""
+    ).toLowerCase()
+    const resultState = (addressDetails.state || "").toLowerCase()
+    const cityLower = normalizedCity.toLowerCase()
+    const stateLower = state.toLowerCase()
 
-    if (!response.ok) {
-
-      return null
+    // City match is critical — heavily penalize mismatches
+    if (resultCity.includes(cityLower) || cityLower.includes(resultCity) || displayName.includes(cityLower)) {
+      score += 200
+    } else {
+      score -= 300 // penalize wrong city hard
     }
+
+    // Province/state match
+    if (resultState.includes(stateLower) || displayName.includes(stateLower)) {
+      score += 100
+    } else {
+      score -= 100
+    }
+  }
+
+  if (addressDetails.house_number) score += 50
+  if (addressDetails.road) score += 30
+  if (result.importance) score += result.importance * 10
+  if (result.type === "house" || result.type === "building" || result.type === "residential") score += 40
+
+  return score
+}
+
+/**
+ * Fetch from Nominatim and return the best-scored result for city/state.
+ */
+async function fetchNominatim(url: string, city?: string, state?: string): Promise<GeocodingResult | null> {
+  try {
+    const response = await fetch(url, { headers: NOMINATIM_HEADERS })
+    if (!response.ok) return null
 
     const data = await response.json()
+    if (!data || data.length === 0) return null
 
-    if (!data || data.length === 0) {
-      return null
-    }
+    const scored = data
+      .map((r: any) => ({ ...r, _score: scoreResult(r, city, state) }))
+      .sort((a: any, b: any) => b._score - a._score)
 
-    const scoredResults = data.map((result: any) => {
-      const displayName = result.display_name.toLowerCase()
-      const addressDetails = result.address || {}
-      let score = 0
-
-      if (city && state) {
-        const normalizedCity = city === "Ciudad Autónoma de Buenos Aires" || city === "Capital" ? "Buenos Aires" : city
-        const resultCity = addressDetails.city || addressDetails.town || addressDetails.municipality || ""
-        const resultState = addressDetails.state || ""
-
-        // Boost score if city matches
-        if (
-          resultCity.toLowerCase().includes(normalizedCity.toLowerCase()) ||
-          displayName.includes(normalizedCity.toLowerCase())
-        ) {
-          score += 100
-        }
-
-        // Boost score if state matches
-        if (resultState.toLowerCase().includes(state.toLowerCase()) || displayName.includes(state.toLowerCase())) {
-          score += 50
-        }
-      }
-
-      // Prefer results with house numbers
-      if (addressDetails.house_number) {
-        score += 50
-      }
-
-      // Prefer results with road/street names
-      if (addressDetails.road) {
-        score += 30
-      }
-
-      // Use OSM importance score
-      if (result.importance) {
-        score += result.importance * 10
-      }
-
-      // Prefer building/residential results
-      if (result.type === "house" || result.type === "building" || result.type === "residential") {
-        score += 40
-      }
-
-      return { ...result, score }
-    })
-
-    scoredResults.sort((a: any, b: any) => b.score - a.score)
-
-    const result = scoredResults[0]
+    const best = scored[0]
+    // Reject if score is extremely negative (clearly wrong city)
+    if (best._score < -100) return null
 
     return {
-      latitude: Number.parseFloat(result.lat),
-      longitude: Number.parseFloat(result.lon),
-      displayName: result.display_name,
+      latitude: Number.parseFloat(best.lat),
+      longitude: Number.parseFloat(best.lon),
+      displayName: best.display_name,
     }
   } catch {
     return null
@@ -141,8 +130,47 @@ export async function geocodeAddress(address: string, city?: string, state?: str
 }
 
 /**
- * Geocode a property address by combining address components
- * Uses OpenStreetMap Nominatim for geocoding
+ * Geocode an address using Nominatim structured parameters first,
+ * then falling back to a free-text query.
+ */
+export async function geocodeAddress(address: string, city?: string, state?: string): Promise<GeocodingResult | null> {
+  const base = "https://nominatim.openstreetmap.org/search?format=json&limit=10&countrycodes=ar&addressdetails=1"
+
+  // Strategy 1: Structured parameters (most precise)
+  if (city && state) {
+    const params = new URLSearchParams({
+      street: address,
+      city: city === "Ciudad Autónoma de Buenos Aires" ? "Buenos Aires" : city,
+      state: state,
+      country: "Argentina",
+    })
+    const structured = await fetchNominatim(`${base}&${params}`, city, state)
+    if (structured) return structured
+    await new Promise((r) => setTimeout(r, 500))
+  }
+
+  // Strategy 2: Free-text query with full context
+  if (city && state) {
+    const q = encodeURIComponent(`${address}, ${city}, ${state}, Argentina`)
+    const freeText = await fetchNominatim(`${base}&q=${q}`, city, state)
+    if (freeText) return freeText
+    await new Promise((r) => setTimeout(r, 500))
+  }
+
+  // Strategy 3: Free-text without state
+  if (city) {
+    const q = encodeURIComponent(`${address}, ${city}, Argentina`)
+    const freeText = await fetchNominatim(`${base}&q=${q}`, city, state)
+    if (freeText) return freeText
+  }
+
+  return null
+}
+
+/**
+ * Geocode a property address by combining address components.
+ * Uses OpenStreetMap Nominatim structured search (street + city + state)
+ * for maximum accuracy, with free-text fallbacks.
  */
 export async function geocodeProperty(
   address: string,
@@ -156,27 +184,15 @@ export async function geocodeProperty(
   const correctedAddress = correctStreetName(address)
   const expandedAddress = expandAbbreviations(correctedAddress)
 
-  const strategies = [
-    `${expandedAddress}, ${normalizedCity}, ${state}, ${country}`,
-    neighborhood ? `${expandedAddress}, ${neighborhood}, ${normalizedCity}, ${state}, ${country}` : null,
-    address !== expandedAddress ? `${address}, ${normalizedCity}, ${state}, ${country}` : null,
-    `${expandedAddress}, ${normalizedCity}, ${country}`,
-    `${expandedAddress.replace(/\d+/g, "").trim()}, ${normalizedCity}, ${state}, ${country}`,
-    `${expandedAddress.split(",")[0]}, ${normalizedCity}, ${country}`,
-    `${normalizedCity}, ${state}, ${country}`,
-  ].filter(Boolean) as string[]
+  // Try with the corrected/expanded address first
+  const result = await geocodeAddress(expandedAddress, normalizedCity, state)
+  if (result) return result
 
-  for (let i = 0; i < strategies.length; i++) {
-    const strategyAddress = strategies[i]
-
-    const result = await geocodeAddress(strategyAddress, normalizedCity, state)
-    if (result) {
-      return result
-    }
-
-    if (i < strategies.length - 1) {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-    }
+  // Fallback: try original address if it differs (e.g. the corrections changed something)
+  if (expandedAddress !== address) {
+    await new Promise((r) => setTimeout(r, 500))
+    const fallback = await geocodeAddress(address, normalizedCity, state)
+    if (fallback) return fallback
   }
 
   return null
