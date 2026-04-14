@@ -9,12 +9,10 @@ interface GeocodingResult {
  */
 function correctStreetName(street: string): string {
   const corrections: Record<string, string> = {
-    // Hipólito Yrigoyen variations
     irogyen: "yrigoyen",
     irigoyen: "yrigoyen",
     "hipolito irogyen": "hipolito yrigoyen",
     "hipólito irogyen": "hipólito yrigoyen",
-    // Other common corrections
     "san martin": "san martín",
     colon: "colón",
     cordoba: "córdoba",
@@ -25,7 +23,6 @@ function correctStreetName(street: string): string {
     corrected = corrected.replace(new RegExp(wrong, "gi"), right)
   }
 
-  // Capitalize first letter of each word
   return corrected.replace(/\b\w/g, (char) => char.toUpperCase())
 }
 
@@ -53,77 +50,61 @@ function expandAbbreviations(text: string): string {
   return expanded
 }
 
-const NOMINATIM_HEADERS = { "User-Agent": "GestionInmobiliariaRE/1.0" }
+const GEOREF_BASE = "https://apis.datos.gob.ar/georef/api"
+const GEOREF_HEADERS = { "User-Agent": "GestionInmobiliariaRE/1.0" }
 
 /**
- * Score a Nominatim result against expected city and state.
- * Only uses structured address fields (city/town/municipality/state),
- * NOT displayName — which can falsely match province names embedded in any result.
- * Returns a numeric score — higher is better.
+ * Normalize city name for comparison and API calls.
+ * "Capital" is the internal name used for some provincial capitals.
  */
-function scoreResult(result: any, city?: string, state?: string): number {
-  const addr = result.address || {}
-  let score = 0
-
-  if (city) {
-    const normalizedCity =
-      city === "Ciudad Autónoma de Buenos Aires" || city === "Capital" ? "Buenos Aires" : city.toLowerCase()
-
-    // Nominatim returns city name in different fields depending on place type
-    const resultCityRaw =
-      addr.city || addr.town || addr.village || addr.municipality || addr.suburb || addr.county || ""
-    const resultCity = resultCityRaw.toLowerCase()
-
-    if (resultCity && (resultCity.includes(normalizedCity) || normalizedCity.includes(resultCity))) {
-      score += 300 // strong match on structured city field
-    } else if (resultCity) {
-      score -= 400 // wrong city — discard
-    }
+function normalizeCity(city: string, state: string): string {
+  if (city === "Capital" || city === "Ciudad Autónoma de Buenos Aires") {
+    // For CABA use "Buenos Aires", for other provinces use the state name as capital
+    return state === "Buenos Aires" ? "Buenos Aires" : state
   }
-
-  if (state) {
-    const resultState = (addr.state || "").toLowerCase()
-    const stateLower = state.toLowerCase()
-    if (resultState && (resultState.includes(stateLower) || stateLower.includes(resultState))) {
-      score += 100
-    } else if (resultState) {
-      score -= 150
-    }
-  }
-
-  if (addr.house_number) score += 50
-  if (addr.road) score += 30
-  if (result.importance) score += result.importance * 10
-  if (result.type === "house" || result.type === "building" || result.type === "residential") score += 40
-
-  return score
+  return city
 }
 
 /**
- * Fetch from Nominatim and return the best-scored result for city/state.
- * Rejects results where the city clearly doesn't match (score < 0).
+ * Strategy 1 — GeoRef exact street match.
+ * Queries the official Argentine geocoding API by street + province,
+ * then filters results to only those matching the selected city.
  */
-async function fetchNominatim(url: string, city?: string, state?: string): Promise<GeocodingResult | null> {
+async function georefStreet(address: string, city: string, state: string): Promise<GeocodingResult | null> {
   try {
-    const response = await fetch(url, { headers: NOMINATIM_HEADERS })
+    const params = new URLSearchParams({
+      direccion: address,
+      provincia: state,
+      max: "20",
+    })
+    const response = await fetch(`${GEOREF_BASE}/direcciones?${params}`, { headers: GEOREF_HEADERS })
     if (!response.ok) return null
 
     const data = await response.json()
-    if (!data || data.length === 0) return null
+    const direcciones: any[] = data.direcciones || []
+    if (direcciones.length === 0) return null
 
-    const scored = data
-      .map((r: any) => ({ ...r, _score: scoreResult(r, city, state) }))
-      .sort((a: any, b: any) => b._score - a._score)
+    // Filter to results whose localidad matches the selected city
+    const cityLower = city.toLowerCase()
+    const matched = direcciones.filter((r: any) => {
+      const loc = (
+        r.localidad?.nombre ||
+        r.localidad_censal?.nombre ||
+        ""
+      ).toLowerCase()
+      return loc.includes(cityLower) || cityLower.includes(loc)
+    })
 
-    const best = scored[0]
+    const best = matched[0]
+    if (!best) return null
 
-    // Reject if the best result has a negative score — wrong city or province
-    if (best._score < 0) return null
+    const ub = best.ubicacion
+    if (!ub?.lat || !ub?.lon) return null
 
     return {
-      latitude: Number.parseFloat(best.lat),
-      longitude: Number.parseFloat(best.lon),
-      displayName: best.display_name,
+      latitude: ub.lat,
+      longitude: ub.lon,
+      displayName: best.nomenclatura || address,
     }
   } catch {
     return null
@@ -131,47 +112,67 @@ async function fetchNominatim(url: string, city?: string, state?: string): Promi
 }
 
 /**
- * Geocode an address using Nominatim structured parameters first,
- * then falling back to a free-text query.
+ * Strategy 2 — GeoRef city centroid fallback.
+ * When the exact street isn't found, returns the geographic center of the city.
+ * This guarantees the pin is at least in the correct city, not in a wrong one.
  */
-export async function geocodeAddress(address: string, city?: string, state?: string): Promise<GeocodingResult | null> {
-  const base = "https://nominatim.openstreetmap.org/search?format=json&limit=10&countrycodes=ar&addressdetails=1"
-
-  // Strategy 1: Structured parameters (most precise)
-  if (city && state) {
+async function georefCityCentroid(city: string, state: string): Promise<GeocodingResult | null> {
+  try {
     const params = new URLSearchParams({
-      street: address,
-      city: city === "Ciudad Autónoma de Buenos Aires" ? "Buenos Aires" : city,
-      state: state,
-      country: "Argentina",
+      nombre: city,
+      provincia: state,
+      max: "5",
+      campos: "completo",
     })
-    const structured = await fetchNominatim(`${base}&${params}`, city, state)
-    if (structured) return structured
-    await new Promise((r) => setTimeout(r, 500))
-  }
+    const response = await fetch(`${GEOREF_BASE}/localidades?${params}`, { headers: GEOREF_HEADERS })
+    if (!response.ok) return null
 
-  // Strategy 2: Free-text query with full context
-  if (city && state) {
-    const q = encodeURIComponent(`${address}, ${city}, ${state}, Argentina`)
-    const freeText = await fetchNominatim(`${base}&q=${q}`, city, state)
-    if (freeText) return freeText
-    await new Promise((r) => setTimeout(r, 500))
-  }
+    const data = await response.json()
+    const localidades: any[] = data.localidades || []
+    if (localidades.length === 0) return null
 
-  // Strategy 3: Free-text without state
-  if (city) {
-    const q = encodeURIComponent(`${address}, ${city}, Argentina`)
-    const freeText = await fetchNominatim(`${base}&q=${q}`, city, state)
-    if (freeText) return freeText
-  }
+    // Prefer exact name match
+    const cityLower = city.toLowerCase()
+    const best =
+      localidades.find((l: any) => l.nombre?.toLowerCase() === cityLower) || localidades[0]
 
-  return null
+    const centroide = best.centroide
+    if (!centroide?.lat || !centroide?.lon) return null
+
+    return {
+      latitude: centroide.lat,
+      longitude: centroide.lon,
+      displayName: `${city}, ${state}, Argentina`,
+    }
+  } catch {
+    return null
+  }
 }
 
 /**
- * Geocode a property address by combining address components.
- * Uses OpenStreetMap Nominatim structured search (street + city + state)
- * for maximum accuracy, with free-text fallbacks.
+ * Geocode an address for a given city and province.
+ * Uses GeoRef (official Argentine API) for accuracy:
+ *  1. Exact street search filtered by city
+ *  2. City centroid fallback (correct city, approximate location)
+ */
+export async function geocodeAddress(address: string, city?: string, state?: string): Promise<GeocodingResult | null> {
+  if (!city || !state) return null
+
+  const normalizedCity = normalizeCity(city, state)
+
+  // Strategy 1: exact street in the correct city
+  const exact = await georefStreet(address, normalizedCity, state)
+  if (exact) return exact
+
+  // Strategy 2: city centroid — guarantees correct city even if street not found
+  await new Promise((r) => setTimeout(r, 300))
+  const centroid = await georefCityCentroid(normalizedCity, state)
+  return centroid
+}
+
+/**
+ * Geocode a property address by combining all location components.
+ * Tries with corrected/expanded address first, then original as fallback.
  */
 export async function geocodeProperty(
   address: string,
@@ -180,20 +181,17 @@ export async function geocodeProperty(
   country = "Argentina",
   neighborhood?: string,
 ): Promise<GeocodingResult | null> {
-  const normalizedCity = city === "Ciudad Autónoma de Buenos Aires" ? "Buenos Aires" : city
+  const normalizedCity = normalizeCity(city, state)
 
   const correctedAddress = correctStreetName(address)
   const expandedAddress = expandAbbreviations(correctedAddress)
 
-  // Try with the corrected/expanded address first
   const result = await geocodeAddress(expandedAddress, normalizedCity, state)
   if (result) return result
 
-  // Fallback: try original address if it differs (e.g. the corrections changed something)
   if (expandedAddress !== address) {
-    await new Promise((r) => setTimeout(r, 500))
-    const fallback = await geocodeAddress(address, normalizedCity, state)
-    if (fallback) return fallback
+    await new Promise((r) => setTimeout(r, 300))
+    return geocodeAddress(address, normalizedCity, state)
   }
 
   return null
