@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, MapPin, Sparkles, Plus } from "lucide-react"
 import { createProperty, updateProperty } from "@/lib/actions/properties"
+import { geocodeAddressAction } from "@/lib/actions/geocoding"
 import { generatePropertyTitle } from "@/lib/actions/ai-property-title"
 import { useToast } from "@/hooks/use-toast"
 import { CreateOwnerDialog } from "@/components/create-owner-dialog"
@@ -648,9 +649,7 @@ export function PropertyForm({
         return
       }
 
-      const params = new URLSearchParams({ address, city: cityName, state: provinceName })
-      const res = await fetch(`/api/geocode?${params}`)
-      const result = res.ok ? await res.json() : null
+      const result = await geocodeAddressAction(address, cityName, provinceName)
 
       if (result) {
         setFormData((prev) => ({
