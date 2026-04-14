@@ -1,4 +1,4 @@
-import { getCurrentUser, checkPermission } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/auth"
 import { redirect, notFound } from "next/navigation"
 import { PropertyForm } from "@/components/property-form"
 import { WordPressSyncButton } from "@/components/wordpress-sync-button"
