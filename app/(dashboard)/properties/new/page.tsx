@@ -1,4 +1,4 @@
-import { getCurrentUser, checkPermission } from "@/lib/auth"
+import { getCurrentUser } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { PropertyForm } from "@/components/property-form"
 import { ChevronLeft } from "lucide-react"
@@ -12,7 +12,7 @@ export default async function NewPropertyPage() {
     redirect("/login")
   }
 
-  const canDeleteImages = await checkPermission("images.delete")
+  const canDeleteImages = user.role === "ADMIN" || user.role === "SUPERVISOR"
 
   return (
     <div className="space-y-6">

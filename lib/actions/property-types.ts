@@ -22,8 +22,7 @@ export async function getPropertyTypes() {
     if (error) throw error
 
     return propertyTypes || []
-  } catch (error) {
-    console.error("[getPropertyTypes] Error:", error)
+  } catch {
     throw new Error("Error al obtener los tipos de propiedad")
   }
 }
@@ -40,8 +39,7 @@ export async function getActivePropertyTypes() {
 
     if (error) throw error
     return data || []
-  } catch (error) {
-    console.error("[getActivePropertyTypes] Error:", error)
+  } catch {
     throw new Error("Error al obtener los tipos de propiedad activos")
   }
 }
@@ -55,8 +53,7 @@ export async function getPropertyTypeById(id: string) {
     if (error) throw error
 
     return data
-  } catch (error) {
-    console.error("[getPropertyTypeById] Error:", error)
+  } catch {
     throw new Error("Error al obtener el tipo de propiedad")
   }
 }
@@ -82,7 +79,6 @@ export async function createPropertyType(formData: FormData) {
     revalidatePath("/property-types")
     return propertyType
   } catch (error) {
-    console.error("[createPropertyType] Error:", error)
     if (error instanceof z.ZodError) {
       throw new Error(error.errors[0].message)
     }
@@ -114,7 +110,6 @@ export async function updatePropertyType(id: string, formData: FormData) {
     revalidatePath(`/property-types/${id}/edit`)
     return propertyType
   } catch (error) {
-    console.error("[updatePropertyType] Error:", error)
     if (error instanceof z.ZodError) {
       throw new Error(error.errors[0].message)
     }
@@ -153,7 +148,6 @@ export async function deletePropertyType(id: string) {
     revalidatePath("/property-types")
     return { success: true, wasDeactivated: false }
   } catch (error) {
-    console.error("[deletePropertyType] Error:", error)
     if (error instanceof Error) {
       return { success: false, error: error.message }
     }

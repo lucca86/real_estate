@@ -7,6 +7,7 @@ import { ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { getPropertyById } from "@/lib/actions/properties"
+import { getPropertyEditMode } from "@/lib/actions/system-settings"
 
 type TransactionType = "VENTA" | "ALQUILER" | "VENTA_ALQUILER" | "ALQUILER_OPCION_COMPRA"
 
@@ -28,37 +29,35 @@ export default async function EditPropertyPage({
     notFound()
   }
 
-  // Solo bloquear si el usuario no está autenticado (ya chequeado arriba)
-  // Todos los roles (ADMIN, SUPERVISOR, VENDEDOR) pueden editar cualquier propiedad
+  // Apply property_edit_mode setting: in "restricted" mode, VENDEDOR can only edit their own properties
+  // ADMIN and SUPERVISOR can always edit any property
+  if (user.role === "VENDEDOR") {
+    const editMode = await getPropertyEditMode()
+    if (editMode === "restricted" && propertyData.created_by_id && propertyData.created_by_id !== user.id) {
+      redirect("/properties")
+    }
+  }
+
+  // ADMIN and SUPERVISOR can always delete images — avoid async permission lookup that can fail silently
+  const canDeleteImages = user.role === "ADMIN" || user.role === "SUPERVISOR"
 
   const property = {
     id: propertyData.id,
     title: propertyData.title,
     description: propertyData.description,
-    internalNotes: propertyData.internal_notes,
     status: propertyData.status,
     address: propertyData.address,
-    // Location IDs — mapped from snake_case DB columns
-    countryId: propertyData.country_id,
-    provinceId: propertyData.province_id,
-    cityId: propertyData.city_id,
-    neighborhoodId: propertyData.neighborhood_id,
-    // Owner and property type
-    ownerId: propertyData.owner_id,
-    propertyTypeId: propertyData.property_type_id,
-    // Coordinates — numeric in DB, coerce to number to avoid string display issues
-    latitude: propertyData.latitude != null ? Number(propertyData.latitude) : null,
-    longitude: propertyData.longitude != null ? Number(propertyData.longitude) : null,
-    bedrooms: propertyData.bedrooms != null ? Number(propertyData.bedrooms) : undefined,
-    bathrooms: propertyData.bathrooms != null ? Number(propertyData.bathrooms) : undefined,
-    parkingSpaces: propertyData.parking_spaces != null ? Number(propertyData.parking_spaces) : undefined,
-    area: propertyData.area != null ? Number(propertyData.area) : undefined,
-    lotSize: propertyData.lot_size != null ? Number(propertyData.lot_size) : undefined,
-    // frontSize and depthSize are camelCase column names in the DB (quoted identifiers)
-    frontSize: propertyData.frontSize != null ? Number(propertyData.frontSize) : undefined,
-    depthSize: propertyData.depthSize != null ? Number(propertyData.depthSize) : undefined,
-    yearBuilt: propertyData.year_built != null ? Number(propertyData.year_built) : null,
-    price: propertyData.price != null ? Number(propertyData.price) : undefined,
+    latitude: propertyData.latitude,
+    longitude: propertyData.longitude,
+    bedrooms: propertyData.bedrooms,
+    bathrooms: propertyData.bathrooms,
+    parkingSpaces: propertyData.parking_spaces,
+    area: propertyData.area,
+    lotSize: propertyData.lot_size,
+    frontSize: propertyData.frontSize,
+    depthSize: propertyData.depthSize,
+    yearBuilt: propertyData.year_built,
+    price: propertyData.price,
     currency: propertyData.currency,
     amenities: propertyData.amenities || [],
     images: propertyData.images || [],
@@ -74,7 +73,7 @@ export default async function EditPropertyPage({
     rentalPeriod: (propertyData.rental_period as any) || null,
     zipCode: propertyData.zip_code || null,
     pricePerM2: propertyData.price_per_m2 || null,
-    rentalPrice: propertyData.rental_price != null ? Number(propertyData.rental_price) : null,
+    rentalPrice: propertyData.rental_price || null,
     virtualTour: propertyData.virtual_tour || null,
     propertyLabel: (propertyData.property_label as any) || null,
     published: propertyData.published !== false,
@@ -82,17 +81,30 @@ export default async function EditPropertyPage({
     videos: propertyData.videos || [],
     createdAt: new Date(propertyData.created_at),
     updatedAt: new Date(propertyData.updated_at),
+    // camelCase FK fields required by PropertyForm to pre-populate selects
+    ownerId: propertyData.owner_id ?? null,
+    propertyTypeId: propertyData.property_type_id ?? null,
+    cityId: propertyData.city_id ?? null,
+    countryId: propertyData.country_id ?? null,
+    provinceId: propertyData.province_id ?? null,
+    neighborhoodId: propertyData.neighborhood_id ?? null,
+    // Related objects for display (name labels in dropdowns)
+    owner: propertyData.owner ?? null,
+    propertyType: propertyData.propertyType ?? null,
+    city: propertyData.city ?? null,
+    province: propertyData.province ?? null,
+    country: propertyData.country ?? null,
+    neighborhood: propertyData.neighborhood ?? null,
   }
 
-  // Considera que hay imágenes para sincronizar si:
-  // 1. Hay al menos una imagen, Y
-  // 2. Al menos una tiene syncToWordPress === true, o ninguna tiene el flag explícito (compatibilidad con imágenes antiguas)
-  const images = propertyData.images || []
-  const imagesWithExplicitFlag = images.filter((img: any) => typeof img === "object" && img !== null && "syncToWordPress" in img)
-  const imagesToSync = imagesWithExplicitFlag.length > 0
-    ? images.filter((img: any) => img.syncToWordPress === true)
-    : images // si ninguna tiene el flag, todas se sincronizan
-  const hasImagesToSync = imagesToSync.length > 0
+  // images are stored as text[] where each element is a JSON string — must parse before accessing fields
+  const parsedImages = (propertyData.images || []).map((img: any) => {
+    if (typeof img === "string") {
+      try { return JSON.parse(img) } catch { return {} }
+    }
+    return img
+  })
+  const hasImagesToSync = parsedImages.some((img: any) => img.syncToWordPress === true)
 
   return (
     <div className="space-y-6">
@@ -121,7 +133,7 @@ export default async function EditPropertyPage({
         </CardContent>
       </Card>
 
-      <PropertyForm editProperty={property} />
+                <PropertyForm editProperty={property} canDeleteImages={canDeleteImages} />
     </div>
   )
 }

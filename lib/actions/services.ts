@@ -8,10 +8,7 @@ export async function getAllServices() {
 
   const { data, error } = await supabase.from("Service").select("*").order("name", { ascending: true })
 
-  if (error) {
-    console.error("Error fetching services:", error)
-    return []
-  }
+  if (error) return []
 
   return data || []
 }
@@ -21,10 +18,7 @@ export async function getServiceById(id: string) {
 
   const { data, error } = await supabase.from("Service").select("*").eq("id", id).single()
 
-  if (error) {
-    console.error("Error fetching service:", error)
-    return null
-  }
+  if (error) return null
 
   return data
 }
@@ -48,10 +42,7 @@ export async function createService(formData: FormData) {
     .select()
     .single()
 
-  if (error) {
-    console.error("Error creating service:", error)
-    return { success: false, error: error.message }
-  }
+  if (error) return { success: false, error: error.message }
 
   revalidatePath("/services")
   revalidatePath("/contacts")
@@ -75,10 +66,7 @@ export async function updateService(id: string, formData: FormData) {
     })
     .eq("id", id)
 
-  if (error) {
-    console.error("Error updating service:", error)
-    return { success: false, error: error.message }
-  }
+  if (error) return { success: false, error: error.message }
 
   revalidatePath("/services")
   revalidatePath("/contacts")
@@ -91,18 +79,13 @@ export async function deleteService(id: string) {
   const { error } = await supabase.from("Service").delete().eq("id", id)
 
   if (error) {
-    console.error("Error deleting service:", error)
-
     if (error.code === "23503") {
       const { error: updateError } = await supabase
         .from("Service")
         .update({ isActive: false, updatedAt: new Date().toISOString() })
         .eq("id", id)
 
-      if (updateError) {
-        console.error("Error deactivating service:", updateError)
-        return { success: false, error: updateError.message }
-      }
+      if (updateError) return { success: false, error: updateError.message }
 
       revalidatePath("/services")
       revalidatePath("/contacts")

@@ -37,27 +37,11 @@ export async function syncPropertyToWordPress(propertyId: string) {
     throw new Error("Propiedad no encontrada")
   }
 
-  console.log("[v0] Property fetched successfully:", {
-    id: property.id,
-    title: property.title,
-    images: property.images?.length || 0,
-    lot_size: property.lot_size,
-    area: property.area,
-    property_type: property.property_type?.name,
-    transaction_type: property.transaction_type,
-    status: property.status,
-  })
-
   const rawImages = property.images || []
   const allImages = rawImages.map(parseImage)
   const imagesToSync = allImages.filter((img: any) => img.syncToWordPress === true)
 
-  console.log("[v0] Total images:", allImages.length)
-  console.log("[v0] Images marked for WordPress sync:", imagesToSync.length)
-  console.log("[v0] First image syncToWordPress value:", allImages[0]?.syncToWordPress)
-
   if (imagesToSync.length === 0) {
-    console.log("[v0] WARNING: No images marked for WordPress sync")
     return {
       success: false,
       warning:
@@ -67,10 +51,6 @@ export async function syncPropertyToWordPress(propertyId: string) {
   }
 
   try {
-    console.log("[v0] Calling wordpressAPI.syncProperty...")
-    console.log("[v0] Property wordpress_id from database:", property.wordpress_id)
-    console.log("[v0] Property wordpress_url from database:", property.wordpress_url)
-
     const syncData = {
       id: property.id,
       wordpressId: property.wordpress_id,
@@ -104,11 +84,7 @@ export async function syncPropertyToWordPress(propertyId: string) {
       published: property.published,
     }
 
-    console.log("[v0] Sync data prepared with", imagesToSync.length, "images")
-
     const result = await wordpressAPI.syncProperty(syncData)
-
-    console.log("[v0] WordPress sync successful! WordPress ID:", result.id, "URL:", result.url)
 
     const { error: updateError } = await adminClient
       .from("properties")
@@ -119,21 +95,13 @@ export async function syncPropertyToWordPress(propertyId: string) {
       })
       .eq("id", propertyId)
 
-    if (updateError) {
-      console.log("[v0] ERROR updating property with wordpress_id:", updateError)
-    } else {
-      console.log("[v0] Property updated with WordPress ID")
-    }
+    // Non-fatal: log suppressed to avoid serialization errors
 
     revalidatePath("/properties")
     revalidatePath(`/properties/${propertyId}`)
 
     return { success: true, wordpressId: result.id }
   } catch (error) {
-    console.error("[v0] ========================================")
-    console.error("[v0] WordPress sync FAILED!")
-    console.error("[v0] Error:", error)
-    console.error("[v0] ========================================")
     throw new Error(error instanceof Error ? error.message : "Error al sincronizar con WordPress")
   }
 }
@@ -226,7 +194,6 @@ export async function syncAllPropertiesToWordPress() {
     } catch (error) {
       results.failed++
       results.errors.push(`${property.title}: ${error instanceof Error ? error.message : "Error desconocido"}`)
-      console.error(`[v0] Error syncing property ${property.id}:`, error)
     }
   }
 
@@ -271,7 +238,6 @@ export async function deletePropertyFromWordPress(propertyId: string) {
 
     return { success: true }
   } catch (error) {
-    console.error("[v0] WordPress delete error:", error)
     throw new Error(error instanceof Error ? error.message : "Error al eliminar de WordPress")
   }
 }

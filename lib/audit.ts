@@ -85,10 +85,10 @@ export async function logAudit(params: {
     })
 
     if (error) {
-      console.error("[v0] Error logging audit:", error)
+      // Non-fatal: audit log failure should not crash the app
     }
-  } catch (error) {
-    console.error("[v0] Error logging audit:", error)
+  } catch {
+    // Non-fatal
   }
 }
 
@@ -131,7 +131,6 @@ export async function getAuditLogs(filters?: AuditLogFilters, limit = 100, offse
   const { data, error, count } = await query
 
   if (error) {
-    console.error("[v0] Error fetching audit logs:", error)
     return { data: [], count: 0, error }
   }
 
