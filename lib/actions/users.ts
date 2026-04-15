@@ -1,6 +1,6 @@
 "use server"
 
-import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { hashPassword, getCurrentUser, hasPermission } from "@/lib/auth"
 import { revalidatePath } from "next/cache"
 import { randomUUID } from "crypto"
@@ -39,7 +39,7 @@ export async function createUser(formData: FormData) {
       throw new Error("Solo los administradores pueden crear usuarios administradores")
     }
 
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
     const { data: existingUser } = await supabase.from("User").select("id").eq("email", email).maybeSingle()
 
     if (existingUser) {
@@ -107,7 +107,7 @@ export async function updateUser(userId: string, formData: FormData) {
       throw new Error("Solo los administradores pueden asignar el rol de administrador")
     }
 
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
     const { data: existingUser } = await supabase
       .from("User")
       .select("id")
@@ -169,7 +169,7 @@ export async function deleteUser(userId: string) {
       return { success: false, error: "No puedes eliminar tu propio usuario" }
     }
 
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
     const { error } = await supabase.from("User").delete().eq("id", userId)
 
     if (error) {
@@ -208,7 +208,7 @@ export async function deleteUser(userId: string) {
 
 export async function updateProfile(formData: FormData) {
   try {
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
     const userId = formData.get("id") as string
     const name = formData.get("name") as string
     const email = formData.get("email") as string
@@ -269,7 +269,7 @@ export async function changeUserPassword(
       return { error: "La contraseña debe tener al menos 6 caracteres" }
     }
 
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
 
     // Get user to verify current password (only if changing own password)
     if (currentUser.id === userId) {

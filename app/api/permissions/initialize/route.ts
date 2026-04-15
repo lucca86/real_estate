@@ -77,7 +77,7 @@ export async function POST() {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 })
     }
 
-    const { data: userData } = await supabase.from("users").select("role").eq("id", user.id).single()
+    const { data: userData } = await supabase.from("User").select("role").eq("id", user.id).single()
 
     if (userData?.role !== "ADMIN") {
       return NextResponse.json({ error: "Solo administradores pueden inicializar permisos" }, { status: 403 })

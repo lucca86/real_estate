@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/lib/auth"
 import { redirect } from "next/navigation"
-import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { PropertiesMap } from "@/components/properties-map"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -11,40 +11,31 @@ export default async function MapPage() {
     redirect("/login")
   }
 
-  const supabase = await createServerClient()
+  const supabase = await createAdminClient()
   const { data: propertiesData, error } = await supabase
-    .from("properties")
+    .from("Property")
     .select(`
-      id,
-      title,
-      address,
-      city_id,
-      cities!properties_city_id_fkey(name),
-      latitude,
-      longitude,
-      price,
-      currency,
-      property_type_id,
-      property_types!properties_property_type_id_fkey(name),
-      status,
-      images
+      id, title, address, cityId, latitude, longitude,
+      price, currency, status, images,
+      city:City!cityId(name),
+      propertyType:PropertyType!propertyTypeId(name)
     `)
-    .eq("is_active", true)
+    .eq("isActive", true)
     .not("latitude", "is", null)
     .not("longitude", "is", null)
-    .order("created_at", { ascending: false })
+    .order("createdAt", { ascending: false })
 
   const properties =
     propertiesData?.map((prop: any) => ({
       id: prop.id,
       title: prop.title,
       address: prop.address,
-      city: prop.cities?.name || "",
+      city: prop.city?.name || "",
       latitude: prop.latitude,
       longitude: prop.longitude,
       price: prop.price,
       currency: prop.currency,
-      propertyType: prop.property_types?.name || "",
+      propertyType: prop.propertyType?.name || "",
       status: prop.status,
       images: prop.images,
     })) || []

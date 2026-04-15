@@ -35,12 +35,41 @@ export async function getAllContacts() {
     }))
   }
 
-  const contactsWithServices = contacts.map((contact) => ({
-    ...contact,
-    services: (contactServices || [])
+  // Build explicit plain objects — prevents Next.js RSC serializer from hitting
+  // internal Supabase Proxy references on spread of row objects → stack overflow
+  const contactsWithServices = contacts.map((contact) => {
+    const services = (contactServices || [])
       .filter((cs) => cs.contactId === contact.id)
-      .map((cs) => ({ service: cs.service })),
-  }))
+      .map((cs) => {
+        const svc = cs.service as any
+        return {
+          service: svc
+            ? {
+                id: svc.id ?? null,
+                name: svc.name ?? null,
+                description: svc.description ?? null,
+                isActive: svc.isActive ?? true,
+              }
+            : null,
+        }
+      })
+
+    return {
+      id: String(contact.id),
+      firstName: contact.firstName ?? "",
+      lastName: contact.lastName ?? "",
+      company: contact.company ?? null,
+      email: contact.email ?? null,
+      phone: contact.phone ?? null,
+      address: contact.address ?? null,
+      website: contact.website ?? null,
+      notes: contact.notes ?? null,
+      isActive: contact.isActive ?? true,
+      createdAt: contact.createdAt ?? null,
+      updatedAt: contact.updatedAt ?? null,
+      services,
+    }
+  })
 
   return contactsWithServices
 }
@@ -67,8 +96,26 @@ export async function getContactById(id: string) {
   }
 
   return {
-    ...contact,
-    services: contactServices || [],
+    id: String(contact.id),
+    firstName: contact.firstName ?? "",
+    lastName: contact.lastName ?? "",
+    company: contact.company ?? null,
+    email: contact.email ?? null,
+    phone: contact.phone ?? null,
+    address: contact.address ?? null,
+    website: contact.website ?? null,
+    notes: contact.notes ?? null,
+    isActive: contact.isActive ?? true,
+    createdAt: contact.createdAt ?? null,
+    updatedAt: contact.updatedAt ?? null,
+    services: (contactServices || []).map((cs) => {
+      const svc = cs.service as any
+      return {
+        service: svc
+          ? { id: svc.id ?? null, name: svc.name ?? null, description: svc.description ?? null, isActive: svc.isActive ?? true }
+          : null,
+      }
+    }),
   }
 }
 

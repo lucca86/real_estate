@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { z } from "zod"
 import crypto from "crypto"
 import { getCurrentUser } from "@/lib/auth"
@@ -29,13 +29,13 @@ const clientSchema = z.object({
 
 export async function getAgents() {
   try {
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
 
     const { data: agents, error } = await supabase
-      .from("users")
+      .from("User")
       .select("id, name, email, role")
       .in("role", ["VENDEDOR", "ADMIN"])
-      .eq("is_active", true)
+      .eq("isActive", true)
       .order("name")
 
     if (error) throw error
@@ -53,74 +53,79 @@ export async function getClients() {
       return { success: false, error: "No autenticado" }
     }
 
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
 
     let query = supabase
-      .from("clients")
+      .from("Client")
       .select(`
-        id,
-        name,
-        email,
-        phone,
-        secondary_phone,
-        id_number,
-        address,
-        city_id,
-        province_id,
-        country_id,
-        occupation,
-        budget_min,
-        budget_max,
-        preferred_property_type_id,
-        preferred_transaction_type,
-        notes,
-        source,
-        is_active,
-        agent_id,
-        created_at,
-        updated_at,
-        city:cities(id, name),
-        province:provinces(id, name),
-        country:countries(id, name),
-        agent:users!clients_agent_id_fkey(id, name, email)
+        id, name, email, phone, secondaryPhone, idNumber, address,
+        cityId, provinceId, countryId, occupation,
+        budgetMin, budgetMax, preferredPropertyTypeId, preferredTransactionType,
+        notes, source, isActive, agentId, createdAt, updatedAt,
+        city:City(id, name),
+        province:Province(id, name),
+        country:Country(id, name),
+        agent:User!Client_agentId_fkey(id, name, email)
       `)
-      .order("created_at", { ascending: false })
+      .order("createdAt", { ascending: false })
 
     if (currentUser.role === "VENDEDOR") {
-      query = query.eq("agent_id", currentUser.id)
+      query = query.eq("agentId", currentUser.id)
     }
 
     const { data: clients, error } = await query
 
     if (error) throw error
 
-    const clientsWithCounts: any[] = await Promise.all(
-      (clients || []).map(async (client) => {
-        const { count } = await supabase
-          .from("appointments")
-          .select("*", { count: "exact", head: true })
-          .eq("client_id", client.id)
+    // Single query for appointment counts instead of N parallel queries
+    const clientIds = (clients || []).map((c) => c.id)
+    const { data: apptCounts } = clientIds.length > 0
+      ? await supabase.from("Appointment").select("clientId").in("clientId", clientIds)
+      : { data: [] }
 
-        const city = Array.isArray(client.city) && client.city.length > 0 ? client.city[0] : null
-        const province = Array.isArray(client.province) && client.province.length > 0 ? client.province[0] : null
-        const country = Array.isArray(client.country) && client.country.length > 0 ? client.country[0] : null
-        const agent = Array.isArray(client.agent) && client.agent.length > 0 ? client.agent[0] : null
+    const apptMap: Record<string, number> = {}
+    for (const row of apptCounts ?? []) {
+      if (row.clientId) apptMap[row.clientId] = (apptMap[row.clientId] ?? 0) + 1
+    }
 
-        return {
-          ...client,
-          isActive: client.is_active,
-          agentId: client.agent_id,
-          budget: client.budget_max || client.budget_min,
-          city,
-          province,
-          country,
-          agent,
-          _count: {
-            appointments: count || 0,
-          },
-        }
-      }),
-    )
+    const clientsWithCounts: any[] = (clients || []).map((client) => {
+      const city = Array.isArray(client.city) && client.city.length > 0 ? client.city[0] : (client.city ?? null)
+      const province = Array.isArray(client.province) && client.province.length > 0 ? client.province[0] : (client.province ?? null)
+      const country = Array.isArray(client.country) && client.country.length > 0 ? client.country[0] : (client.country ?? null)
+      const agent = Array.isArray(client.agent) && client.agent.length > 0 ? client.agent[0] : (client.agent ?? null)
+
+      return {
+        id: String(client.id),
+        name: client.name ?? "",
+        email: client.email ?? null,
+        phone: client.phone ?? "",
+        secondary_phone: (client as any).secondaryPhone ?? null,
+        id_number: (client as any).idNumber ?? null,
+        address: client.address ?? null,
+        city_id: (client as any).cityId ?? null,
+        province_id: (client as any).provinceId ?? null,
+        country_id: (client as any).countryId ?? null,
+        occupation: client.occupation ?? null,
+        budget_min: (client as any).budgetMin ?? null,
+        budget_max: (client as any).budgetMax ?? null,
+        preferred_property_type_id: (client as any).preferredPropertyTypeId ?? null,
+        preferred_transaction_type: (client as any).preferredTransactionType ?? null,
+        notes: client.notes ?? null,
+        source: client.source ?? null,
+        is_active: (client as any).isActive ?? true,
+        isActive: (client as any).isActive ?? true,
+        agent_id: (client as any).agentId ?? null,
+        agentId: (client as any).agentId ?? null,
+        created_at: (client as any).createdAt ?? null,
+        updated_at: (client as any).updatedAt ?? null,
+        budget: (client as any).budgetMax || (client as any).budgetMin,
+        city,
+        province,
+        country,
+        agent,
+        _count: { appointments: apptMap[client.id] ?? 0 },
+      }
+    })
 
     return { success: true, data: clientsWithCounts }
   } catch {
@@ -135,16 +140,16 @@ export async function getClientById(id: string) {
       return { success: false, error: "No autenticado" }
     }
 
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
 
     const { data: client, error } = await supabase
-      .from("clients")
+      .from("Client")
       .select(`
         *,
-        city:cities(name),
-        province:provinces(name),
-        country:countries(name),
-        agent:users!clients_agent_id_fkey(id, name, email)
+        city:City(name),
+        province:Province(name),
+        country:Country(name),
+        agent:User!Client_agentId_fkey(id, name, email)
       `)
       .eq("id", id)
       .single()
@@ -152,7 +157,7 @@ export async function getClientById(id: string) {
     if (error) throw error
     if (!client) return { success: false, error: "Cliente no encontrado" }
 
-    if (currentUser.role === "VENDEDOR" && client.agent_id !== currentUser.id) {
+    if (currentUser.role === "VENDEDOR" && (client as any).agentId !== currentUser.id) {
       return { success: false, error: "No tienes permiso para ver este cliente" }
     }
 
@@ -171,31 +176,31 @@ export async function createClient(data: z.infer<typeof clientSchema>) {
       return { success: false, error: "No autenticado" }
     }
 
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
 
     const clientData = {
       id: crypto.randomUUID(),
       name: validated.name,
       email: validated.email,
       phone: validated.phone,
-      secondary_phone: validated.secondaryPhone || null,
-      id_number: validated.idNumber || null,
+      secondaryPhone: validated.secondaryPhone || null,
+      idNumber: validated.idNumber || null,
       address: validated.address || null,
-      city_id: validated.cityId || null,
-      province_id: validated.provinceId || null,
-      country_id: validated.countryId || null,
+      cityId: validated.cityId || null,
+      provinceId: validated.provinceId || null,
+      countryId: validated.countryId || null,
       occupation: validated.occupation || null,
-      budget_min: validated.budgetMin || null,
-      budget_max: validated.budgetMax || null,
-      preferred_property_type_id: validated.preferredPropertyTypeId || null,
-      preferred_transaction_type: validated.preferredTransactionType || null,
+      budgetMin: validated.budgetMin || null,
+      budgetMax: validated.budgetMax || null,
+      preferredPropertyTypeId: validated.preferredPropertyTypeId || null,
+      preferredTransactionType: validated.preferredTransactionType || null,
       notes: validated.notes || null,
       source: validated.source || null,
-      is_active: validated.isActive,
-      agent_id: currentUser.role === "ADMIN" && validated.agentId ? validated.agentId : currentUser.id,
+      isActive: validated.isActive,
+      agentId: currentUser.role === "ADMIN" && validated.agentId ? validated.agentId : currentUser.id,
     }
 
-    const { data: client, error } = await supabase.from("clients").insert(clientData).select().single()
+    const { data: client, error } = await supabase.from("Client").insert(clientData).select().single()
 
     if (error) throw error
 
@@ -218,12 +223,12 @@ export async function updateClient(id: string, data: z.infer<typeof clientSchema
       return { success: false, error: "No autenticado" }
     }
 
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
 
     if (currentUser.role === "VENDEDOR") {
-      const { data: existingClient } = await supabase.from("clients").select("agent_id").eq("id", id).single()
+      const { data: existingClient } = await supabase.from("Client").select("agentId").eq("id", id).single()
 
-      if (existingClient?.agent_id !== currentUser.id) {
+      if ((existingClient as any)?.agentId !== currentUser.id) {
         return { success: false, error: "No tienes permiso para editar este cliente" }
       }
     }
@@ -232,28 +237,27 @@ export async function updateClient(id: string, data: z.infer<typeof clientSchema
       name: validated.name,
       email: validated.email,
       phone: validated.phone,
-      secondary_phone: validated.secondaryPhone || null,
-      id_number: validated.idNumber || null,
+      secondaryPhone: validated.secondaryPhone || null,
+      idNumber: validated.idNumber || null,
       address: validated.address || null,
-      city_id: validated.cityId || null,
-      province_id: validated.provinceId || null,
-      country_id: validated.countryId || null,
+      cityId: validated.cityId || null,
+      provinceId: validated.provinceId || null,
+      countryId: validated.countryId || null,
       occupation: validated.occupation || null,
-      budget_min: validated.budgetMin || null,
-      budget_max: validated.budgetMax || null,
-      preferred_property_type_id: validated.preferredPropertyTypeId || null,
-      preferred_transaction_type: validated.preferredTransactionType || null,
+      budgetMin: validated.budgetMin || null,
+      budgetMax: validated.budgetMax || null,
+      preferredPropertyTypeId: validated.preferredPropertyTypeId || null,
+      preferredTransactionType: validated.preferredTransactionType || null,
       notes: validated.notes || null,
       source: validated.source || null,
-      is_active: validated.isActive,
-      updated_at: new Date().toISOString(),
+      isActive: validated.isActive,
     }
 
     if (currentUser.role === "ADMIN" && validated.agentId) {
-      clientData.agent_id = validated.agentId
+      clientData.agentId = validated.agentId
     }
 
-    const { data: client, error } = await supabase.from("clients").update(clientData).eq("id", id).select().single()
+    const { data: client, error } = await supabase.from("Client").update(clientData).eq("id", id).select().single()
 
     if (error) throw error
 
@@ -275,23 +279,23 @@ export async function deleteClient(id: string) {
       return { success: false, error: "No autenticado" }
     }
 
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
 
     if (currentUser.role === "VENDEDOR") {
-      const { data: existingClient } = await supabase.from("clients").select("agent_id").eq("id", id).single()
+      const { data: existingClient } = await supabase.from("Client").select("agentId").eq("id", id).single()
 
-      if (existingClient?.agent_id !== currentUser.id) {
+      if ((existingClient as any)?.agentId !== currentUser.id) {
         return { success: false, error: "No tienes permiso para eliminar este cliente" }
       }
     }
 
-    const { error } = await supabase.from("clients").delete().eq("id", id)
+    const { error } = await supabase.from("Client").delete().eq("id", id)
 
     if (error) {
       if (error.code === "23503") {
         const { error: updateError } = await supabase
-          .from("clients")
-          .update({ is_active: false, updated_at: new Date().toISOString() })
+          .from("Client")
+          .update({ isActive: false })
           .eq("id", id)
 
         if (updateError) throw updateError
@@ -323,11 +327,11 @@ export async function reassignClientAgent(clientId: string, newAgentId: string) 
       return { success: false, error: "No tienes permiso para realizar esta acción" }
     }
 
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
 
     const { error } = await supabase
-      .from("clients")
-      .update({ agent_id: newAgentId, updated_at: new Date().toISOString() })
+      .from("Client")
+      .update({ agentId: newAgentId })
       .eq("id", clientId)
 
     if (error) throw error

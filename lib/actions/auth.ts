@@ -1,6 +1,6 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { redirect } from 'next/navigation'
 import { compare } from "bcryptjs"
 import { cookies } from "next/headers"
@@ -13,15 +13,15 @@ const JWT_SECRET = new TextEncoder().encode(
 
 async function findUserByEmail(email: string) {
   try {
-    const supabase = await createClient()
+    const supabase = await createAdminClient()
     
     const { data: userData, error: userError } = await supabase
-      .from("users")
-      .select("id, email, name, password, role, is_active")
+      .from("User")
+      .select("id, email, name, password, role, isActive")
       .eq("email", email)
       .single()
 
-    if (userError || !userData || !userData.is_active) {
+    if (userError || !userData || !userData.isActive) {
       return null
     }
 
@@ -100,14 +100,14 @@ export async function getSession() {
     const { jwtVerify } = await import("jose")
     const { payload } = await jwtVerify(token, JWT_SECRET)
 
-    const supabase = await createClient()
+    const supabase = await createAdminClient()
     const { data: userData } = await supabase
-      .from("users")
-      .select("id, email, name, role, is_active")
+      .from("User")
+      .select("id, email, name, role, isActive")
       .eq("id", payload.userId as string)
       .single()
 
-    if (!userData || !userData.is_active) return null
+    if (!userData || !userData.isActive) return null
 
     return {
       id: userData.id,

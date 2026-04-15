@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
-import { createServerClient } from "@/lib/supabase/server"
+
 import { randomUUID } from "crypto"
 import { getCurrentUser } from "@/lib/auth"
 import { checkPermission, type Permission } from "@/lib/permissions"
@@ -105,11 +105,11 @@ async function isWithinWorkHours(date: Date): Promise<{ valid: boolean; message?
   // TODO: Implementar detección de feriados si se requiere
   
   // Obtener configuración desde la base de datos
-  const supabase = await createServerClient()
+  const supabase = await createAdminClient()
   const { data: settings, error } = await supabase
-    .from("appointment_settings")
+    .from("AppointmentSetting")
     .select("*")
-    .eq("day_type", dayType)
+    .eq("dayType", dayType)
     .single()
 
   if (error || !settings) {
@@ -117,14 +117,16 @@ async function isWithinWorkHours(date: Date): Promise<{ valid: boolean; message?
     return { valid: false, message: "No se pudo verificar el horario de atención" }
   }
 
+  const s = settings as any
+
   // Si el día está cerrado
-  if (!settings.is_open) {
+  if (!s.isOpen) {
     const dayName = dayType === "SATURDAY" ? "Sábados" : "ese día"
     return { valid: false, message: `${dayName} está cerrado para citas` }
   }
 
   // Verificar que tenga horarios configurados
-  if (!settings.start_time || !settings.end_time) {
+  if (!s.startTime || !s.endTime) {
     return { valid: false, message: "Horarios no configurados correctamente" }
   }
 
@@ -132,8 +134,8 @@ async function isWithinWorkHours(date: Date): Promise<{ valid: boolean; message?
   const currentMinutes = hours * 60 + minutes
 
   // Parsear horarios de configuración (formato HH:MM)
-  const [startHour, startMin] = settings.start_time.split(":").map(Number)
-  const [endHour, endMin] = settings.end_time.split(":").map(Number)
+  const [startHour, startMin] = s.startTime.split(":").map(Number)
+  const [endHour, endMin] = s.endTime.split(":").map(Number)
   
   const startMinutes = startHour * 60 + startMin
   const endMinutes = endHour * 60 + endMin
@@ -145,7 +147,7 @@ async function isWithinWorkHours(date: Date): Promise<{ valid: boolean; message?
   const dayName = dayType === "SATURDAY" ? "Sábados" : "Lunes a Viernes"
   return {
     valid: false,
-    message: `${dayName}: ${settings.start_time} a ${settings.end_time}`,
+    message: `${dayName}: ${s.startTime} a ${s.endTime}`,
   }
 }
 
@@ -165,16 +167,16 @@ async function checkScheduleConflict(
 
   const supabase = createAdminClient()
   let query = supabase
-    .from("appointments")
+    .from("Appointment")
     .select(`
       *,
-      property:properties(title),
-      client:clients(name)
+      property:Property(title),
+      client:Client(name)
     `)
-    .eq("agent_id", agentId)
+    .eq("agentId", agentId)
     .in("status", ["PENDIENTE", "CONFIRMADA"])
-    .gte("scheduled_date", dayStart.toISOString())
-    .lte("scheduled_date", dayEnd.toISOString())
+    .gte("scheduledDate", dayStart.toISOString())
+    .lte("scheduledDate", dayEnd.toISOString())
 
   if (excludeAppointmentId) {
     query = query.neq("id", excludeAppointmentId)
@@ -235,25 +237,26 @@ export async function createAppointment(data: AppointmentFormData): Promise<Appo
       dayType = "SATURDAY"
     }
     
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
     const { data: daySetting } = await supabase
-      .from("appointment_settings")
+      .from("AppointmentSetting")
       .select("*")
-      .eq("day_type", dayType)
+      .eq("dayType", dayType)
       .single()
     
     if (daySetting) {
-      if (validatedData.duration < daySetting.min_duration) {
+      const ds = daySetting as any
+      if (validatedData.duration < ds.minDuration) {
         return {
           success: false,
-          error: `La duración mínima permitida es de ${daySetting.min_duration} minutos`,
+          error: `La duración mínima permitida es de ${ds.minDuration} minutos`,
         }
       }
       
-      if (validatedData.duration > daySetting.max_duration) {
+      if (validatedData.duration > ds.maxDuration) {
         return {
           success: false,
-          error: `La duración máxima permitida es de ${daySetting.max_duration} minutos`,
+          error: `La duración máxima permitida es de ${ds.maxDuration} minutos`,
         }
       }
     }
@@ -285,12 +288,12 @@ export async function createAppointment(data: AppointmentFormData): Promise<Appo
 
     const [propertyResult, clientResult, agentResult] = await Promise.all([
       validatedData.propertyId
-        ? supabase.from("properties").select("*").eq("id", validatedData.propertyId).single()
+        ? supabase.from("Property").select("*").eq("id", validatedData.propertyId).single()
         : { data: null },
       validatedData.clientId
-        ? supabase.from("clients").select("*").eq("id", validatedData.clientId).single()
+        ? supabase.from("Client").select("*").eq("id", validatedData.clientId).single()
         : { data: null },
-      supabase.from("users").select("*").eq("id", validatedData.agentId).single(),
+      supabase.from("User").select("*").eq("id", validatedData.agentId).single(),
     ])
 
     const property = propertyResult.data
@@ -308,19 +311,19 @@ export async function createAppointment(data: AppointmentFormData): Promise<Appo
     const appointmentId = randomUUID()
 
     const { data: appointment, error: insertError } = await supabase
-      .from("appointments")
+      .from("Appointment")
       .insert({
         id: appointmentId,
-        property_id: validatedData.propertyId || null,
-        other_location: validatedData.otherLocation || null,
-        client_id: validatedData.clientId || null,
-        contact_name: validatedData.contactName || null,
-        agent_id: validatedData.agentId,
-        scheduled_date: scheduledDate.toISOString(),
+        propertyId: validatedData.propertyId || null,
+        otherLocation: validatedData.otherLocation || null,
+        clientId: validatedData.clientId || null,
+        contactName: validatedData.contactName || null,
+        agentId: validatedData.agentId,
+        scheduledDate: scheduledDate.toISOString(),
         duration: validatedData.duration,
         status: validatedData.status,
         notes: validatedData.notes || null,
-        created_by: currentUser.id, // Added created_by field
+        createdBy: currentUser.id,
       })
       .select()
       .single()
@@ -360,42 +363,26 @@ export async function getAppointments(filters?: {
   endDate?: string
 }) {
   try {
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
 
     let query = supabase
-      .from("appointments")
+      .from("Appointment")
       .select(`
-        id,
-        property_id,
-        client_id,
-        contact_name,
-        other_location,
-        agent_id,
-        scheduled_date,
-        duration,
-        status,
-        notes,
-        created_at,
-        property:properties(
-          id,
-          title,
-          address,
-          price,
-          images,
-          city:cities(id, name)
-        ),
-        client:clients(id, name, email, phone),
-        agent:users!fk_appointments_agent(id, name, email)
+        id, propertyId, clientId, contactName, otherLocation,
+        agentId, scheduledDate, duration, status, notes, createdAt,
+        property:Property(id, title, address, price, images, city:City(id, name)),
+        client:Client(id, name, email, phone),
+        agent:User!Appointment_agentId_fkey(id, name, email)
       `)
-      .order("scheduled_date", { ascending: true })
+      .order("scheduledDate", { ascending: true })
 
-    if (filters?.agentId) query = query.eq("agent_id", filters.agentId)
-    if (filters?.clientId) query = query.eq("client_id", filters.clientId)
-    if (filters?.contactName) query = query.ilike("contact_name", `%${filters.contactName}%`)
-    if (filters?.propertyId) query = query.eq("property_id", filters.propertyId)
+    if (filters?.agentId) query = query.eq("agentId", filters.agentId)
+    if (filters?.clientId) query = query.eq("clientId", filters.clientId)
+    if (filters?.contactName) query = query.ilike("contactName", `%${filters.contactName}%`)
+    if (filters?.propertyId) query = query.eq("propertyId", filters.propertyId)
     if (filters?.status) query = query.eq("status", filters.status)
-    if (filters?.startDate) query = query.gte("scheduled_date", filters.startDate)
-    if (filters?.endDate) query = query.lte("scheduled_date", filters.endDate)
+    if (filters?.startDate) query = query.gte("scheduledDate", filters.startDate)
+    if (filters?.endDate) query = query.lte("scheduledDate", filters.endDate)
 
     const { data: appointments, error } = await query
 
@@ -412,12 +399,12 @@ export async function getAppointments(filters?: {
 
         return {
           id: apt.id,
-          scheduledAt: apt.scheduled_date,
+          scheduledAt: (apt as any).scheduledDate,
           duration: apt.duration,
           status: apt.status,
           notes: apt.notes,
-          contactName: apt.contact_name,
-          otherLocation: apt.other_location,
+          contactName: (apt as any).contactName,
+          otherLocation: (apt as any).otherLocation,
           property: property
             ? {
                 id: property.id,
@@ -461,14 +448,14 @@ export async function getAppointments(filters?: {
 // Obtener una cita por ID
 export async function getAppointmentById(id: string) {
   try {
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
     const { data: appointment } = await supabase
-      .from("appointments")
+      .from("Appointment")
       .select(`
         *,
-        property:properties(id, title, address, city_id, images),
-        client:clients(id, name, email, phone),
-        agent:users!fk_appointments_agent(id, name, email)
+        property:Property(id, title, address, cityId, images),
+        client:Client(id, name, email, phone),
+        agent:User!Appointment_agentId_fkey(id, name, email)
       `)
       .eq("id", id)
       .single()
@@ -513,14 +500,14 @@ export async function getAppointmentById(id: string) {
 // Actualizar una cita
 export async function updateAppointment(id: string, data: Partial<AppointmentInput>) {
   try {
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
     const { data: existing } = await supabase
-      .from("appointments")
+      .from("Appointment")
       .select(`
         *,
-        property:properties(id, title, address, city_id, images),
-        client:clients(id, name, email, phone),
-        agent:users!fk_appointments_agent(id, name, email)
+        property:Property(id, title, address, cityId, images),
+        client:Client(id, name, email, phone),
+        agent:User!Appointment_agentId_fkey(id, name, email)
       `)
       .eq("id", id)
       .single()
@@ -530,9 +517,9 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
     }
 
   if (data.scheduledAt || data.duration) {
-    const scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : existing.scheduled_date
+    const scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : (existing as any).scheduledDate
     const duration = data.duration ?? existing.duration
-    const agentId = data.agentId ?? existing.agent_id
+    const agentId = data.agentId ?? (existing as any).agentId
 
     // Verificar que la duración esté dentro de los límites configurados
     const { day } = getArgentinaDateTime(scheduledAt)
@@ -542,23 +529,23 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
     }
     
     const { data: daySetting } = await supabase
-      .from("appointment_settings")
+      .from("AppointmentSetting")
       .select("*")
-      .eq("day_type", dayType)
+      .eq("dayType", dayType)
       .single()
     
     if (daySetting) {
-      if (duration < daySetting.min_duration) {
+      if (duration < (daySetting as any).minDuration) {
         return {
           success: false,
-          error: `La duración mínima permitida es de ${daySetting.min_duration} minutos`,
+          error: `La duración mínima permitida es de ${(daySetting as any).minDuration} minutos`,
         }
       }
       
-      if (duration > daySetting.max_duration) {
+      if (duration > (daySetting as any).maxDuration) {
         return {
           success: false,
-          error: `La duración máxima permitida es de ${daySetting.max_duration} minutos`,
+          error: `La duración máxima permitida es de ${(daySetting as any).maxDuration} minutos`,
         }
       }
     }
@@ -584,25 +571,25 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
   }
 
     const updateData: any = {}
-    if (data.propertyId !== undefined) updateData.property_id = data.propertyId || null
-    if (data.otherLocation !== undefined) updateData.other_location = data.otherLocation || null
-    if (data.clientId) updateData.client_id = data.clientId
-    if (data.contactName) updateData.contact_name = data.contactName
-    if (data.agentId) updateData.agent_id = data.agentId
-    if (data.scheduledAt) updateData.scheduled_date = new Date(data.scheduledAt).toISOString()
+    if (data.propertyId !== undefined) updateData.propertyId = data.propertyId || null
+    if (data.otherLocation !== undefined) updateData.otherLocation = data.otherLocation || null
+    if (data.clientId) updateData.clientId = data.clientId
+    if (data.contactName) updateData.contactName = data.contactName
+    if (data.agentId) updateData.agentId = data.agentId
+    if (data.scheduledAt) updateData.scheduledDate = new Date(data.scheduledAt).toISOString()
     if (data.duration) updateData.duration = data.duration
     if (data.status) updateData.status = data.status
     if (data.notes !== undefined) updateData.notes = data.notes
 
     const { data: updatedAppointment, error } = await supabase
-      .from("appointments")
+      .from("Appointment")
       .update(updateData)
       .eq("id", id)
       .select(`
         *,
-        property:properties(*),
-        client:clients(*),
-        agent:users!fk_appointments_agent(id, name, email)
+        property:Property(*),
+        client:Client(*),
+        agent:User!Appointment_agentId_fkey(id, name, email)
       `)
       .single()
 
@@ -633,16 +620,16 @@ export async function deleteAppointment(id: string) {
       return { success: false, error: "Solo los administradores pueden eliminar citas" }
     }
 
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
 
     // Verify appointment exists
-    const { data: appointment } = await supabase.from("appointments").select("id").eq("id", id).single()
+    const { data: appointment } = await supabase.from("Appointment").select("id").eq("id", id).single()
 
     if (!appointment) {
       return { success: false, error: "Cita no encontrada" }
     }
 
-    const { error } = await supabase.from("appointments").delete().eq("id", id)
+    const { error } = await supabase.from("Appointment").delete().eq("id", id)
 
     if (error) {
       serverLog.error("Error deleting appointment:", error)
@@ -660,16 +647,16 @@ export async function deleteAppointment(id: string) {
 // Cambiar el estado de una cita
 export async function updateAppointmentStatus(id: string, status: AppointmentStatus) {
   try {
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
     const { data: appointment, error } = await supabase
-      .from("appointments")
+      .from("Appointment")
       .update({ status })
       .eq("id", id)
       .select(`
         *,
-        property:properties(id, title, address, city_id, images),
-        client:clients(id, name, email, phone),
-        agent:users!fk_appointments_agent(id, name, email)
+        property:Property(id, title, address, cityId, images),
+        client:Client(id, name, email, phone),
+        agent:User!Appointment_agentId_fkey(id, name, email)
       `)
       .single()
 

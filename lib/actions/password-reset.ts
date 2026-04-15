@@ -1,6 +1,6 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { z } from "zod"
 import bcrypt from "bcryptjs"
 import crypto from "crypto"
@@ -33,11 +33,11 @@ export async function requestPasswordReset(formData: FormData): Promise<Password
     }
 
     const { email } = validatedFields.data
-    const supabase = await createClient()
+    const supabase = await createAdminClient()
 
     // Find user by email
     const { data: user, error: userError } = await supabase
-      .from("users")
+      .from("User")
       .select("id, email, name")
       .eq("email", email)
       .single()
@@ -93,7 +93,7 @@ export async function resetPassword(formData: FormData): Promise<ResetPasswordRe
     }
 
     const { token, password } = validatedFields.data
-    const supabase = await createClient()
+    const supabase = await createAdminClient()
 
     // Find valid token
     const { data: resetToken, error: tokenError } = await supabase
@@ -113,7 +113,7 @@ export async function resetPassword(formData: FormData): Promise<ResetPasswordRe
 
     // Update user password
     const { error: updateError } = await supabase
-      .from("users")
+      .from("User")
       .update({ password: hashedPassword })
       .eq("id", resetToken.user_id)
 
@@ -144,21 +144,20 @@ export async function changePassword(formData: FormData): Promise<ChangePassword
       return { error: "La nueva contraseña debe tener al menos 6 caracteres" }
     }
 
-    const supabase = await createClient()
+    const supabase = await createAdminClient()
 
-    // Get current user
-    const {
-      data: { user: authUser },
-    } = await supabase.auth.getUser()
-    if (!authUser) {
+    // Get current user from session/JWT via getCurrentUser
+    const { getCurrentUser } = await import("@/lib/auth")
+    const currentUser = await getCurrentUser()
+    if (!currentUser) {
       return { error: "Usuario no autenticado" }
     }
 
     // Get user from database
     const { data: user, error: userError } = await supabase
-      .from("users")
+      .from("User")
       .select("password")
-      .eq("id", authUser.id)
+      .eq("id", currentUser.id)
       .single()
 
     if (userError || !user) {
@@ -176,9 +175,9 @@ export async function changePassword(formData: FormData): Promise<ChangePassword
 
     // Update password
     const { error: updateError } = await supabase
-      .from("users")
+      .from("User")
       .update({ password: hashedPassword })
-      .eq("id", authUser.id)
+      .eq("id", currentUser.id)
 
     if (updateError) return { error: "Error al actualizar la contraseña" }
 

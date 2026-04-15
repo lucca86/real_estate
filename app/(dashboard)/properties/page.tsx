@@ -46,7 +46,7 @@ export default async function PropertiesPage({
 
   const supabase = await createAdminClient()
 
-  let countQuery = supabase.from("properties").select("*", { count: "exact", head: true })
+  let countQuery = supabase.from("Property").select("*", { count: "exact", head: true })
 
   if (activeOnly) {
     countQuery = countQuery.eq("status", "ACTIVO")
@@ -57,11 +57,11 @@ export default async function PropertiesPage({
   }
 
   if (propertyType) {
-    countQuery = countQuery.eq("property_type_id", propertyType)
+    countQuery = countQuery.eq("propertyTypeId", propertyType)
   }
 
   if (transactionType && transactionType !== "Todas") {
-    countQuery = countQuery.eq("transaction_type", transactionType)
+    countQuery = countQuery.eq("transactionType", transactionType)
   }
 
   if (status && status !== "Todos") {
@@ -69,11 +69,11 @@ export default async function PropertiesPage({
   }
 
   if (city) {
-    countQuery = countQuery.eq("city_id", city)
+    countQuery = countQuery.eq("cityId", city)
   }
 
   if (neighborhood) {
-    countQuery = countQuery.eq("neighborhood_id", neighborhood)
+    countQuery = countQuery.eq("neighborhoodId", neighborhood)
   }
 
   if (minPrice) {
@@ -93,28 +93,25 @@ export default async function PropertiesPage({
   }
 
   if (syncedOnly) {
-    countQuery = countQuery.not("wordpress_id", "is", null)
+    countQuery = countQuery.not("wordpressId", "is", null)
   }
 
   if (updatedBy) {
-    countQuery = countQuery.eq("updated_by_id", updatedBy)
+    countQuery = countQuery.eq("updatedById", updatedBy)
   }
 
   const { count } = await countQuery
 
   let query = supabase
-    .from("properties")
+    .from("Property")
     .select(`
       *,
-      owner:owners!owner_id(name),
-      propertyType:property_types!property_type_id(name),
-      city:cities!city_id(name),
-      province:provinces!province_id(name),
-      wordpress_id,
-      wordpress_url,
-      wordpress_synced_at
+      owner:Owner!ownerId(name),
+      propertyType:PropertyType!propertyTypeId(name),
+      city:City!cityId(name),
+      province:Province!provinceId(name)
     `)
-    .order("created_at", { ascending: false })
+    .order("createdAt", { ascending: false })
     .range(offset, offset + limit - 1)
 
   if (activeOnly) {
@@ -126,11 +123,11 @@ export default async function PropertiesPage({
   }
 
   if (propertyType) {
-    query = query.eq("property_type_id", propertyType)
+    query = query.eq("propertyTypeId", propertyType)
   }
 
   if (transactionType && transactionType !== "Todas") {
-    query = query.eq("transaction_type", transactionType)
+    query = query.eq("transactionType", transactionType)
   }
 
   if (status && status !== "Todos") {
@@ -138,11 +135,11 @@ export default async function PropertiesPage({
   }
 
   if (city) {
-    query = query.eq("city_id", city)
+    query = query.eq("cityId", city)
   }
 
   if (neighborhood) {
-    query = query.eq("neighborhood_id", neighborhood)
+    query = query.eq("neighborhoodId", neighborhood)
   }
 
   if (minPrice) {
@@ -162,11 +159,11 @@ export default async function PropertiesPage({
   }
 
   if (syncedOnly) {
-    query = query.not("wordpress_id", "is", null)
+    query = query.not("wordpressId", "is", null)
   }
 
   if (updatedBy) {
-    query = query.eq("updated_by_id", updatedBy)
+    query = query.eq("updatedById", updatedBy)
   }
 
   const { data: properties, error } = await query
@@ -177,11 +174,11 @@ export default async function PropertiesPage({
   }
 
   // Load all updatedBy users in a single query to avoid N+1 and stack overflow
-  const userIds = [...new Set((properties || []).map((p: any) => p.updated_by_id).filter(Boolean))]
+  const userIds = [...new Set((properties || []).map((p: any) => p.updatedById).filter(Boolean))]
   let usersMap: Record<string, { name: string }> = {}
   if (userIds.length > 0) {
     const { data: users } = await supabase
-      .from("users")
+      .from("User")
       .select("id, name")
       .in("id", userIds)
     if (users) {
@@ -191,7 +188,7 @@ export default async function PropertiesPage({
 
   const propertiesWithUsers = (properties || []).map((property: any) => ({
     ...property,
-    updatedBy: property.updated_by_id ? (usersMap[property.updated_by_id] ?? null) : null,
+    updatedBy: property.updatedById ? (usersMap[property.updatedById] ?? null) : null,
   }))
 
   const totalPages = count ? Math.ceil(count / limit) : 0

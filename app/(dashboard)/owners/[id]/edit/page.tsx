@@ -2,7 +2,7 @@ import { getCurrentUser } from "@/lib/auth"
 import { redirect, notFound } from "next/navigation"
 import { getOwnerById } from "@/lib/actions/owners"
 import { OwnerForm } from "@/components/owner-form"
-import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 
 export default async function EditOwnerPage({
   params,
@@ -24,15 +24,15 @@ export default async function EditOwnerPage({
 
   const ownerRaw = result.data
 
-  const supabase = await createServerClient()
+  const supabase = await createAdminClient()
 
   const defaultProvinceId = "f54e20b7-d5f8-4ae1-81f9-a09b2e2ee8f3"
   const provinceIdForCities = ownerRaw.province_id || defaultProvinceId
 
   const [{ data: countries }, { data: provinces }, { data: cities }] = await Promise.all([
-    supabase.from("countries").select("id, name").eq("is_active", true).order("name"),
-    supabase.from("provinces").select("id, name, country_id").eq("is_active", true).order("name"),
-    supabase.from("cities").select("id, name, province_id").eq("is_active", true).eq("province_id", provinceIdForCities).order("name"),
+    supabase.from("Country").select("id, name").eq("isActive", true).order("name"),
+    supabase.from("Province").select("id, name, countryId").eq("isActive", true).order("name"),
+    supabase.from("City").select("id, name, provinceId").eq("isActive", true).eq("provinceId", provinceIdForCities).order("name"),
   ])
 
   const owner = {

@@ -1,6 +1,6 @@
 "use server"
 
-import { createClient, createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { wordpressAPI } from "@/lib/wordpress"
 import { revalidatePath } from "next/cache"
 
@@ -21,14 +21,14 @@ export async function syncPropertyToWordPress(propertyId: string) {
   const adminClient = await createAdminClient()
 
   const { data: property, error } = await adminClient
-    .from("properties")
+    .from("Property")
     .select(`
       *,
-      property_type:property_types!property_type_id(name),
-      city:cities!city_id(name),
-      province:provinces!province_id(name),
-      country:countries!country_id(name),
-      neighborhood:neighborhoods!neighborhood_id(name)
+      property_type:PropertyType!propertyTypeId(name),
+      city:City!cityId(name),
+      province:Province!provinceId(name),
+      country:Country!countryId(name),
+      neighborhood:Neighborhood!neighborhoodId(name)
     `)
     .eq("id", propertyId)
     .single()
@@ -51,47 +51,48 @@ export async function syncPropertyToWordPress(propertyId: string) {
   }
 
   try {
+    const p = property as any
     const syncData = {
       id: property.id,
-      wordpressId: property.wordpress_id,
-      wordpress_id: property.wordpress_id, // Also pass as wordpress_id for compatibility
+      wordpressId: p.wordpressId,
+      wordpress_id: p.wordpressId,
       title: property.title,
       description: property.description,
-      propertyType: property.property_type?.name,
-      transactionType: property.transaction_type,
+      propertyType: p.property_type?.name,
+      transactionType: p.transactionType,
       status: property.status,
       address: property.address,
-      city: property.city?.name,
-      state: property.province?.name,
-      country: property.country?.name,
-      zipCode: property.zip_code,
+      city: p.city?.name,
+      state: p.province?.name,
+      country: p.country?.name,
+      zipCode: p.zipCode,
       latitude: property.latitude,
       longitude: property.longitude,
       bedrooms: property.bedrooms,
       bathrooms: property.bathrooms,
-      parkingSpaces: property.parking_spaces,
+      parkingSpaces: p.parkingSpaces,
       area: property.area,
-      lotSize: property.lot_size,
-      yearBuilt: property.year_built,
+      lotSize: p.lotSize,
+      yearBuilt: p.yearBuilt,
       price: property.price,
       currency: property.currency,
-      pricePerM2: property.price_per_m2,
+      pricePerM2: p.pricePerM2,
       features: property.features,
       amenities: property.amenities,
       images: imagesToSync,
-      virtualTour: property.virtual_tour,
-      propertyLabel: property.property_label,
+      virtualTour: p.virtualTour,
+      propertyLabel: p.propertyLabel,
       published: property.published,
     }
 
     const result = await wordpressAPI.syncProperty(syncData)
 
     const { error: updateError } = await adminClient
-      .from("properties")
+      .from("Property")
       .update({
-        wordpress_id: result.id,
-        wordpress_url: result.url,
-        wordpress_synced_at: new Date().toISOString(),
+        wordpressId: result.id,
+        wordpressUrl: result.url,
+        wordpressSyncedAt: new Date().toISOString(),
       })
       .eq("id", propertyId)
 
@@ -107,25 +108,24 @@ export async function syncPropertyToWordPress(propertyId: string) {
 }
 
 export async function syncAllPropertiesToWordPress() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { getCurrentUser } = await import("@/lib/auth")
+  const currentUser = await getCurrentUser()
 
-  if (!user || user.user_metadata?.role !== "ADMIN") {
+  if (!currentUser || currentUser.role !== "ADMIN") {
     throw new Error("Solo los administradores pueden sincronizar todas las propiedades")
   }
 
+  const supabase = await createAdminClient()
   const { data: properties } = await supabase
-    .from("properties")
+    .from("Property")
     .select(`
       *,
-      property_type:property_types!property_type_id(name),
-      owner:owners!owner_id(name),
-      city:cities!city_id(name),
-      province:provinces!province_id(name),
-      country:countries!country_id(name),
-      neighborhood:neighborhoods!neighborhood_id(name)
+      property_type:PropertyType!propertyTypeId(name),
+      owner:Owner!ownerId(name),
+      city:City!cityId(name),
+      province:Province!provinceId(name),
+      country:Country!countryId(name),
+      neighborhood:Neighborhood!neighborhoodId(name)
     `)
     .eq("published", true)
 
@@ -152,41 +152,41 @@ export async function syncAllPropertiesToWordPress() {
 
       const wordpressId = await wordpressAPI.syncProperty({
         id: property.id,
-        wordpressId: property.wordpress_id,
+        wordpressId: property.wordpressId,
         title: property.title,
         description: property.description,
         propertyType: property.property_type?.name,
-        transactionType: property.transaction_type,
+        transactionType: (property as any).transactionType,
         status: property.status,
         address: property.address,
         city: property.city?.name,
         state: property.province?.name,
         country: property.country?.name,
-        zipCode: property.zip_code,
+        zipCode: (property as any).zipCode,
         latitude: property.latitude,
         longitude: property.longitude,
         bedrooms: property.bedrooms,
         bathrooms: property.bathrooms,
-        parkingSpaces: property.parking_spaces,
+        parkingSpaces: (property as any).parkingSpaces,
         area: property.area,
-        lotSize: property.lot_size,
-        yearBuilt: property.year_built,
+        lotSize: (property as any).lotSize,
+        yearBuilt: (property as any).yearBuilt,
         price: property.price,
         currency: property.currency,
-        pricePerM2: property.price_per_m2,
+        pricePerM2: (property as any).pricePerM2,
         features: property.features,
         amenities: property.amenities,
         images: imagesToSync,
-        virtualTour: property.virtual_tour,
-        propertyLabel: property.property_label,
+        virtualTour: (property as any).virtualTour,
+        propertyLabel: (property as any).propertyLabel,
         published: property.published,
       })
 
       await supabase
-        .from("properties")
+        .from("Property")
         .update({
-          wordpress_id: wordpressId,
-          wordpress_synced_at: new Date().toISOString(),
+          wordpressId: wordpressId,
+          wordpressSyncedAt: new Date().toISOString(),
         })
         .eq("id", property.id)
 
@@ -203,33 +203,32 @@ export async function syncAllPropertiesToWordPress() {
 }
 
 export async function deletePropertyFromWordPress(propertyId: string) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { getCurrentUser } = await import("@/lib/auth")
+  const currentUser = await getCurrentUser()
 
-  if (!user) {
+  if (!currentUser) {
     throw new Error("No estás autenticado")
   }
 
-  if (user.user_metadata?.role !== "ADMIN") {
+  if (currentUser.role !== "ADMIN") {
     throw new Error("No tienes permisos para eliminar propiedades de WordPress")
   }
 
-  const { data: property } = await supabase.from("properties").select("id, wordpress_id").eq("id", propertyId).single()
+  const supabase = await createAdminClient()
+  const { data: property } = await supabase.from("Property").select("id, wordpressId").eq("id", propertyId).single()
 
-  if (!property || !property.wordpress_id) {
+  if (!property || !(property as any).wordpressId) {
     throw new Error("Propiedad no encontrada o no sincronizada")
   }
 
   try {
-    await wordpressAPI.deleteProperty(property.wordpress_id)
+    await wordpressAPI.deleteProperty((property as any).wordpressId)
 
     await supabase
-      .from("properties")
+      .from("Property")
       .update({
-        wordpress_id: null,
-        wordpress_synced_at: null,
+        wordpressId: null,
+        wordpressSyncedAt: null,
       })
       .eq("id", propertyId)
 

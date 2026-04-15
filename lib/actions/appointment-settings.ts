@@ -7,22 +7,22 @@ import type { ActionResult } from "@/types/action-result"
 
 export interface AppointmentSetting {
   id: string
-  day_type: "WEEKDAY" | "SATURDAY" | "HOLIDAY"
-  is_open: boolean
-  start_time: string | null
-  end_time: string | null
-  min_duration: number
-  max_duration: number
-  duration_interval: number
+  dayType: "WEEKDAY" | "SATURDAY" | "HOLIDAY"
+  isOpen: boolean
+  startTime: string | null
+  endTime: string | null
+  minDuration: number
+  maxDuration: number
+  durationInterval: number
 }
 
 export async function getAppointmentSettings(): Promise<AppointmentSetting[]> {
   const supabase = await createAdminClient()
 
   const { data, error } = await supabase
-    .from("appointment_settings")
+    .from("AppointmentSetting")
     .select("*")
-    .order("day_type")
+    .order("dayType")
 
   if (error) return []
 
@@ -55,43 +55,43 @@ export async function updateAppointmentSetting(
     }
   }
 
-  const is_open = formData.get("is_open") === "true"
-  const start_time = formData.get("start_time") as string | null
-  const end_time = formData.get("end_time") as string | null
-  const min_duration = Number.parseInt(formData.get("min_duration") as string)
-  const max_duration = Number.parseInt(formData.get("max_duration") as string)
-  const duration_interval = Number.parseInt(formData.get("duration_interval") as string)
+  const isOpen = formData.get("is_open") === "true"
+  const startTime = formData.get("start_time") as string | null
+  const endTime = formData.get("end_time") as string | null
+  const minDuration = Number.parseInt(formData.get("min_duration") as string)
+  const maxDuration = Number.parseInt(formData.get("max_duration") as string)
+  const durationInterval = Number.parseInt(formData.get("duration_interval") as string)
 
   // Validaciones
-  if (is_open && (!start_time || !end_time)) {
+  if (isOpen && (!startTime || !endTime)) {
     return {
       success: false,
       error: "Debe especificar horarios de inicio y fin cuando está abierto",
     }
   }
 
-  if (min_duration < 5) {
+  if (minDuration < 5) {
     return {
       success: false,
       error: "La duración mínima debe ser al menos 5 minutos",
     }
   }
 
-  if (max_duration > 480) {
+  if (maxDuration > 480) {
     return {
       success: false,
       error: "La duración máxima no puede superar 480 minutos (8 horas)",
     }
   }
 
-  if (min_duration > max_duration) {
+  if (minDuration > maxDuration) {
     return {
       success: false,
       error: "La duración mínima no puede ser mayor a la máxima",
     }
   }
 
-  if (duration_interval < 1 || duration_interval > 60) {
+  if (durationInterval < 1 || durationInterval > 60) {
     return {
       success: false,
       error: "El intervalo debe estar entre 1 y 60 minutos",
@@ -99,17 +99,16 @@ export async function updateAppointmentSetting(
   }
 
   const updateData = {
-    is_open,
-    start_time: is_open ? start_time : null,
-    end_time: is_open ? end_time : null,
-    min_duration,
-    max_duration,
-    duration_interval,
-    updated_at: new Date().toISOString(),
+    isOpen,
+    startTime: isOpen ? startTime : null,
+    endTime: isOpen ? endTime : null,
+    minDuration,
+    maxDuration,
+    durationInterval,
   }
 
   const { error, data } = await supabase
-    .from("appointment_settings")
+    .from("AppointmentSetting")
     .update(updateData)
     .eq("id", id)
     .select()
