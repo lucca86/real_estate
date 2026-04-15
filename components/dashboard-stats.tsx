@@ -1,10 +1,10 @@
 import { Building2, DollarSign, TrendingUp, Users } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 
 export async function DashboardStats() {
   try {
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
 
     const [
       { count: totalProperties },

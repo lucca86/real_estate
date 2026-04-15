@@ -12,10 +12,10 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient()
 
   const { data, error } = await supabase
-    .from("cities")
-    .select("id, name, province_id")
-    .eq("is_active", true)
-    .eq("province_id", provinceId)
+    .from("City")
+    .select("id, name, provinceId")
+    .eq("isActive", true)
+    .eq("provinceId", provinceId)
     .order("name")
 
   if (error) {

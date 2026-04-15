@@ -40,7 +40,7 @@ export async function createUser(formData: FormData) {
     }
 
     const supabase = await createServerClient()
-    const { data: existingUser } = await supabase.from("users").select("id").eq("email", email).maybeSingle()
+    const { data: existingUser } = await supabase.from("User").select("id").eq("email", email).maybeSingle()
 
     if (existingUser) {
       throw new Error("Ya existe un usuario con este email")
@@ -61,13 +61,11 @@ export async function createUser(formData: FormData) {
       email,
       role,
       password: hashedPassword,
-      is_active: isActive,
+      isActive,
       avatar: avatarUrl,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     }
 
-    const { error } = await supabase.from("users").insert(newUser)
+    const { error } = await supabase.from("User").insert(newUser)
     if (error) {
       serverLog.error("Supabase insert error:", error)
       throw error
@@ -111,7 +109,7 @@ export async function updateUser(userId: string, formData: FormData) {
 
     const supabase = await createServerClient()
     const { data: existingUser } = await supabase
-      .from("users")
+      .from("User")
       .select("id")
       .eq("email", email)
       .neq("id", userId)
@@ -133,15 +131,14 @@ export async function updateUser(userId: string, formData: FormData) {
       name,
       email,
       role,
-      is_active: isActive,
-      updated_at: new Date().toISOString(),
+      isActive,
     }
 
     if (avatarUrl !== undefined) {
       updateData.avatar = avatarUrl
     }
 
-    const { error } = await supabase.from("users").update(updateData).eq("id", userId)
+    const { error } = await supabase.from("User").update(updateData).eq("id", userId)
 
     if (error) throw error
 
@@ -173,14 +170,14 @@ export async function deleteUser(userId: string) {
     }
 
     const supabase = await createServerClient()
-    const { error } = await supabase.from("users").delete().eq("id", userId)
+    const { error } = await supabase.from("User").delete().eq("id", userId)
 
     if (error) {
       if (error.code === "23503") {
         // Instead of deleting, mark as inactive
         const { error: updateError } = await supabase
-          .from("users")
-          .update({ is_active: false, updated_at: new Date().toISOString() })
+          .from("User")
+          .update({ isActive: false })
           .eq("id", userId)
 
         if (updateError) throw updateError
@@ -233,15 +230,14 @@ export async function updateProfile(formData: FormData) {
       name,
       email,
       role,
-      is_active: isActive,
-      updated_at: new Date().toISOString(),
+      isActive,
     }
 
     if (avatarUrl) {
       updateData.avatar = avatarUrl
     }
 
-    const { error } = await supabase.from("users").update(updateData).eq("id", userId)
+    const { error } = await supabase.from("User").update(updateData).eq("id", userId)
 
     if (error) {
       serverLog.error("Error updating profile:", error)
@@ -277,7 +273,7 @@ export async function changeUserPassword(
 
     // Get user to verify current password (only if changing own password)
     if (currentUser.id === userId) {
-      const { data: user } = await supabase.from("users").select("password").eq("id", userId).single()
+      const { data: user } = await supabase.from("User").select("password").eq("id", userId).single()
 
       if (!user) {
         return { error: "Usuario no encontrado" }
@@ -296,11 +292,8 @@ export async function changeUserPassword(
 
     // Update password
     const { error } = await supabase
-      .from("users")
-      .update({
-        password: hashedPassword,
-        updated_at: new Date().toISOString(),
-      })
+      .from("User")
+      .update({ password: hashedPassword })
       .eq("id", userId)
 
     if (error) {

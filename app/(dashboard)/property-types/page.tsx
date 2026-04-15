@@ -17,7 +17,7 @@ export default async function PropertyTypesPage() {
 
   const supabase = await createAdminClient()
   const { data: propertyTypes, error } = await supabase
-    .from("property_types")
+    .from("PropertyType")
     .select("*")
     .order("name", { ascending: true })
 
@@ -79,8 +79,8 @@ export default async function PropertyTypesPage() {
                     <TableCell className="font-medium">{type.name}</TableCell>
                     <TableCell>{type.description || "-"}</TableCell>
                     <TableCell>
-                      <Badge variant={type.is_active ? "default" : "secondary"}>
-                        {type.is_active ? "Activo" : "Inactivo"}
+                      <Badge variant={type.isActive ? "default" : "secondary"}>
+                        {type.isActive ? "Activo" : "Inactivo"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">

@@ -1,6 +1,6 @@
 "use server"
 
-import { createClient, createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { getCurrentUser } from "@/lib/auth"
 import { syncPropertyToWordPress, deletePropertyFromWordPress } from "./wordpress"
 import { wordpressAPI } from "@/lib/wordpress"
@@ -16,7 +16,7 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
     return { success: false, error: "No autenticado. Por favor inicia sesión." }
   }
 
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   try {
 
@@ -91,52 +91,46 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
     const pricePerM2 = price && parsedArea ? Number.parseFloat(price) / parsedArea : null
 
     const { data: newProperty, error } = await supabase
-      .from("properties")
+      .from("Property")
       .insert({
         id: crypto.randomUUID(),
         title,
         description: description || null,
-        owner_id: ownerId,
-        property_type_id: propertyTypeId,
+        ownerId,
+        propertyTypeId,
         status,
         address,
-        city_id: cityId,
-        country_id: countryId,
-        province_id: provinceId,
-        neighborhood_id: neighborhoodId || null,
+        cityId,
+        countryId,
+        provinceId,
+        neighborhoodId: neighborhoodId || null,
         latitude: parsedLatitude,
         longitude: parsedLongitude,
         bedrooms: parsedBedrooms,
         bathrooms: parsedBathrooms,
-        parking_spaces: parsedParkingSpaces,
+        parkingSpaces: parsedParkingSpaces,
         area: parsedArea,
-        lot_size: parsedLotSize,
-        frontSize: frontMeters,
-        depthSize: backMeters,
-        year_built: parsedYearBuilt,
-        transaction_type: transactionType,
-        rental_period: rentalPeriod || null,
-        zip_code: zipCode || null,
+        lotSize: parsedLotSize,
+        yearBuilt: parsedYearBuilt,
+        transactionType,
+        rentalPeriod: rentalPeriod || null,
+        zipCode: zipCode || null,
         price: price ? Number.parseFloat(price) : null,
-        price_per_m2: pricePerM2,
+        pricePerM2,
         currency,
-        rental_price: rentalPrice ? Number.parseFloat(rentalPrice) : null,
+        rentalPrice: rentalPrice ? Number.parseFloat(rentalPrice) : null,
         amenities: parseArrayField(amenities),
         images: sortedImages,
-        property_label: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
+        propertyLabel: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
         adrema: adrema || null,
         features: parseArrayField(features),
-      videos: videos ? JSON.parse(videos) : [],
-      virtual_tour: virtualTour || null,
-      published,
-      sync_to_wordpress: syncToWordPress,
-      is_featured: isFeatured,
-      internal_notes: formData.get("internalNotes") as string | null,
-      created_by_id: currentUser.id,
-      updated_by_id: currentUser.id,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
+        videos: videos ? JSON.parse(videos) : [],
+        virtualTour: virtualTour || null,
+        published,
+        syncToWordPress,
+        createdById: currentUser.id,
+        updatedById: currentUser.id,
+      })
       .select()
       .single()
 
@@ -190,10 +184,10 @@ export async function updateProperty(propertyId: string, formData: FormData) {
     throw new Error("No estás autenticado")
   }
 
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   const { data: property, error: fetchError } = await supabase
-    .from("properties")
+    .from("Property")
     .select("*")
     .eq("id", propertyId)
     .single()
@@ -268,49 +262,45 @@ export async function updateProperty(propertyId: string, formData: FormData) {
   const pricePerM2 = price && parsedArea ? Number.parseFloat(price) / parsedArea : null
 
   const { data: updatedProperty, error: updateError } = await supabase
-    .from("properties")
+    .from("Property")
     .update({
       title,
       description: description || null,
-      owner_id: ownerId,
-      property_type_id: propertyTypeId,
+      ownerId,
+      propertyTypeId,
       status,
       address,
-      city_id: cityId,
-      country_id: countryId,
-      province_id: provinceId,
-      neighborhood_id: neighborhoodId || null,
+      cityId,
+      countryId,
+      provinceId,
+      neighborhoodId: neighborhoodId || null,
       latitude: parsedLatitude,
       longitude: parsedLongitude,
       bedrooms: parsedBedrooms,
       bathrooms: parsedBathrooms,
-      parking_spaces: parsedParkingSpaces,
+      parkingSpaces: parsedParkingSpaces,
       area: parsedArea,
-      lot_size: parsedLotSize,
-      frontSize: frontMeters,
-      depthSize: backMeters,
-      year_built: parsedYearBuilt,
-      transaction_type: transactionType,
-      rental_period: rentalPeriod || null,
-      zip_code: zipCode || null,
+      lotSize: parsedLotSize,
+      yearBuilt: parsedYearBuilt,
+      transactionType,
+      rentalPeriod: rentalPeriod || null,
+      zipCode: zipCode || null,
       price: price ? Number.parseFloat(price) : null,
-      price_per_m2: pricePerM2,
+      pricePerM2,
       currency,
-      rental_price: rentalPrice ? Number.parseFloat(rentalPrice) : null,
+      rentalPrice: rentalPrice ? Number.parseFloat(rentalPrice) : null,
       amenities: parseArrayField(amenities),
       images: sortedImages,
-      property_label: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
+      propertyLabel: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
       adrema: adrema || null,
       features: parseArrayField(features),
-    videos: videos ? JSON.parse(videos) : [],
-    virtual_tour: virtualTour || null,
-    published,
-    sync_to_wordpress: syncToWordPress,
-    internal_notes: formData.get("internalNotes") as string | null,
-    updated_by_id: currentUser.id,
-    updated_at: new Date().toISOString(),
-  })
-  .eq("id", propertyId)
+      videos: videos ? JSON.parse(videos) : [],
+      virtualTour: virtualTour || null,
+      published,
+      syncToWordPress,
+      updatedById: currentUser.id,
+    })
+    .eq("id", propertyId)
     .select()
     .single()
 
@@ -340,14 +330,14 @@ export async function updateProperty(propertyId: string, formData: FormData) {
 
       const adminClient = await createAdminClient()
       const { data: propertyWithRelations } = await adminClient
-        .from("properties")
+        .from("Property")
         .select(`
           *,
-          propertyType:property_types!property_type_id(name),
-          city:cities!city_id(name),
-          province:provinces!province_id(name),
-          country:countries!country_id(name),
-          neighborhood:neighborhoods!neighborhood_id(name)
+          propertyType:PropertyType!propertyTypeId(name),
+          city:City!cityId(name),
+          province:Province!provinceId(name),
+          country:Country!countryId(name),
+          neighborhood:Neighborhood!neighborhoodId(name)
         `)
         .eq("id", updatedProperty.id)
         .single()
@@ -407,7 +397,7 @@ export async function deletePropertyImage(propertyId: string, imageId: string) {
     const supabase = await createAdminClient()
 
     const { data: property, error: fetchError } = await supabase
-      .from("properties")
+      .from("Property")
       .select("id, images")
       .eq("id", propertyId)
       .single()
@@ -426,8 +416,8 @@ export async function deletePropertyImage(propertyId: string, imageId: string) {
     }
 
     const { error: updateError } = await supabase
-      .from("properties")
-      .update({ images: updatedImages, updated_at: new Date().toISOString() })
+      .from("Property")
+      .update({ images: updatedImages })
       .eq("id", propertyId)
 
     if (updateError) {
@@ -459,7 +449,7 @@ export async function deleteProperty(propertyId: string) {
     const supabase = await createAdminClient()
 
     const { data: property, error: fetchError} = await supabase
-      .from("properties")
+      .from("Property")
       .select("*")
       .eq("id", propertyId)
       .single()
@@ -472,13 +462,13 @@ export async function deleteProperty(propertyId: string) {
     if (currentUser.role === "VENDEDOR") {
       const { getPropertyEditMode } = await import("@/lib/actions/system-settings")
       const editMode = await getPropertyEditMode()
-      if (editMode === "restricted" && property.created_by_id && property.created_by_id !== currentUser.id) {
+      if (editMode === "restricted" && property.createdById && property.createdById !== currentUser.id) {
         return { success: false, error: "Solo puedes eliminar propiedades que hayas creado" }
       }
     }
 
     // Delete from WordPress first if synced
-    if (property.wordpress_id && property.wordpress_id > 0) {
+    if (property.wordpressId && property.wordpressId > 0) {
       try {
         await wordpressAPI.deleteProperty(property.wordpress_id)
       } catch {
@@ -486,13 +476,13 @@ export async function deleteProperty(propertyId: string) {
       }
     }
 
-    const { error: deleteError } = await supabase.from("properties").delete().eq("id", propertyId)
+    const { error: deleteError } = await supabase.from("Property").delete().eq("id", propertyId)
 
     if (deleteError) {
       if (deleteError.code === "23503") {
         const { error: updateError } = await supabase
-          .from("properties")
-          .update({ is_active: false })
+          .from("Property")
+          .update({ status: "ELIMINADO" })
           .eq("id", propertyId)
 
         if (updateError) return { success: false, error: `Error al desactivar propiedad: ${updateError.message}` }
@@ -526,36 +516,32 @@ export async function deleteProperty(propertyId: string) {
 }
 
 export async function getPropertyById(id: string) {
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   const { data: property, error } = await supabase
-    .from("properties")
+    .from("Property")
     .select(`
       *,
-      owner:owners!owner_id(
-        id, 
-        name, 
-        email, 
-        phone, 
-        secondary_phone,
-        id_number,
-        tax_id,
+      owner:Owner!ownerId(
+        id,
+        name,
+        email,
+        phone,
+        secondaryPhone,
+        idNumber,
+        taxId,
         address,
         notes,
-        is_active,
-        first_name,
-        last_name,
-        owner_type,
-        real_estate_agency,
-        city:cities!city_id(id, name),
-        province:provinces!province_id(id, name),
-        country:countries!country_id(id, name)
+        isActive,
+        city:City!cityId(id, name),
+        province:Province!provinceId(id, name),
+        country:Country!countryId(id, name)
       ),
-      city:cities!city_id(id, name),
-      province:provinces!province_id(id, name),
-      country:countries!country_id(id, name),
-      neighborhood:neighborhoods!neighborhood_id(id, name),
-      propertyType:property_types!property_type_id(id, name)
+      city:City!cityId(id, name),
+      province:Province!provinceId(id, name),
+      country:Country!countryId(id, name),
+      neighborhood:Neighborhood!neighborhoodId(id, name),
+      propertyType:PropertyType!propertyTypeId(id, name)
     `)
     .eq("id", id)
     .maybeSingle()
@@ -572,20 +558,20 @@ export async function getPropertyById(id: string) {
 
   const p = property as any
 
-  if (p.created_by_id) {
+  if (p.createdById) {
     const { data: creator } = await supabase
-      .from("users")
+      .from("User")
       .select("id, name, email")
-      .eq("id", p.created_by_id)
+      .eq("id", p.createdById)
       .single()
     createdBy = creator
   }
 
-  if (p.updated_by_id) {
+  if (p.updatedById) {
     const { data: updater } = await supabase
-      .from("users")
+      .from("User")
       .select("id, name, email")
-      .eq("id", p.updated_by_id)
+      .eq("id", p.updatedById)
       .single()
     updatedBy = updater
   }

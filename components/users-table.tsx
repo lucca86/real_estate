@@ -1,4 +1,4 @@
-import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -14,12 +14,12 @@ interface UsersTableProps {
 }
 
 export async function UsersTable({ currentUser }: UsersTableProps) {
-  const supabase = await createServerClient()
+  const supabase = await createAdminClient()
 
   const { data: users, error } = await supabase
-    .from("users")
-    .select("id, name, email, role, is_active, created_at, avatar")
-    .order("created_at", { ascending: false })
+    .from("User")
+    .select("id, name, email, role, isActive, createdAt, avatar")
+    .order("createdAt", { ascending: false })
 
   if (error || !users) {
     console.error("[v0] Error fetching users:", error)
@@ -78,8 +78,8 @@ export async function UsersTable({ currentUser }: UsersTableProps) {
                     </Badge>
                   </td>
                   <td className="px-6 py-4">
-                    <Badge variant={user.is_active ? "default" : "secondary"}>
-                      {user.is_active ? "Activo" : "Inactivo"}
+                    <Badge variant={(user as any).isActive ? "default" : "secondary"}>
+                      {(user as any).isActive ? "Activo" : "Inactivo"}
                     </Badge>
                   </td>
                   <td className="px-6 py-4">

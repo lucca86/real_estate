@@ -84,10 +84,10 @@ export function ClientForm({ client, userRole, agents = [] }: ClientFormProps) {
       const supabase = createBrowserClient()
 
       const [countriesRes, provincesRes, citiesRes, propertyTypesRes] = await Promise.all([
-        supabase.from("countries").select("id, name").eq("is_active", true).order("name"),
-        supabase.from("provinces").select("id, name, country_id").eq("is_active", true).order("name"),
-        supabase.from("cities").select("id, name, province_id").eq("is_active", true).order("name"),
-        supabase.from("property_types").select("id, name").eq("is_active", true).order("name"),
+        supabase.from("Country").select("id, name").eq("isActive", true).order("name"),
+        supabase.from("Province").select("id, name, countryId").eq("isActive", true).order("name"),
+        supabase.from("City").select("id, name, provinceId").eq("isActive", true).order("name"),
+        supabase.from("PropertyType").select("id, name").eq("isActive", true).order("name"),
       ])
 
       if (countriesRes.data) setCountries(countriesRes.data)

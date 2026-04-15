@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { getCurrentUser } from "@/lib/auth"
 
 export async function GET() {
@@ -10,12 +10,12 @@ export async function GET() {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
 
-    const supabase = await createServerClient()
+    const supabase = await createAdminClient()
     
     const { data: owners, error } = await supabase
-      .from("owners")
+      .from("Owner")
       .select("id, name")
-      .eq("is_active", true)
+      .eq("isActive", true)
       .order("name", { ascending: true })
 
     if (error) {

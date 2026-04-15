@@ -4,7 +4,7 @@ import { UserForm } from "@/components/user-form"
 import { ChevronLeft } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { createServerClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 
 export default async function EditUserPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -20,10 +20,10 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
 
   console.log("[v0] Fetching user with ID:", id)
 
-  const supabase = await createServerClient()
+  const supabase = await createAdminClient()
   const { data: editUser, error } = await supabase
-    .from("users")
-    .select("id, name, email, role, is_active, avatar")
+    .from("User")
+    .select("id, name, email, role, isActive, avatar")
     .eq("id", id)
     .single()
 

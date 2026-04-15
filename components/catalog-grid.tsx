@@ -21,27 +21,26 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
   const supabase = await createAdminClient()
 
   let query = supabase
-    .from("properties")
+    .from("Property")
     .select(`
       *,
-      owner:owners!owner_id(name, phone),
-      city:cities!city_id(name),
-      province:provinces!province_id(name),
-      propertyType:property_types!property_type_id(name)
+      owner:Owner!ownerId(name, phone),
+      city:City!cityId(name),
+      province:Province!provinceId(name),
+      propertyType:PropertyType!propertyTypeId(name)
     `)
-    .eq("is_active", true)
-    .order("created_at", { ascending: false })
+    .order("createdAt", { ascending: false })
 
   if (search) {
     query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
   }
 
   if (propertyType) {
-    query = query.eq("property_type_id", propertyType)
+    query = query.eq("propertyTypeId", propertyType)
   }
 
   if (transactionType) {
-    query = query.eq("transaction_type", transactionType)
+    query = query.eq("transactionType", transactionType)
   }
 
   if (status) {
@@ -49,7 +48,7 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
   }
 
   if (city) {
-    query = query.eq("city_id", city)
+    query = query.eq("cityId", city)
   }
 
   if (minPrice) {
@@ -83,11 +82,11 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
   }
 
   // Load all updatedBy users in a single query to avoid N+1 and stack overflow
-  const userIds = [...new Set(properties.map((p: any) => p.updated_by_id).filter(Boolean))]
+  const userIds = [...new Set(properties.map((p: any) => p.updatedById).filter(Boolean))]
   let usersMap: Record<string, { name: string }> = {}
   if (userIds.length > 0) {
     const { data: users } = await supabase
-      .from("users")
+      .from("User")
       .select("id, name")
       .in("id", userIds)
     if (users) {
@@ -97,7 +96,7 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
 
   const propertiesWithUsers = properties.map((property: any) => ({
     ...property,
-    updatedBy: property.updated_by_id ? (usersMap[property.updated_by_id] ?? null) : null,
+    updatedBy: property.updatedById ? (usersMap[property.updatedById] ?? null) : null,
   }))
 
   if (propertiesWithUsers.length === 0) {

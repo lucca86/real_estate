@@ -42,17 +42,17 @@ export async function getRecentProperties() {
     const supabase = await createAdminClient()
 
     const { data: properties, error } = await supabase
-      .from("properties")
+      .from("Property")
       .select(`
         id,
         title,
         price,
         currency,
-        created_at,
-        property_types:property_type_id(name),
-        cities:city_id(name)
+        createdAt,
+        propertyType:PropertyType!propertyTypeId(name),
+        city:City!cityId(name)
       `)
-      .order("created_at", { ascending: false })
+      .order("createdAt", { ascending: false })
       .limit(5)
 
     if (error || !properties) {
@@ -66,9 +66,9 @@ export async function getRecentProperties() {
       title: property.title,
       price: property.price,
       currency: property.currency,
-      created_at: property.created_at,
-      property_types: property.property_types,
-      cities: property.cities,
+      created_at: (property as any).createdAt,
+      property_types: (property as any).propertyType,
+      cities: (property as any).city,
     }))
   } catch (error) {
     console.error("[v0] RecentProperties: Error fetching properties:", error)
