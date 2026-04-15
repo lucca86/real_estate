@@ -24,6 +24,20 @@ export default async function NewOwnerPage() {
     supabase.from("City").select("id, name, provinceId").eq("isActive", true).eq("provinceId", defaultProvinceId).order("name"),
   ])
 
+  // Normalize to snake_case for the OwnerForm which expects country_id / province_id
+  const normalizedProvinces = (provinces || []).map((p: any) => ({
+    id: p.id,
+    name: p.name,
+    country_id: p.countryId ?? p.country_id ?? null,
+    countryId: p.countryId ?? p.country_id ?? null,
+  }))
+  const normalizedCities = (cities || []).map((c: any) => ({
+    id: c.id,
+    name: c.name,
+    province_id: c.provinceId ?? c.province_id ?? null,
+    provinceId: c.provinceId ?? c.province_id ?? null,
+  }))
+
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-6">
@@ -32,8 +46,8 @@ export default async function NewOwnerPage() {
       </div>
       <OwnerForm 
         countries={countries || []}
-        provinces={provinces || []}
-        cities={cities || []}
+        provinces={normalizedProvinces}
+        cities={normalizedCities}
       />
     </div>
   )
