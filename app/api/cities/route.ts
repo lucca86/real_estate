@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createAdminClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "provinceId is required" }, { status: 400 })
   }
 
-  const supabase = await createAdminClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase
     .from("City")

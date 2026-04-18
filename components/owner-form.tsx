@@ -76,9 +76,8 @@ interface OwnerFormProps {
     is_active: boolean
   }
   countries?: Array<{ id: string; name: string }>
-  // Accept both snake_case (legacy) and camelCase (Prisma/PascalCase tables)
-  provinces?: Array<{ id: string; name: string; country_id?: string; countryId?: string; country?: { id: string; name: string } }>
-  cities?: Array<{ id: string; name: string; province_id?: string; provinceId?: string; province?: { id: string; name: string } }>
+  provinces?: Array<{ id: string; name: string; country_id: string; country?: { id: string; name: string } }>
+  cities?: Array<{ id: string; name: string; province_id: string; province?: { id: string; name: string } }>
 }
 
 const capitalizeFirst = (str: string) => {
@@ -100,7 +99,7 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
   const [selectedProvinceId, setSelectedProvinceId] = useState(owner?.province_id || defaultProvinceId)
   // Cities loaded from the server initially (pre-filtered for the current province),
   // then refreshed client-side via /api/cities when the user changes province.
-  const [availableCities, setAvailableCities] = useState<Array<{ id: string; name: string; province_id?: string; provinceId?: string }>>(cities)
+  const [availableCities, setAvailableCities] = useState<Array<{ id: string; name: string; province_id: string }>>(cities)
   const [loadingCities, setLoadingCities] = useState(false)
 
   const fetchCities = useCallback(async (provinceId: string) => {
@@ -112,11 +111,7 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
     try {
       const res = await fetch(`/api/cities?provinceId=${provinceId}`)
       const data = await res.json()
-      // Normalize camelCase response → also expose province_id for internal reducer
-      const normalized = Array.isArray(data)
-        ? data.map((c: any) => ({ ...c, province_id: c.provinceId ?? c.province_id ?? null }))
-        : []
-      setAvailableCities(normalized)
+      setAvailableCities(Array.isArray(data) ? data : [])
     } catch {
       setAvailableCities([])
     } finally {
@@ -179,9 +174,8 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
 
   const provincesByCountry = provinces.reduce(
     (acc, province) => {
-      const cid = province.country_id || province.countryId
       const countryName =
-        province.country?.name || countries.find((c) => c.id === cid)?.name || "Sin país"
+        province.country?.name || countries.find((c) => c.id === province.country_id)?.name || "Sin país"
       if (!acc[countryName]) {
         acc[countryName] = []
       }
@@ -193,8 +187,7 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
 
   const citiesByProvince = availableCities.reduce(
     (acc, city) => {
-      const pid = (city as any).province_id || (city as any).provinceId
-      const provinceName = provinces.find((p) => p.id === pid)?.name || "Sin provincia"
+      const provinceName = provinces.find((p) => p.id === city.province_id)?.name || "Sin provincia"
       if (!acc[provinceName]) {
         acc[provinceName] = []
       }

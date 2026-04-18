@@ -242,10 +242,12 @@ export async function deletePropertyFromWordPress(propertyId: string) {
 }
 
 export async function testWordPressConnection() {
-  const { getCurrentUser } = await import("@/lib/auth")
-  const currentUser = await getCurrentUser()
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  if (!currentUser || currentUser.role !== "ADMIN") {
+  if (!user || user.user_metadata?.role !== "ADMIN") {
     throw new Error("Solo los administradores pueden probar la conexión")
   }
 
@@ -261,10 +263,12 @@ export async function testWordPressConnection() {
 }
 
 export async function debugWordPressProperty(propertyId: number) {
-  const { getCurrentUser } = await import("@/lib/auth")
-  const currentUser = await getCurrentUser()
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  if (!currentUser || currentUser.role !== "ADMIN") {
+  if (!user || user.user_metadata?.role !== "ADMIN") {
     throw new Error("Solo los administradores pueden usar el debug")
   }
 
