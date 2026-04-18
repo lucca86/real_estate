@@ -100,7 +100,7 @@ export function OwnerForm({ owner, countries = [], provinces = [], cities = [] }
   const [selectedProvinceId, setSelectedProvinceId] = useState(owner?.province_id || defaultProvinceId)
   // Cities loaded from the server initially (pre-filtered for the current province),
   // then refreshed client-side via /api/cities when the user changes province.
-  const [availableCities, setAvailableCities] = useState<Array<{ id: string; name: string; province_id: string }>>(cities)
+  const [availableCities, setAvailableCities] = useState<Array<{ id: string; name: string; province_id?: string; provinceId?: string }>>(cities)
   const [loadingCities, setLoadingCities] = useState(false)
 
   const fetchCities = useCallback(async (provinceId: string) => {
