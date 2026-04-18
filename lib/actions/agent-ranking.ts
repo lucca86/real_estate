@@ -25,20 +25,20 @@ export async function getAgentRanking(period: RankingPeriod = "all"): Promise<{ 
   }
 
   let query = supabase
-    .from("Property")
-    .select("createdById, createdAt")
-    .not("createdById", "is", null)
+    .from("properties")
+    .select("created_by_id, created_at")
+    .not("created_by_id", "is", null)
 
   if (fromDate) {
-    query = query.gte("createdAt", fromDate)
+    query = query.gte("created_at", fromDate)
   }
 
   const { data: propertiesByAgent } = await query
 
   const agentIdCounts: Record<string, number> = {}
   propertiesByAgent?.forEach((p: any) => {
-    if (p.createdById) {
-      agentIdCounts[p.createdById] = (agentIdCounts[p.createdById] || 0) + 1
+    if (p.created_by_id) {
+      agentIdCounts[p.created_by_id] = (agentIdCounts[p.created_by_id] || 0) + 1
     }
   })
 
@@ -46,7 +46,7 @@ export async function getAgentRanking(period: RankingPeriod = "all"): Promise<{ 
   if (agentIds.length === 0) return []
 
   const { data: agentUsers } = await supabase
-    .from("User")
+    .from("users")
     .select("id, name")
     .in("id", agentIds)
 

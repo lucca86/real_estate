@@ -107,9 +107,9 @@ async function isWithinWorkHours(date: Date): Promise<{ valid: boolean; message?
   // Obtener configuración desde la base de datos
   const supabase = await createAdminClient()
   const { data: settings, error } = await supabase
-    .from("AppointmentSetting")
+    .from("appointment_settings")
     .select("*")
-    .eq("dayType", dayType)
+    .eq("day_type", dayType)
     .single()
 
   if (error || !settings) {
@@ -119,23 +119,19 @@ async function isWithinWorkHours(date: Date): Promise<{ valid: boolean; message?
 
   const s = settings as any
 
-  // Si el día está cerrado
-  if (!s.isOpen) {
+  if (!s.is_open) {
     const dayName = dayType === "SATURDAY" ? "Sábados" : "ese día"
     return { valid: false, message: `${dayName} está cerrado para citas` }
   }
 
-  // Verificar que tenga horarios configurados
-  if (!s.startTime || !s.endTime) {
+  if (!s.start_time || !s.end_time) {
     return { valid: false, message: "Horarios no configurados correctamente" }
   }
 
-  // Convertir hora actual a minutos desde medianoche
   const currentMinutes = hours * 60 + minutes
 
-  // Parsear horarios de configuración (formato HH:MM)
-  const [startHour, startMin] = s.startTime.split(":").map(Number)
-  const [endHour, endMin] = s.endTime.split(":").map(Number)
+  const [startHour, startMin] = s.start_time.split(":").map(Number)
+  const [endHour, endMin] = s.end_time.split(":").map(Number)
   
   const startMinutes = startHour * 60 + startMin
   const endMinutes = endHour * 60 + endMin
@@ -144,10 +140,10 @@ async function isWithinWorkHours(date: Date): Promise<{ valid: boolean; message?
     return { valid: true }
   }
 
-  const dayName = dayType === "SATURDAY" ? "Sábados" : "Lunes a Viernes"
+    const dayName = dayType === "SATURDAY" ? "Sábados" : "Lunes a Viernes"
   return {
     valid: false,
-    message: `${dayName}: ${s.startTime} a ${s.endTime}`,
+    message: `${dayName}: ${s.start_time} a ${s.end_time}`,
   }
 }
 
@@ -167,16 +163,16 @@ async function checkScheduleConflict(
 
   const supabase = createAdminClient()
   let query = supabase
-    .from("Appointment")
+    .from("appointments")
     .select(`
       *,
-      property:Property(title),
-      client:Client(name)
+      property:properties!appointments_property_id_fkey(title),
+      client:clients!appointments_client_id_fkey(name)
     `)
-    .eq("agentId", agentId)
+    .eq("agent_id", agentId)
     .in("status", ["PENDIENTE", "CONFIRMADA"])
-    .gte("scheduledDate", dayStart.toISOString())
-    .lte("scheduledDate", dayEnd.toISOString())
+    .gte("scheduled_date", dayStart.toISOString())
+    .lte("scheduled_date", dayEnd.toISOString())
 
   if (excludeAppointmentId) {
     query = query.neq("id", excludeAppointmentId)
@@ -185,7 +181,7 @@ async function checkScheduleConflict(
   const { data: existingAppointments } = await query
 
   for (const existing of existingAppointments || []) {
-    const existingStart = new Date(existing.scheduled_date)
+    const existingStart = new Date((existing as any).scheduled_date)
     const existingEnd = new Date(existingStart.getTime() + existing.duration * 60000)
     const hasOverlap = scheduledAt < existingEnd && endTime > existingStart
 
@@ -239,24 +235,24 @@ export async function createAppointment(data: AppointmentFormData): Promise<Appo
     
     const supabase = await createAdminClient()
     const { data: daySetting } = await supabase
-      .from("AppointmentSetting")
+      .from("appointment_settings")
       .select("*")
-      .eq("dayType", dayType)
+      .eq("day_type", dayType)
       .single()
     
     if (daySetting) {
       const ds = daySetting as any
-      if (validatedData.duration < ds.minDuration) {
+      if (validatedData.duration < ds.min_duration) {
         return {
           success: false,
-          error: `La duración mínima permitida es de ${ds.minDuration} minutos`,
+          error: `La duración mínima permitida es de ${ds.min_duration} minutos`,
         }
       }
       
-      if (validatedData.duration > ds.maxDuration) {
+      if (validatedData.duration > ds.max_duration) {
         return {
           success: false,
-          error: `La duración máxima permitida es de ${ds.maxDuration} minutos`,
+          error: `La duración máxima permitida es de ${ds.max_duration} minutos`,
         }
       }
     }
@@ -288,12 +284,12 @@ export async function createAppointment(data: AppointmentFormData): Promise<Appo
 
     const [propertyResult, clientResult, agentResult] = await Promise.all([
       validatedData.propertyId
-        ? supabase.from("Property").select("*").eq("id", validatedData.propertyId).single()
+        ? supabase.from("properties").select("*").eq("id", validatedData.propertyId).single()
         : { data: null },
       validatedData.clientId
-        ? supabase.from("Client").select("*").eq("id", validatedData.clientId).single()
+        ? supabase.from("clients").select("*").eq("id", validatedData.clientId).single()
         : { data: null },
-      supabase.from("User").select("*").eq("id", validatedData.agentId).single(),
+      supabase.from("users").select("*").eq("id", validatedData.agentId).single(),
     ])
 
     const property = propertyResult.data
@@ -311,19 +307,19 @@ export async function createAppointment(data: AppointmentFormData): Promise<Appo
     const appointmentId = randomUUID()
 
     const { data: appointment, error: insertError } = await supabase
-      .from("Appointment")
+      .from("appointments")
       .insert({
         id: appointmentId,
-        propertyId: validatedData.propertyId || null,
-        otherLocation: validatedData.otherLocation || null,
-        clientId: validatedData.clientId || null,
-        contactName: validatedData.contactName || null,
-        agentId: validatedData.agentId,
-        scheduledDate: scheduledDate.toISOString(),
+        property_id: validatedData.propertyId || null,
+        other_location: validatedData.otherLocation || null,
+        client_id: validatedData.clientId || null,
+        contact_name: validatedData.contactName || null,
+        agent_id: validatedData.agentId,
+        scheduled_date: scheduledDate.toISOString(),
         duration: validatedData.duration,
         status: validatedData.status,
         notes: validatedData.notes || null,
-        createdBy: currentUser.id,
+        created_by: currentUser.id,
       })
       .select()
       .single()
@@ -366,23 +362,23 @@ export async function getAppointments(filters?: {
     const supabase = await createAdminClient()
 
     let query = supabase
-      .from("Appointment")
+      .from("appointments")
       .select(`
-        id, propertyId, clientId, contactName, otherLocation,
-        agentId, scheduledDate, duration, status, notes, createdAt,
-        property:Property(id, title, address, price, images, city:City(id, name)),
-        client:Client(id, name, email, phone),
-        agent:User!Appointment_agentId_fkey(id, name, email)
+        id, property_id, client_id, contact_name, other_location,
+        agent_id, scheduled_date, duration, status, notes, created_at,
+        property:properties!appointments_property_id_fkey(id, title, address, price, images, city:cities!properties_city_id_fkey(id, name)),
+        client:clients!appointments_client_id_fkey(id, name, email, phone),
+        agent:users!appointments_agent_id_fkey(id, name, email)
       `)
-      .order("scheduledDate", { ascending: true })
+      .order("scheduled_date", { ascending: true })
 
-    if (filters?.agentId) query = query.eq("agentId", filters.agentId)
-    if (filters?.clientId) query = query.eq("clientId", filters.clientId)
-    if (filters?.contactName) query = query.ilike("contactName", `%${filters.contactName}%`)
-    if (filters?.propertyId) query = query.eq("propertyId", filters.propertyId)
+    if (filters?.agentId) query = query.eq("agent_id", filters.agentId)
+    if (filters?.clientId) query = query.eq("client_id", filters.clientId)
+    if (filters?.contactName) query = query.ilike("contact_name", `%${filters.contactName}%`)
+    if (filters?.propertyId) query = query.eq("property_id", filters.propertyId)
     if (filters?.status) query = query.eq("status", filters.status)
-    if (filters?.startDate) query = query.gte("scheduledDate", filters.startDate)
-    if (filters?.endDate) query = query.lte("scheduledDate", filters.endDate)
+    if (filters?.startDate) query = query.gte("scheduled_date", filters.startDate)
+    if (filters?.endDate) query = query.lte("scheduled_date", filters.endDate)
 
     const { data: appointments, error } = await query
 
@@ -399,12 +395,12 @@ export async function getAppointments(filters?: {
 
         return {
           id: apt.id,
-          scheduledAt: (apt as any).scheduledDate,
+          scheduledAt: (apt as any).scheduled_date,
           duration: apt.duration,
           status: apt.status,
           notes: apt.notes,
-          contactName: (apt as any).contactName,
-          otherLocation: (apt as any).otherLocation,
+          contactName: (apt as any).contact_name,
+          otherLocation: (apt as any).other_location,
           property: property
             ? {
                 id: property.id,
@@ -450,12 +446,12 @@ export async function getAppointmentById(id: string) {
   try {
     const supabase = await createAdminClient()
     const { data: appointment } = await supabase
-      .from("Appointment")
+      .from("appointments")
       .select(`
         *,
-        property:Property(id, title, address, cityId, images),
-        client:Client(id, name, email, phone),
-        agent:User!Appointment_agentId_fkey(id, name, email)
+        property:properties!appointments_property_id_fkey(id, title, address, city_id, images),
+        client:clients!appointments_client_id_fkey(id, name, email, phone),
+        agent:users!appointments_agent_id_fkey(id, name, email)
       `)
       .eq("id", id)
       .single()
@@ -468,24 +464,24 @@ export async function getAppointmentById(id: string) {
       ...appointment,
       property: appointment.property
         ? {
-            id: appointment.property.id,
-            title: appointment.property.title,
-            address: appointment.property.address,
+            id: (appointment.property as any).id,
+            title: (appointment.property as any).title,
+            address: (appointment.property as any).address,
           }
         : null,
       client: appointment.client
         ? {
-            id: appointment.client.id,
-            name: appointment.client.name,
-            email: appointment.client.email,
-            phone: appointment.client.phone,
+            id: (appointment.client as any).id,
+            name: (appointment.client as any).name,
+            email: (appointment.client as any).email,
+            phone: (appointment.client as any).phone,
           }
         : null,
       agent: appointment.agent
         ? {
-            id: appointment.agent.id,
-            name: appointment.agent.name,
-            email: appointment.agent.email,
+            id: (appointment.agent as any).id,
+            name: (appointment.agent as any).name,
+            email: (appointment.agent as any).email,
           }
         : null,
     }
@@ -502,12 +498,12 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
   try {
     const supabase = await createAdminClient()
     const { data: existing } = await supabase
-      .from("Appointment")
+      .from("appointments")
       .select(`
         *,
-        property:Property(id, title, address, cityId, images),
-        client:Client(id, name, email, phone),
-        agent:User!Appointment_agentId_fkey(id, name, email)
+        property:properties!appointments_property_id_fkey(id, title, address, city_id, images),
+        client:clients!appointments_client_id_fkey(id, name, email, phone),
+        agent:users!appointments_agent_id_fkey(id, name, email)
       `)
       .eq("id", id)
       .single()
@@ -529,23 +525,23 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
     }
     
     const { data: daySetting } = await supabase
-      .from("AppointmentSetting")
+      .from("appointment_settings")
       .select("*")
-      .eq("dayType", dayType)
+      .eq("day_type", dayType)
       .single()
     
     if (daySetting) {
-      if (duration < (daySetting as any).minDuration) {
+      if (duration < (daySetting as any).min_duration) {
         return {
           success: false,
-          error: `La duración mínima permitida es de ${(daySetting as any).minDuration} minutos`,
+          error: `La duración mínima permitida es de ${(daySetting as any).min_duration} minutos`,
         }
       }
       
-      if (duration > (daySetting as any).maxDuration) {
+      if (duration > (daySetting as any).max_duration) {
         return {
           success: false,
-          error: `La duración máxima permitida es de ${(daySetting as any).maxDuration} minutos`,
+          error: `La duración máxima permitida es de ${(daySetting as any).max_duration} minutos`,
         }
       }
     }
@@ -571,25 +567,25 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
   }
 
     const updateData: any = {}
-    if (data.propertyId !== undefined) updateData.propertyId = data.propertyId || null
-    if (data.otherLocation !== undefined) updateData.otherLocation = data.otherLocation || null
-    if (data.clientId) updateData.clientId = data.clientId
-    if (data.contactName) updateData.contactName = data.contactName
-    if (data.agentId) updateData.agentId = data.agentId
-    if (data.scheduledAt) updateData.scheduledDate = new Date(data.scheduledAt).toISOString()
+    if (data.propertyId !== undefined) updateData.property_id = data.propertyId || null
+    if (data.otherLocation !== undefined) updateData.other_location = data.otherLocation || null
+    if (data.clientId) updateData.client_id = data.clientId
+    if (data.contactName) updateData.contact_name = data.contactName
+    if (data.agentId) updateData.agent_id = data.agentId
+    if (data.scheduledAt) updateData.scheduled_date = new Date(data.scheduledAt).toISOString()
     if (data.duration) updateData.duration = data.duration
     if (data.status) updateData.status = data.status
     if (data.notes !== undefined) updateData.notes = data.notes
 
     const { data: updatedAppointment, error } = await supabase
-      .from("Appointment")
+      .from("appointments")
       .update(updateData)
       .eq("id", id)
       .select(`
         *,
-        property:Property(*),
-        client:Client(*),
-        agent:User!Appointment_agentId_fkey(id, name, email)
+        property:properties!appointments_property_id_fkey(*),
+        client:clients!appointments_client_id_fkey(*),
+        agent:users!appointments_agent_id_fkey(id, name, email)
       `)
       .single()
 
@@ -623,13 +619,13 @@ export async function deleteAppointment(id: string) {
     const supabase = await createAdminClient()
 
     // Verify appointment exists
-    const { data: appointment } = await supabase.from("Appointment").select("id").eq("id", id).single()
+    const { data: appointment } = await supabase.from("appointments").select("id").eq("id", id).single()
 
     if (!appointment) {
       return { success: false, error: "Cita no encontrada" }
     }
 
-    const { error } = await supabase.from("Appointment").delete().eq("id", id)
+    const { error } = await supabase.from("appointments").delete().eq("id", id)
 
     if (error) {
       serverLog.error("Error deleting appointment:", error)
@@ -649,14 +645,14 @@ export async function updateAppointmentStatus(id: string, status: AppointmentSta
   try {
     const supabase = await createAdminClient()
     const { data: appointment, error } = await supabase
-      .from("Appointment")
+      .from("appointments")
       .update({ status })
       .eq("id", id)
       .select(`
         *,
-        property:Property(id, title, address, cityId, images),
-        client:Client(id, name, email, phone),
-        agent:User!Appointment_agentId_fkey(id, name, email)
+        property:properties!appointments_property_id_fkey(id, title, address, city_id, images),
+        client:clients!appointments_client_id_fkey(id, name, email, phone),
+        agent:users!appointments_agent_id_fkey(id, name, email)
       `)
       .single()
 

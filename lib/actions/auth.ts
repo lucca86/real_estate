@@ -16,12 +16,12 @@ async function findUserByEmail(email: string) {
     const supabase = await createAdminClient()
     
     const { data: userData, error: userError } = await supabase
-      .from("User")
-      .select("id, email, name, password, role, isActive")
+      .from("users")
+      .select("id, email, name, password, role, is_active")
       .eq("email", email)
       .single()
 
-    if (userError || !userData || !userData.isActive) {
+    if (userError || !userData || !userData.is_active) {
       return null
     }
 
@@ -67,7 +67,7 @@ export async function signIn(formData: FormData) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60 * 24 * 7,
       path: "/",
     })
 
@@ -102,12 +102,12 @@ export async function getSession() {
 
     const supabase = await createAdminClient()
     const { data: userData } = await supabase
-      .from("User")
-      .select("id, email, name, role, isActive")
+      .from("users")
+      .select("id, email, name, role, is_active")
       .eq("id", payload.userId as string)
       .single()
 
-    if (!userData || !userData.isActive) return null
+    if (!userData || !userData.is_active) return null
 
     return {
       id: userData.id,
@@ -115,7 +115,7 @@ export async function getSession() {
       name: userData.name,
       role: userData.role,
     }
-  } catch (error) {
+  } catch {
     return null
   }
 }

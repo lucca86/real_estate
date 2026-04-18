@@ -69,17 +69,14 @@ export async function POST() {
     const supabase = await createAdminClient()
 
     // Verificar que el usuario sea ADMIN
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const { getCurrentUser } = await import("@/lib/auth")
+    const currentUser = await getCurrentUser()
 
-    if (!user) {
+    if (!currentUser) {
       return NextResponse.json({ error: "No autenticado" }, { status: 401 })
     }
 
-    const { data: userData } = await supabase.from("User").select("role").eq("id", user.id).single()
-
-    if (userData?.role !== "ADMIN") {
+    if (currentUser.role !== "ADMIN") {
       return NextResponse.json({ error: "Solo administradores pueden inicializar permisos" }, { status: 403 })
     }
 

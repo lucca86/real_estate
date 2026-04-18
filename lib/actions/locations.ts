@@ -17,12 +17,12 @@ export async function createCountry(formData: FormData) {
   try {
     const supabase = await createAdminClient()
     const { data, error } = await supabase
-      .from("Country")
+      .from("countries")
       .insert({
         id: crypto.randomUUID(),
         name,
         code: code.toUpperCase(),
-        isActive,
+        is_active: isActive,
       })
       .select()
       .single()
@@ -48,11 +48,11 @@ export async function updateCountry(id: string, formData: FormData) {
   try {
     const supabase = await createAdminClient()
     const { data, error } = await supabase
-      .from("Country")
+      .from("countries")
       .update({
         name,
         code: code.toUpperCase(),
-        isActive,
+        is_active: isActive,
       })
       .eq("id", id)
       .select()
@@ -80,12 +80,12 @@ export async function createProvince(formData: FormData) {
   try {
     const supabase = await createAdminClient()
     const { data, error } = await supabase
-      .from("Province")
+      .from("provinces")
       .insert({
         id: crypto.randomUUID(),
         name,
-        countryId: countryId,
-        isActive,
+        country_id: countryId,
+        is_active: isActive,
       })
       .select()
       .single()
@@ -111,8 +111,8 @@ export async function updateProvince(id: string, formData: FormData) {
   try {
     const supabase = await createAdminClient()
     const { data, error } = await supabase
-      .from("Province")
-      .update({ name, countryId: countryId, is_active: isActive })
+      .from("provinces")
+      .update({ name, country_id: countryId, is_active: isActive })
       .eq("id", id)
       .select()
       .single()
@@ -139,12 +139,12 @@ export async function createCity(formData: FormData) {
   try {
     const supabase = await createAdminClient()
     const { data, error } = await supabase
-      .from("City")
+      .from("cities")
       .insert({
         id: crypto.randomUUID(),
         name,
-        provinceId: provinceId,
-        isActive,
+        province_id: provinceId,
+        is_active: isActive,
       })
       .select()
       .single()
@@ -170,8 +170,8 @@ export async function updateCity(id: string, formData: FormData) {
   try {
     const supabase = await createAdminClient()
     const { data, error } = await supabase
-      .from("City")
-      .update({ name, provinceId: provinceId, is_active: isActive })
+      .from("cities")
+      .update({ name, province_id: provinceId, is_active: isActive })
       .eq("id", id)
       .select()
       .single()
@@ -198,12 +198,12 @@ export async function createNeighborhood(formData: FormData) {
   try {
     const supabase = await createAdminClient()
     const { data, error } = await supabase
-      .from("Neighborhood")
+      .from("neighborhoods")
       .insert({
         id: crypto.randomUUID(),
         name,
-        cityId: cityId,
-        isActive,
+        city_id: cityId,
+        is_active: isActive,
       })
       .select()
       .single()
@@ -229,8 +229,8 @@ export async function updateNeighborhood(id: string, formData: FormData) {
   try {
     const supabase = await createAdminClient()
     const { data, error } = await supabase
-      .from("Neighborhood")
-      .update({ name, cityId: cityId, is_active: isActive })
+      .from("neighborhoods")
+      .update({ name, city_id: cityId, is_active: isActive })
       .eq("id", id)
       .select()
       .single()
@@ -248,10 +248,10 @@ export async function getNeighborhoods(cityId: string) {
   try {
     const supabase = await createAdminClient()
     const { data, error } = await supabase
-      .from("Neighborhood")
+      .from("neighborhoods")
       .select("id, name")
-      .eq("cityId", cityId)
-      .eq("isActive", true)
+      .eq("city_id", cityId)
+      .eq("is_active", true)
       .order("name", { ascending: true })
 
     if (error) throw error
@@ -278,9 +278,7 @@ export async function deleteLocation(type: "country" | "province" | "city" | "ne
     const { error } = await supabase.from(tableMap[type]).delete().eq("id", id)
 
     if (error) {
-      // Check if it's a foreign key constraint violation
       if (error.code === "23503") {
-        // Instead of deleting, mark as inactive
         const { error: updateError } = await supabase.from(tableMap[type]).update({ is_active: false }).eq("id", id)
 
         if (updateError) throw updateError
@@ -310,9 +308,9 @@ export async function getCountries() {
   try {
     const supabase = await createAdminClient()
     const { data, error } = await supabase
-      .from("Country")
+      .from("countries")
       .select("id, name, code")
-      .eq("isActive", true)
+      .eq("is_active", true)
       .order("name", { ascending: true })
 
     if (error) throw error
@@ -326,10 +324,10 @@ export async function getProvinces(countryId: string) {
   try {
     const supabase = await createAdminClient()
     const { data, error } = await supabase
-      .from("Province")
+      .from("provinces")
       .select("id, name")
-      .eq("countryId", countryId)
-      .eq("isActive", true)
+      .eq("country_id", countryId)
+      .eq("is_active", true)
       .order("name", { ascending: true })
 
     if (error) throw error
@@ -343,10 +341,10 @@ export async function getCities(provinceId: string) {
   try {
     const supabase = await createAdminClient()
     const { data, error } = await supabase
-      .from("City")
+      .from("cities")
       .select("id, name")
-      .eq("provinceId", provinceId)
-      .eq("isActive", true)
+      .eq("province_id", provinceId)
+      .eq("is_active", true)
       .order("name", { ascending: true })
 
     if (error) throw error
@@ -360,7 +358,7 @@ export async function getAllCountries() {
   try {
     const supabase = await createAdminClient()
     const { data, error } = await supabase
-      .from("Country")
+      .from("countries")
       .select("id, name, code, is_active, created_at")
       .order("name", { ascending: true })
 
@@ -375,16 +373,16 @@ export async function getAllProvinces() {
   try {
     const supabase = await createAdminClient()
     const { data, error } = await supabase
-      .from("Province")
+      .from("provinces")
       .select(`
         id,
         name,
         is_active,
         created_at,
-        countryId,
-        country:countries(id, name)
+        country_id,
+        country:countries!provinces_country_id_fkey(id, name)
       `)
-      .eq("isActive", true)
+      .eq("is_active", true)
       .order("name", { ascending: true })
 
     if (error) throw error
@@ -400,29 +398,25 @@ export async function getAllCities() {
     const supabase = await createAdminClient()
 
     const { data: cities, error } = await supabase
-      .from("City")
-      .select(
-        `
+      .from("cities")
+      .select(`
         id,
         name,
         is_active,
-        province:provinces!cities_provinceId_fkey (
+        province:provinces!cities_province_id_fkey(
           id,
           name,
-          country:countries!provinces_countryId_fkey (
+          country:countries!provinces_country_id_fkey(
             id,
             name
           )
         )
-      `,
-      )
-      .eq("isActive", true)
+      `)
+      .eq("is_active", true)
 
     if (error) throw error
 
-    if (!cities) {
-      return []
-    }
+    if (!cities) return []
 
     const transformed = cities
       .map((city: any) => {
@@ -457,13 +451,13 @@ export async function getAllNeighborhoods() {
   try {
     const supabase = await createAdminClient()
     const { data, error } = await supabase
-      .from("Neighborhood")
+      .from("neighborhoods")
       .select(`
         id,
         name,
         is_active,
         created_at,
-        city:cities(id, name)
+        city:cities!neighborhoods_city_id_fkey(id, name)
       `)
       .order("name", { ascending: true })
 
@@ -484,7 +478,7 @@ export async function getAllNeighborhoods() {
 export async function getCountryById(id: string) {
   try {
     const supabase = await createAdminClient()
-    const { data, error } = await supabase.from("Country").select("*").eq("id", id).single()
+    const { data, error } = await supabase.from("countries").select("*").eq("id", id).single()
 
     if (error) throw error
     return data
@@ -496,7 +490,7 @@ export async function getCountryById(id: string) {
 export async function getCityById(id: string) {
   try {
     const supabase = await createAdminClient()
-    const { data, error } = await supabase.from("City").select("*").eq("id", id).single()
+    const { data, error } = await supabase.from("cities").select("*").eq("id", id).single()
 
     if (error) throw error
     return data
@@ -508,7 +502,7 @@ export async function getCityById(id: string) {
 export async function getProvinceById(id: string) {
   try {
     const supabase = await createAdminClient()
-    const { data, error } = await supabase.from("Province").select("*").eq("id", id).single()
+    const { data, error } = await supabase.from("provinces").select("*").eq("id", id).single()
 
     if (error) throw error
     return data
@@ -520,7 +514,7 @@ export async function getProvinceById(id: string) {
 export async function getNeighborhoodById(id: string) {
   try {
     const supabase = await createAdminClient()
-    const { data, error } = await supabase.from("Neighborhood").select("*").eq("id", id).single()
+    const { data, error } = await supabase.from("neighborhoods").select("*").eq("id", id).single()
 
     if (error) throw error
     return data
@@ -532,7 +526,7 @@ export async function getNeighborhoodById(id: string) {
 export async function checkCityExists(name: string, provinceId: string, excludeId?: string) {
   try {
     const supabase = await createAdminClient()
-    let query = supabase.from("City").select("id, name").eq("provinceId", provinceId).ilike("name", name)
+    let query = supabase.from("cities").select("id, name").eq("province_id", provinceId).ilike("name", name)
 
     if (excludeId) {
       query = query.neq("id", excludeId)
@@ -550,7 +544,7 @@ export async function checkCityExists(name: string, provinceId: string, excludeI
 export async function checkNeighborhoodExists(name: string, cityId: string, excludeId?: string) {
   try {
     const supabase = await createAdminClient()
-    let query = supabase.from("Neighborhood").select("id, name").eq("cityId", cityId).ilike("name", name)
+    let query = supabase.from("neighborhoods").select("id, name").eq("city_id", cityId).ilike("name", name)
 
     if (excludeId) {
       query = query.neq("id", excludeId)
@@ -565,16 +559,15 @@ export async function checkNeighborhoodExists(name: string, cityId: string, excl
   }
 }
 
-// Duplicate check functions for neighborhoods and cities
 export async function checkDuplicateNeighborhood(name: string, cityId: string, excludeId?: string) {
   try {
     const supabase = await createAdminClient()
     let query = supabase
-      .from("Neighborhood")
+      .from("neighborhoods")
       .select("id, name")
-      .eq("cityId", cityId)
+      .eq("city_id", cityId)
       .ilike("name", name)
-      .eq("isActive", true)
+      .eq("is_active", true)
 
     if (excludeId) {
       query = query.neq("id", excludeId)
@@ -594,11 +587,11 @@ export async function checkDuplicateCity(name: string, provinceId: string, exclu
   try {
     const supabase = await createAdminClient()
     let query = supabase
-      .from("City")
+      .from("cities")
       .select("id, name")
-      .eq("provinceId", provinceId)
+      .eq("province_id", provinceId)
       .ilike("name", name)
-      .eq("isActive", true)
+      .eq("is_active", true)
 
     if (excludeId) {
       query = query.neq("id", excludeId)
@@ -618,11 +611,11 @@ export async function checkDuplicateProvince(name: string, countryId: string, ex
   try {
     const supabase = await createAdminClient()
     let query = supabase
-      .from("Province")
+      .from("provinces")
       .select("id, name")
-      .eq("countryId", countryId)
+      .eq("country_id", countryId)
       .ilike("name", name)
-      .eq("isActive", true)
+      .eq("is_active", true)
 
     if (excludeId) {
       query = query.neq("id", excludeId)

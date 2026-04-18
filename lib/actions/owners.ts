@@ -24,48 +24,39 @@ const ownerSchema = z.object({
   is_active: z.boolean().default(true),
 })
 
-const quickOwnerSchema = z.object({
-  firstName: z.string().min(1, "El nombre es requerido"),
-  lastName: z.string().min(1, "El apellido es requerido"),
-  email: z.string().email("Email inválido").optional().or(z.literal("")),
-  phone: z.string().min(1, "El teléfono es requerido"),
-})
-
 export async function getOwners() {
   try {
-    // Use admin client to bypass RLS (app uses custom JWT auth, auth.uid() is NULL)
     const supabase = await createAdminClient()
 
     const { data: owners, error } = await supabase
-      .from("Owner")
+      .from("owners")
       .select(`
-        id, name, email, phone, secondaryPhone, address,
-        cityId, provinceId, countryId,
-        idNumber, taxId, notes, isActive, createdAt, updatedAt,
-        city:City(id, name),
-        province:Province(id, name),
-        country:Country(id, name)
+        id, name, email, phone, secondary_phone, address,
+        city_id, province_id, country_id,
+        id_number, tax_id, notes, is_active, created_at, updated_at,
+        first_name, last_name, owner_type, real_estate_agency,
+        city:cities!owners_city_id_fkey(id, name),
+        province:provinces!owners_province_id_fkey(id, name),
+        country:countries!owners_country_id_fkey(id, name)
       `)
-      .order("createdAt", { ascending: false })
+      .order("created_at", { ascending: false })
 
     if (error) throw error
 
-    // Fetch property counts in a single query instead of N individual queries
+    // Fetch property counts in a single query
     const { data: propCounts, error: countError } = await supabase
-      .from("Property")
-      .select("ownerId")
+      .from("properties")
+      .select("owner_id")
 
     if (countError) throw countError
 
     const countMap: Record<string, number> = {}
     for (const row of propCounts ?? []) {
-      if (row.ownerId) {
-        countMap[row.ownerId] = (countMap[row.ownerId] ?? 0) + 1
+      if (row.owner_id) {
+        countMap[row.owner_id] = (countMap[row.owner_id] ?? 0) + 1
       }
     }
 
-    // Build explicit plain objects — prevents Next.js RSC serializer from
-    // encountering internal Supabase Proxy references → stack overflow
     const ownersWithCounts = (owners ?? []).map((owner) => {
       const city = Array.isArray(owner.city) ? owner.city[0] : owner.city
       const province = Array.isArray(owner.province) ? owner.province[0] : owner.province
@@ -74,28 +65,24 @@ export async function getOwners() {
       return {
         id: String(owner.id),
         name: owner.name ?? "",
-        // Owner table has no first_name/last_name — split from name
-        first_name: (owner.name ?? "").split(" ")[0] ?? "",
-        last_name: (owner.name ?? "").split(" ").slice(1).join(" ") ?? "",
-        owner_type: "Propietario",
-        real_estate_agency: null,
+        first_name: owner.first_name ?? (owner.name ?? "").split(" ")[0] ?? "",
+        last_name: owner.last_name ?? (owner.name ?? "").split(" ").slice(1).join(" ") ?? "",
+        owner_type: owner.owner_type ?? "Propietario",
+        real_estate_agency: owner.real_estate_agency ?? null,
         email: owner.email ?? null,
         phone: owner.phone ?? "",
-        secondary_phone: owner.secondaryPhone ?? null,
+        secondary_phone: owner.secondary_phone ?? null,
         address: owner.address ?? null,
-        city_id: owner.cityId ?? null,
-        province_id: owner.provinceId ?? null,
-        country_id: owner.countryId ?? null,
-        cityId: owner.cityId ?? null,
-        provinceId: owner.provinceId ?? null,
-        countryId: owner.countryId ?? null,
-        id_number: owner.idNumber ?? null,
-        tax_id: owner.taxId ?? null,
+        city_id: owner.city_id ?? null,
+        province_id: owner.province_id ?? null,
+        country_id: owner.country_id ?? null,
+        id_number: owner.id_number ?? null,
+        tax_id: owner.tax_id ?? null,
         notes: owner.notes ?? null,
-        is_active: owner.isActive ?? true,
-        isActive: owner.isActive ?? true,
-        created_at: owner.createdAt ?? null,
-        updated_at: owner.updatedAt ?? null,
+        is_active: owner.is_active ?? true,
+        isActive: owner.is_active ?? true,
+        created_at: owner.created_at ?? null,
+        updated_at: owner.updated_at ?? null,
         city: city ? { id: String(city.id), name: String(city.name) } : null,
         province: province ? { id: String(province.id), name: String(province.name) } : null,
         country: country ? { id: String(country.id), name: String(country.name) } : null,
@@ -115,12 +102,12 @@ export async function getOwnerById(id: string) {
     const supabase = await createAdminClient()
 
     const { data: owner, error } = await supabase
-      .from("Owner")
+      .from("owners")
       .select(`
         *,
-        city:City(name),
-        province:Province(name),
-        country:Country(name)
+        city:cities!owners_city_id_fkey(name),
+        province:provinces!owners_province_id_fkey(name),
+        country:countries!owners_country_id_fkey(name)
       `)
       .eq("id", id)
       .single()
@@ -154,21 +141,25 @@ export async function createOwner(formData: FormData) {
     const ownerData = {
       id: crypto.randomUUID(),
       name: `${firstName} ${lastName}`,
+      first_name: firstName,
+      last_name: lastName,
+      owner_type: ownerType || "Propietario",
+      real_estate_agency: realEstateAgency || null,
       email: email || null,
       phone,
-      secondaryPhone: (formData.get("secondaryPhone") as string) || null,
+      secondary_phone: (formData.get("secondaryPhone") as string) || null,
       address: (formData.get("address") as string) || null,
-      cityId: cityId || null,
-      provinceId: provinceId || null,
-      countryId: countryId || null,
-      idNumber: (formData.get("idNumber") as string) || null,
-      taxId: (formData.get("taxId") as string) || null,
+      city_id: cityId || null,
+      province_id: provinceId || null,
+      country_id: countryId || null,
+      id_number: (formData.get("idNumber") as string) || null,
+      tax_id: (formData.get("taxId") as string) || null,
       notes: (formData.get("notes") as string) || null,
-      isActive: true,
+      is_active: true,
     }
 
     const supabase = await createAdminClient()
-    const { data: owner, error } = await supabase.from("Owner").insert(ownerData).select().single()
+    const { data: owner, error } = await supabase.from("owners").insert(ownerData).select().single()
 
     if (error) throw error
 
@@ -203,21 +194,25 @@ export async function updateOwner(
   try {
     const ownerData = {
       name: `${data.firstName} ${data.lastName}`,
+      first_name: data.firstName,
+      last_name: data.lastName,
+      owner_type: data.ownerType,
+      real_estate_agency: data.realEstateAgency || null,
       email: data.email || null,
       phone: data.phone,
-      secondaryPhone: data.secondaryPhone || null,
+      secondary_phone: data.secondaryPhone || null,
       address: data.address || null,
-      cityId: data.cityId || null,
-      provinceId: data.provinceId || null,
-      countryId: data.countryId || null,
-      idNumber: data.idNumber || null,
-      taxId: data.taxId || null,
+      city_id: data.cityId || null,
+      province_id: data.provinceId || null,
+      country_id: data.countryId || null,
+      id_number: data.idNumber || null,
+      tax_id: data.taxId || null,
       notes: data.notes || null,
-      isActive: data.isActive,
+      is_active: data.isActive,
     }
 
     const supabase = await createAdminClient()
-    const { data: owner, error } = await supabase.from("Owner").update(ownerData).eq("id", id).select().single()
+    const { data: owner, error } = await supabase.from("owners").update(ownerData).eq("id", id).select().single()
 
     if (error) throw error
 
@@ -234,11 +229,10 @@ export async function deleteOwner(id: string) {
   try {
     const supabase = await createAdminClient()
 
-    const { count } = await supabase.from("Property").select("*", { count: "exact", head: true }).eq("ownerId", id)
+    const { count } = await supabase.from("properties").select("*", { count: "exact", head: true }).eq("owner_id", id)
 
     if (count && count > 0) {
-      // Owner has properties, mark as inactive instead
-      const { error: updateError } = await supabase.from("Owner").update({ isActive: false }).eq("id", id)
+      const { error: updateError } = await supabase.from("owners").update({ is_active: false }).eq("id", id)
 
       if (updateError) throw updateError
 
@@ -249,8 +243,7 @@ export async function deleteOwner(id: string) {
       }
     }
 
-    // Owner has no properties, safe to delete
-    const { error } = await supabase.from("Owner").delete().eq("id", id)
+    const { error } = await supabase.from("owners").delete().eq("id", id)
 
     if (error) throw error
 
