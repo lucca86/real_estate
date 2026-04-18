@@ -6,26 +6,26 @@ export async function getDashboardStats() {
   const supabase = await createAdminClient()
 
   try {
-    const { count: totalProperties } = await supabase.from("properties").select("*", { count: "exact", head: true })
+    const { count: totalProperties } = await supabase.from("Property").select("*", { count: "exact", head: true })
 
     const { count: activeProperties } = await supabase
-      .from("properties")
+      .from("Property")
       .select("*", { count: "exact", head: true })
       .eq("status", "ACTIVO")
 
-    const { count: totalClients } = await supabase.from("clients").select("*", { count: "exact", head: true })
+    const { count: totalClients } = await supabase.from("Client").select("*", { count: "exact", head: true })
 
-    const { count: totalOwners } = await supabase.from("owners").select("*", { count: "exact", head: true })
+    const { count: totalOwners } = await supabase.from("Owner").select("*", { count: "exact", head: true })
 
     const { count: upcomingAppointments } = await supabase
-      .from("appointments")
+      .from("Appointment")
       .select("*", { count: "exact", head: true })
-      .gte("scheduled_date", new Date().toISOString())
+      .gte("scheduledAt", new Date().toISOString())
       .not("status", "eq", "CANCELADA")
 
-    const { data: propertiesByType } = await supabase.from("properties").select(`
-        property_type_id,
-        propertyType:property_types!properties_property_type_id_fkey(name)
+    const { data: propertiesByType } = await supabase.from("Property").select(`
+        propertyTypeId,
+        propertyType:PropertyType!Property_propertyTypeId_fkey(name)
       `)
 
     const propertyTypeCounts = propertiesByType?.reduce((acc: Record<string, number>, prop) => {
@@ -34,10 +34,10 @@ export async function getDashboardStats() {
       return acc
     }, {})
 
-    const { data: propertiesByTransaction } = await supabase.from("properties").select("transaction_type")
+    const { data: propertiesByTransaction } = await supabase.from("Property").select("transactionType")
 
     const transactionCounts = propertiesByTransaction?.reduce((acc: Record<string, number>, prop) => {
-      const transactionName: string = (prop as any).transaction_type || "Sin Definir"
+      const transactionName: string = (prop as any).transactionType || "Sin Definir"
       const translationMap: Record<string, string> = {
         VENTA: "Venta",
         ALQUILER: "Alquiler",
@@ -51,14 +51,14 @@ export async function getDashboardStats() {
 
     // Ranking of agents by properties created
     const { data: propertiesByAgent } = await supabase
-      .from("properties")
-      .select("created_by_id")
-      .not("created_by_id", "is", null)
+      .from("Property")
+      .select("createdById")
+      .not("createdById", "is", null)
 
     const agentIdCounts: Record<string, number> = {}
     propertiesByAgent?.forEach((p: any) => {
-      if (p.created_by_id) {
-        agentIdCounts[p.created_by_id] = (agentIdCounts[p.created_by_id] || 0) + 1
+      if (p.createdById) {
+        agentIdCounts[p.createdById] = (agentIdCounts[p.createdById] || 0) + 1
       }
     })
 
@@ -67,7 +67,7 @@ export async function getDashboardStats() {
 
     if (agentIds.length > 0) {
       const { data: agentUsers } = await supabase
-        .from("users")
+        .from("User")
         .select("id, name")
         .in("id", agentIds)
 
@@ -77,17 +77,17 @@ export async function getDashboardStats() {
     }
 
     const { data: recentProperties } = await supabase
-      .from("properties")
+      .from("Property")
       .select(`
         id,
         title,
         price,
         currency,
-        created_at,
-        propertyType:property_types!properties_property_type_id_fkey(name),
-        city:cities!properties_city_id_fkey(name)
+        createdAt,
+        propertyType:PropertyType!Property_propertyTypeId_fkey(name),
+        city:City!Property_cityId_fkey(name)
       `)
-      .order("created_at", { ascending: false })
+      .order("createdAt", { ascending: false })
       .limit(5)
 
     const transformedRecentProperties =
@@ -96,7 +96,7 @@ export async function getDashboardStats() {
         title: prop.title,
         price: prop.price,
         currency: prop.currency,
-        created_at: prop.created_at,
+        created_at: prop.createdAt,
         property_types: prop.propertyType || null,
         cities: prop.city || null,
       })) || []

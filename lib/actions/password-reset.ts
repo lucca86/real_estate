@@ -34,7 +34,7 @@ export async function requestPasswordReset(formData: FormData): Promise<Password
     const supabase = await createAdminClient()
 
     const { data: user, error: userError } = await supabase
-      .from("users")
+      .from("User")
       .select("id, email, name")
       .eq("email", email)
       .single()
@@ -49,6 +49,7 @@ export async function requestPasswordReset(formData: FormData): Promise<Password
     const token = crypto.randomBytes(32).toString("hex")
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000)
 
+    // NOTE: password_reset_tokens table uses snake_case (not managed by Prisma)
     const { error: tokenError } = await supabase.from("password_reset_tokens").insert({
       user_id: user.id,
       token,
@@ -98,7 +99,7 @@ export async function resetPassword(formData: FormData): Promise<ResetPasswordRe
     const hashedPassword = await bcrypt.hash(password, 10)
 
     const { error: updateError } = await supabase
-      .from("users")
+      .from("User")
       .update({ password: hashedPassword })
       .eq("id", resetToken.user_id)
 
@@ -134,7 +135,7 @@ export async function changePassword(formData: FormData): Promise<ChangePassword
     }
 
     const { data: user, error: userError } = await supabase
-      .from("users")
+      .from("User")
       .select("password")
       .eq("id", currentUser.id)
       .single()
@@ -151,7 +152,7 @@ export async function changePassword(formData: FormData): Promise<ChangePassword
     const hashedPassword = await bcrypt.hash(newPassword, 10)
 
     const { error: updateError } = await supabase
-      .from("users")
+      .from("User")
       .update({ password: hashedPassword })
       .eq("id", currentUser.id)
 

@@ -163,16 +163,16 @@ async function checkScheduleConflict(
 
   const supabase = createAdminClient()
   let query = supabase
-    .from("appointments")
+    .from("Appointment")
     .select(`
       *,
-      property:properties!appointments_property_id_fkey(title),
-      client:clients!appointments_client_id_fkey(name)
+      property:Property!Appointment_propertyId_fkey(title),
+      client:Client!Appointment_clientId_fkey(name)
     `)
-    .eq("agent_id", agentId)
+    .eq("agentId", agentId)
     .in("status", ["PENDIENTE", "CONFIRMADA"])
-    .gte("scheduled_date", dayStart.toISOString())
-    .lte("scheduled_date", dayEnd.toISOString())
+    .gte("scheduledAt", dayStart.toISOString())
+    .lte("scheduledAt", dayEnd.toISOString())
 
   if (excludeAppointmentId) {
     query = query.neq("id", excludeAppointmentId)
@@ -181,7 +181,7 @@ async function checkScheduleConflict(
   const { data: existingAppointments } = await query
 
   for (const existing of existingAppointments || []) {
-    const existingStart = new Date((existing as any).scheduled_date)
+    const existingStart = new Date((existing as any).scheduledAt)
     const existingEnd = new Date(existingStart.getTime() + existing.duration * 60000)
     const hasOverlap = scheduledAt < existingEnd && endTime > existingStart
 
@@ -191,8 +191,8 @@ async function checkScheduleConflict(
         minute: "2-digit",
       })
 
-      const clientName = existing.client?.name || existing.contact_name || "un cliente"
-      const propertyTitle = existing.property?.title || existing.other_location || "una propiedad"
+      const clientName = (existing.client as any)?.name || (existing as any).contactName || "un cliente"
+      const propertyTitle = (existing.property as any)?.title || (existing as any).otherLocation || "una propiedad"
 
       return {
         hasConflict: true,
@@ -284,12 +284,12 @@ export async function createAppointment(data: AppointmentFormData): Promise<Appo
 
     const [propertyResult, clientResult, agentResult] = await Promise.all([
       validatedData.propertyId
-        ? supabase.from("properties").select("*").eq("id", validatedData.propertyId).single()
+        ? supabase.from("Property").select("*").eq("id", validatedData.propertyId).single()
         : { data: null },
       validatedData.clientId
-        ? supabase.from("clients").select("*").eq("id", validatedData.clientId).single()
+        ? supabase.from("Client").select("*").eq("id", validatedData.clientId).single()
         : { data: null },
-      supabase.from("users").select("*").eq("id", validatedData.agentId).single(),
+      supabase.from("User").select("*").eq("id", validatedData.agentId).single(),
     ])
 
     const property = propertyResult.data
@@ -307,19 +307,16 @@ export async function createAppointment(data: AppointmentFormData): Promise<Appo
     const appointmentId = randomUUID()
 
     const { data: appointment, error: insertError } = await supabase
-      .from("appointments")
+      .from("Appointment")
       .insert({
         id: appointmentId,
-        property_id: validatedData.propertyId || null,
-        other_location: validatedData.otherLocation || null,
-        client_id: validatedData.clientId || null,
-        contact_name: validatedData.contactName || null,
-        agent_id: validatedData.agentId,
-        scheduled_date: scheduledDate.toISOString(),
+        propertyId: validatedData.propertyId || null,
+        clientId: validatedData.clientId || null,
+        agentId: validatedData.agentId,
+        scheduledAt: scheduledDate.toISOString(),
         duration: validatedData.duration,
         status: validatedData.status,
         notes: validatedData.notes || null,
-        created_by: currentUser.id,
       })
       .select()
       .single()
@@ -362,23 +359,22 @@ export async function getAppointments(filters?: {
     const supabase = await createAdminClient()
 
     let query = supabase
-      .from("appointments")
+      .from("Appointment")
       .select(`
-        id, property_id, client_id, contact_name, other_location,
-        agent_id, scheduled_date, duration, status, notes, created_at,
-        property:properties!appointments_property_id_fkey(id, title, address, price, images, city:cities!properties_city_id_fkey(id, name)),
-        client:clients!appointments_client_id_fkey(id, name, email, phone),
-        agent:users!appointments_agent_id_fkey(id, name, email)
+        id, propertyId, clientId,
+        agentId, scheduledAt, duration, status, notes, createdAt,
+        property:Property!Appointment_propertyId_fkey(id, title, address, price, images, city:City!Property_cityId_fkey(id, name)),
+        client:Client!Appointment_clientId_fkey(id, name, email, phone),
+        agent:User!Appointment_agentId_fkey(id, name, email)
       `)
-      .order("scheduled_date", { ascending: true })
+      .order("scheduledAt", { ascending: true })
 
-    if (filters?.agentId) query = query.eq("agent_id", filters.agentId)
-    if (filters?.clientId) query = query.eq("client_id", filters.clientId)
-    if (filters?.contactName) query = query.ilike("contact_name", `%${filters.contactName}%`)
-    if (filters?.propertyId) query = query.eq("property_id", filters.propertyId)
+    if (filters?.agentId) query = query.eq("agentId", filters.agentId)
+    if (filters?.clientId) query = query.eq("clientId", filters.clientId)
+    if (filters?.propertyId) query = query.eq("propertyId", filters.propertyId)
     if (filters?.status) query = query.eq("status", filters.status)
-    if (filters?.startDate) query = query.gte("scheduled_date", filters.startDate)
-    if (filters?.endDate) query = query.lte("scheduled_date", filters.endDate)
+    if (filters?.startDate) query = query.gte("scheduledAt", filters.startDate)
+    if (filters?.endDate) query = query.lte("scheduledAt", filters.endDate)
 
     const { data: appointments, error } = await query
 
@@ -395,12 +391,12 @@ export async function getAppointments(filters?: {
 
         return {
           id: apt.id,
-          scheduledAt: (apt as any).scheduled_date,
+          scheduledAt: (apt as any).scheduledAt,
           duration: apt.duration,
           status: apt.status,
           notes: apt.notes,
-          contactName: (apt as any).contact_name,
-          otherLocation: (apt as any).other_location,
+          contactName: (apt as any).contactName,
+          otherLocation: (apt as any).otherLocation,
           property: property
             ? {
                 id: property.id,
@@ -446,12 +442,12 @@ export async function getAppointmentById(id: string) {
   try {
     const supabase = await createAdminClient()
     const { data: appointment } = await supabase
-      .from("appointments")
+      .from("Appointment")
       .select(`
         *,
-        property:properties!appointments_property_id_fkey(id, title, address, city_id, images),
-        client:clients!appointments_client_id_fkey(id, name, email, phone),
-        agent:users!appointments_agent_id_fkey(id, name, email)
+        property:Property!Appointment_propertyId_fkey(id, title, address, cityId, images),
+        client:Client!Appointment_clientId_fkey(id, name, email, phone),
+        agent:User!Appointment_agentId_fkey(id, name, email)
       `)
       .eq("id", id)
       .single()
@@ -498,12 +494,12 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
   try {
     const supabase = await createAdminClient()
     const { data: existing } = await supabase
-      .from("appointments")
+      .from("Appointment")
       .select(`
         *,
-        property:properties!appointments_property_id_fkey(id, title, address, city_id, images),
-        client:clients!appointments_client_id_fkey(id, name, email, phone),
-        agent:users!appointments_agent_id_fkey(id, name, email)
+        property:Property!Appointment_propertyId_fkey(id, title, address, cityId, images),
+        client:Client!Appointment_clientId_fkey(id, name, email, phone),
+        agent:User!Appointment_agentId_fkey(id, name, email)
       `)
       .eq("id", id)
       .single()
@@ -513,9 +509,9 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
     }
 
   if (data.scheduledAt || data.duration) {
-    const scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : (existing as any).scheduledDate
+    const scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : new Date((existing as any).scheduledAt)
     const duration = data.duration ?? existing.duration
-    const agentId = data.agentId ?? (existing as any).agentId
+    const agentId = data.agentId ?? (existing as any).agentId ?? ""
 
     // Verificar que la duración esté dentro de los límites configurados
     const { day } = getArgentinaDateTime(scheduledAt)
@@ -567,25 +563,23 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
   }
 
     const updateData: any = {}
-    if (data.propertyId !== undefined) updateData.property_id = data.propertyId || null
-    if (data.otherLocation !== undefined) updateData.other_location = data.otherLocation || null
-    if (data.clientId) updateData.client_id = data.clientId
-    if (data.contactName) updateData.contact_name = data.contactName
-    if (data.agentId) updateData.agent_id = data.agentId
-    if (data.scheduledAt) updateData.scheduled_date = new Date(data.scheduledAt).toISOString()
+    if (data.propertyId !== undefined) updateData.propertyId = data.propertyId || null
+    if (data.clientId) updateData.clientId = data.clientId
+    if (data.agentId) updateData.agentId = data.agentId
+    if (data.scheduledAt) updateData.scheduledAt = new Date(data.scheduledAt).toISOString()
     if (data.duration) updateData.duration = data.duration
     if (data.status) updateData.status = data.status
     if (data.notes !== undefined) updateData.notes = data.notes
 
     const { data: updatedAppointment, error } = await supabase
-      .from("appointments")
+      .from("Appointment")
       .update(updateData)
       .eq("id", id)
       .select(`
         *,
-        property:properties!appointments_property_id_fkey(*),
-        client:clients!appointments_client_id_fkey(*),
-        agent:users!appointments_agent_id_fkey(id, name, email)
+        property:Property!Appointment_propertyId_fkey(*),
+        client:Client!Appointment_clientId_fkey(*),
+        agent:User!Appointment_agentId_fkey(id, name, email)
       `)
       .single()
 
@@ -619,13 +613,13 @@ export async function deleteAppointment(id: string) {
     const supabase = await createAdminClient()
 
     // Verify appointment exists
-    const { data: appointment } = await supabase.from("appointments").select("id").eq("id", id).single()
+    const { data: appointment } = await supabase.from("Appointment").select("id").eq("id", id).single()
 
     if (!appointment) {
       return { success: false, error: "Cita no encontrada" }
     }
 
-    const { error } = await supabase.from("appointments").delete().eq("id", id)
+    const { error } = await supabase.from("Appointment").delete().eq("id", id)
 
     if (error) {
       serverLog.error("Error deleting appointment:", error)
@@ -645,14 +639,14 @@ export async function updateAppointmentStatus(id: string, status: AppointmentSta
   try {
     const supabase = await createAdminClient()
     const { data: appointment, error } = await supabase
-      .from("appointments")
+      .from("Appointment")
       .update({ status })
       .eq("id", id)
       .select(`
         *,
-        property:properties!appointments_property_id_fkey(id, title, address, city_id, images),
-        client:clients!appointments_client_id_fkey(id, name, email, phone),
-        agent:users!appointments_agent_id_fkey(id, name, email)
+        property:Property!Appointment_propertyId_fkey(id, title, address, cityId, images),
+        client:Client!Appointment_clientId_fkey(id, name, email, phone),
+        agent:User!Appointment_agentId_fkey(id, name, email)
       `)
       .single()
 

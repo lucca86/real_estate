@@ -9,10 +9,10 @@ export async function GET() {
     const supabase = await createAdminClient()
     
     const { data: properties, error } = await supabase
-      .from("properties")
-      .select("price, updated_at")
+      .from("Property")
+      .select("price, updatedAt")
       .in("status", ["VENDIDO", "ALQUILADO"])
-      .gte("updated_at", sixMonthsAgo.toISOString())
+      .gte("updatedAt", sixMonthsAgo.toISOString())
 
     if (error) throw error
 
@@ -20,7 +20,7 @@ export async function GET() {
 
     const revenueByMonth = (properties || []).reduce(
       (acc, property) => {
-        const updatedAt = new Date((property as any).updated_at)
+        const updatedAt = new Date((property as any).updatedAt)
         const month = updatedAt.getMonth()
         const year = updatedAt.getFullYear()
         const key = `${monthNames[month]} ${year}`

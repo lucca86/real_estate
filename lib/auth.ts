@@ -40,10 +40,10 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
     // so auth.uid() is always NULL and RLS policies block the query with the anon key.
     const supabase = await createAdminClient()
     const { data: userData, error: userError } = await supabase
-      .from("users")
-      .select("id, email, name, role, is_active, avatar")
+      .from("User")
+      .select("id, email, name, role, isActive, avatar")
       .eq("id", payload.userId as string)
-      .eq("is_active", true)
+      .eq("isActive", true)
       .single()
 
     if (userError || !userData) {

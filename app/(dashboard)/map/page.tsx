@@ -13,17 +13,16 @@ export default async function MapPage() {
 
   const supabase = await createAdminClient()
   const { data: propertiesData, error } = await supabase
-    .from("properties")
+    .from("Property")
     .select(`
-      id, title, address, city_id, latitude, longitude,
+      id, title, address, cityId, latitude, longitude,
       price, currency, status, images,
-      city:cities!properties_city_id_fkey(name),
-      propertyType:property_types!properties_property_type_id_fkey(name)
+      city:City!Property_cityId_fkey(name),
+      propertyType:PropertyType!Property_propertyTypeId_fkey(name)
     `)
-    .eq("is_active", true)
     .not("latitude", "is", null)
     .not("longitude", "is", null)
-    .order("created_at", { ascending: false })
+    .order("createdAt", { ascending: false })
 
   const properties =
     propertiesData?.map((prop: any) => ({

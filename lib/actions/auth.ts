@@ -14,14 +14,14 @@ const JWT_SECRET = new TextEncoder().encode(
 async function findUserByEmail(email: string) {
   try {
     const supabase = await createAdminClient()
-    
+
     const { data: userData, error: userError } = await supabase
-      .from("users")
-      .select("id, email, name, password, role, is_active")
+      .from("User")
+      .select("id, email, name, password, role, isActive")
       .eq("email", email)
       .single()
 
-    if (userError || !userData || !userData.is_active) {
+    if (userError || !userData || !userData.isActive) {
       return null
     }
 
@@ -45,7 +45,7 @@ export async function signIn(formData: FormData) {
     if (!user) {
       return { error: "Credenciales inválidas" }
     }
-    
+
     const isValidPassword = await compare(password, user.password)
 
     if (!isValidPassword) {
@@ -102,12 +102,12 @@ export async function getSession() {
 
     const supabase = await createAdminClient()
     const { data: userData } = await supabase
-      .from("users")
-      .select("id, email, name, role, is_active")
+      .from("User")
+      .select("id, email, name, role, isActive")
       .eq("id", payload.userId as string)
       .single()
 
-    if (!userData || !userData.is_active) return null
+    if (!userData || !userData.isActive) return null
 
     return {
       id: userData.id,
