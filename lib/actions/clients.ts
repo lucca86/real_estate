@@ -32,10 +32,10 @@ export async function getAgents() {
     const supabase = await createAdminClient()
 
     const { data: agents, error } = await supabase
-      .from("User")
+      .from("users")
       .select("id, name, email, role")
       .in("role", ["VENDEDOR", "ADMIN"])
-      .eq("isActive", true)
+      .eq("is_active", true)
       .order("name")
 
     if (error) throw error
@@ -55,32 +55,30 @@ export async function getClients() {
 
     const supabase = await createAdminClient()
 
-    let query = supabase
-      .from("Client")
+    const { data: clients, error } = await supabase
+      .from("clients")
       .select(`
-        id, name, email, phone, secondaryPhone, address,
-        cityId, provinceId, countryId, occupation,
-        budget, preferredPropertyTypeId, preferredTransactionType,
-        notes, source, isActive, createdAt, updatedAt,
-        city:City!Client_cityId_fkey(id, name),
-        province:Province!Client_provinceId_fkey(id, name),
-        country:Country!Client_countryId_fkey(id, name)
+        id, name, email, phone, secondary_phone, address,
+        city_id, province_id, country_id, occupation,
+        budget_min, budget_max, preferred_property_type_id, preferred_transaction_type,
+        notes, source, is_active, created_at, updated_at, agent_id,
+        city:cities!clients_city_id_fkey(id, name),
+        province:provinces!clients_province_id_fkey(id, name),
+        country:countries!clients_country_id_fkey(id, name)
       `)
-      .order("createdAt", { ascending: false })
-
-    const { data: clients, error } = await query
+      .order("created_at", { ascending: false })
 
     if (error) throw error
 
     // Single query for appointment counts
     const clientIds = (clients || []).map((c) => c.id)
     const { data: apptCounts } = clientIds.length > 0
-      ? await supabase.from("Appointment").select("clientId").in("clientId", clientIds)
+      ? await supabase.from("appointments").select("client_id").in("client_id", clientIds)
       : { data: [] }
 
     const apptMap: Record<string, number> = {}
     for (const row of apptCounts ?? []) {
-      if (row.clientId) apptMap[row.clientId] = (apptMap[row.clientId] ?? 0) + 1
+      if (row.client_id) apptMap[row.client_id] = (apptMap[row.client_id] ?? 0) + 1
     }
 
     const clientsWithCounts = (clients || []).map((client) => {
@@ -93,20 +91,21 @@ export async function getClients() {
         name: client.name ?? "",
         email: client.email ?? null,
         phone: client.phone ?? "",
-        secondaryPhone: client.secondaryPhone ?? null,
+        secondaryPhone: client.secondary_phone ?? null,
         address: client.address ?? null,
-        cityId: client.cityId ?? null,
-        provinceId: client.provinceId ?? null,
-        countryId: client.countryId ?? null,
+        cityId: client.city_id ?? null,
+        provinceId: client.province_id ?? null,
+        countryId: client.country_id ?? null,
         occupation: client.occupation ?? null,
-        budget: client.budget ?? null,
-        preferredPropertyTypeId: client.preferredPropertyTypeId ?? null,
-        preferredTransactionType: client.preferredTransactionType ?? null,
+        budget: client.budget_max || client.budget_min || null,
+        preferredPropertyTypeId: client.preferred_property_type_id ?? null,
+        preferredTransactionType: client.preferred_transaction_type ?? null,
         notes: client.notes ?? null,
         source: client.source ?? null,
-        isActive: client.isActive ?? true,
-        createdAt: client.createdAt ?? null,
-        updatedAt: client.updatedAt ?? null,
+        isActive: client.is_active ?? true,
+        createdAt: client.created_at ?? null,
+        updatedAt: client.updated_at ?? null,
+        agentId: client.agent_id ?? null,
         city: city ? { id: String(city.id), name: String(city.name) } : null,
         province: province ? { id: String(province.id), name: String(province.name) } : null,
         country: country ? { id: String(country.id), name: String(country.name) } : null,
@@ -130,12 +129,12 @@ export async function getClientById(id: string) {
     const supabase = await createAdminClient()
 
     const { data: client, error } = await supabase
-      .from("Client")
+      .from("clients")
       .select(`
         *,
-        city:City!Client_cityId_fkey(name),
-        province:Province!Client_provinceId_fkey(name),
-        country:Country!Client_countryId_fkey(name)
+        city:cities!clients_city_id_fkey(name),
+        province:provinces!clients_province_id_fkey(name),
+        country:countries!clients_country_id_fkey(name)
       `)
       .eq("id", id)
       .single()
@@ -165,21 +164,23 @@ export async function createClient(data: z.infer<typeof clientSchema>) {
       name: validated.name,
       email: validated.email || null,
       phone: validated.phone,
-      secondaryPhone: validated.secondaryPhone || null,
+      secondary_phone: validated.secondaryPhone || null,
       address: validated.address || null,
-      cityId: validated.cityId || null,
-      provinceId: validated.provinceId || null,
-      countryId: validated.countryId || null,
+      city_id: validated.cityId || null,
+      province_id: validated.provinceId || null,
+      country_id: validated.countryId || null,
       occupation: validated.occupation || null,
-      budget: validated.budgetMax || validated.budgetMin || null,
-      preferredPropertyTypeId: validated.preferredPropertyTypeId || null,
-      preferredTransactionType: validated.preferredTransactionType || null,
+      budget_min: validated.budgetMin || null,
+      budget_max: validated.budgetMax || null,
+      preferred_property_type_id: validated.preferredPropertyTypeId || null,
+      preferred_transaction_type: validated.preferredTransactionType || null,
       notes: validated.notes || null,
       source: validated.source || null,
-      isActive: validated.isActive,
+      is_active: validated.isActive,
+      agent_id: validated.agentId || null,
     }
 
-    const { data: client, error } = await supabase.from("Client").insert(clientData).select().single()
+    const { data: client, error } = await supabase.from("clients").insert(clientData).select().single()
 
     if (error) throw error
 
@@ -208,21 +209,23 @@ export async function updateClient(id: string, data: z.infer<typeof clientSchema
       name: validated.name,
       email: validated.email || null,
       phone: validated.phone,
-      secondaryPhone: validated.secondaryPhone || null,
+      secondary_phone: validated.secondaryPhone || null,
       address: validated.address || null,
-      cityId: validated.cityId || null,
-      provinceId: validated.provinceId || null,
-      countryId: validated.countryId || null,
+      city_id: validated.cityId || null,
+      province_id: validated.provinceId || null,
+      country_id: validated.countryId || null,
       occupation: validated.occupation || null,
-      budget: validated.budgetMax || validated.budgetMin || null,
-      preferredPropertyTypeId: validated.preferredPropertyTypeId || null,
-      preferredTransactionType: validated.preferredTransactionType || null,
+      budget_min: validated.budgetMin || null,
+      budget_max: validated.budgetMax || null,
+      preferred_property_type_id: validated.preferredPropertyTypeId || null,
+      preferred_transaction_type: validated.preferredTransactionType || null,
       notes: validated.notes || null,
       source: validated.source || null,
-      isActive: validated.isActive,
+      is_active: validated.isActive,
+      agent_id: validated.agentId || null,
     }
 
-    const { data: client, error } = await supabase.from("Client").update(clientData).eq("id", id).select().single()
+    const { data: client, error } = await supabase.from("clients").update(clientData).eq("id", id).select().single()
 
     if (error) throw error
 
@@ -246,13 +249,13 @@ export async function deleteClient(id: string) {
 
     const supabase = await createAdminClient()
 
-    const { error } = await supabase.from("Client").delete().eq("id", id)
+    const { error } = await supabase.from("clients").delete().eq("id", id)
 
     if (error) {
       if (error.code === "23503") {
         const { error: updateError } = await supabase
-          .from("Client")
-          .update({ isActive: false })
+          .from("clients")
+          .update({ is_active: false })
           .eq("id", id)
 
         if (updateError) throw updateError
@@ -274,23 +277,6 @@ export async function deleteClient(id: string) {
       success: false,
       error: error.message || "Error al eliminar cliente",
     }
-  }
-}
-
-export async function reassignClientAgent(clientId: string, newAgentId: string) {
-  try {
-    const currentUser = await getCurrentUser()
-    if (!currentUser || currentUser.role !== "ADMIN") {
-      return { success: false, error: "No tienes permiso para realizar esta acción" }
-    }
-
-    const supabase = await createAdminClient()
-
-    // Client table does not have agentId - no-op for now
-    revalidatePath("/clients")
-    return { success: true, message: "Agente reasignado exitosamente" }
-  } catch {
-    return { success: false, error: "Error al reasignar agente" }
   }
 }
 

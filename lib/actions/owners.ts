@@ -29,27 +29,27 @@ export async function getOwners() {
     const supabase = await createAdminClient()
 
     const { data: owners, error } = await supabase
-      .from("Owner")
+      .from("owners")
       .select(`
-        id, name, email, phone, secondaryPhone, address,
-        cityId, provinceId, countryId,
-        idNumber, taxId, notes, isActive, createdAt, updatedAt,
-        city:City!Owner_cityId_fkey(id, name),
-        province:Province!Owner_provinceId_fkey(id, name),
-        country:Country!Owner_countryId_fkey(id, name)
+        id, name, email, phone, secondary_phone, address,
+        city_id, province_id, country_id,
+        id_number, tax_id, notes, is_active, created_at, updated_at,
+        first_name, last_name, owner_type, real_estate_agency,
+        city:cities!owners_city_id_fkey(id, name),
+        province:provinces!owners_province_id_fkey(id, name),
+        country:countries!owners_country_id_fkey(id, name)
       `)
-      .order("createdAt", { ascending: false })
+      .order("created_at", { ascending: false })
 
     if (error) throw error
 
-    // Fetch property counts in a single query
     const { data: propCounts } = await supabase
-      .from("Property")
-      .select("ownerId")
+      .from("properties")
+      .select("owner_id")
 
     const countMap: Record<string, number> = {}
     for (const row of propCounts ?? []) {
-      if (row.ownerId) countMap[row.ownerId] = (countMap[row.ownerId] ?? 0) + 1
+      if (row.owner_id) countMap[row.owner_id] = (countMap[row.owner_id] ?? 0) + 1
     }
 
     const ownersWithCounts = (owners ?? []).map((owner) => {
@@ -62,17 +62,21 @@ export async function getOwners() {
         name: owner.name ?? "",
         email: owner.email ?? null,
         phone: owner.phone ?? "",
-        secondaryPhone: owner.secondaryPhone ?? null,
+        secondaryPhone: owner.secondary_phone ?? null,
         address: owner.address ?? null,
-        cityId: owner.cityId ?? null,
-        provinceId: owner.provinceId ?? null,
-        countryId: owner.countryId ?? null,
-        idNumber: owner.idNumber ?? null,
-        taxId: owner.taxId ?? null,
+        cityId: owner.city_id ?? null,
+        provinceId: owner.province_id ?? null,
+        countryId: owner.country_id ?? null,
+        idNumber: owner.id_number ?? null,
+        taxId: owner.tax_id ?? null,
         notes: owner.notes ?? null,
-        isActive: owner.isActive ?? true,
-        createdAt: owner.createdAt ?? null,
-        updatedAt: owner.updatedAt ?? null,
+        isActive: owner.is_active ?? true,
+        createdAt: owner.created_at ?? null,
+        updatedAt: owner.updated_at ?? null,
+        firstName: owner.first_name ?? null,
+        lastName: owner.last_name ?? null,
+        ownerType: owner.owner_type ?? null,
+        realEstateAgency: owner.real_estate_agency ?? null,
         city: city ? { id: String(city.id), name: String(city.name) } : null,
         province: province ? { id: String(province.id), name: String(province.name) } : null,
         country: country ? { id: String(country.id), name: String(country.name) } : null,
@@ -92,12 +96,12 @@ export async function getOwnerById(id: string) {
     const supabase = await createAdminClient()
 
     const { data: owner, error } = await supabase
-      .from("Owner")
+      .from("owners")
       .select(`
         *,
-        city:City!Owner_cityId_fkey(name),
-        province:Province!Owner_provinceId_fkey(name),
-        country:Country!Owner_countryId_fkey(name)
+        city:cities!owners_city_id_fkey(name),
+        province:provinces!owners_province_id_fkey(name),
+        country:countries!owners_country_id_fkey(name)
       `)
       .eq("id", id)
       .single()
@@ -116,10 +120,8 @@ export async function createOwner(formData: FormData) {
   try {
     const firstName = formData.get("firstName") as string
     const lastName = formData.get("lastName") as string
-    const ownerType = formData.get("ownerType") as string
-    const realEstateAgency = formData.get("realEstateAgency") as string
-    const email = formData.get("email") as string
     const phone = formData.get("phone") as string
+    const email = formData.get("email") as string
     const countryId = formData.get("countryId") as string
     const provinceId = formData.get("provinceId") as string
     const cityId = formData.get("cityId") as string
@@ -131,21 +133,25 @@ export async function createOwner(formData: FormData) {
     const ownerData = {
       id: crypto.randomUUID(),
       name: `${firstName} ${lastName}`,
+      first_name: firstName,
+      last_name: lastName,
+      owner_type: (formData.get("ownerType") as string) || "Propietario",
+      real_estate_agency: (formData.get("realEstateAgency") as string) || null,
       email: email || null,
       phone,
-      secondaryPhone: (formData.get("secondaryPhone") as string) || null,
+      secondary_phone: (formData.get("secondaryPhone") as string) || null,
       address: (formData.get("address") as string) || null,
-      cityId: cityId || null,
-      provinceId: provinceId || null,
-      countryId: countryId || null,
-      idNumber: (formData.get("idNumber") as string) || null,
-      taxId: (formData.get("taxId") as string) || null,
+      city_id: cityId || null,
+      province_id: provinceId || null,
+      country_id: countryId || null,
+      id_number: (formData.get("idNumber") as string) || null,
+      tax_id: (formData.get("taxId") as string) || null,
       notes: (formData.get("notes") as string) || null,
-      isActive: true,
+      is_active: true,
     }
 
     const supabase = await createAdminClient()
-    const { data: owner, error } = await supabase.from("Owner").insert(ownerData).select().single()
+    const { data: owner, error } = await supabase.from("owners").insert(ownerData).select().single()
 
     if (error) throw error
 
@@ -180,21 +186,25 @@ export async function updateOwner(
   try {
     const ownerData = {
       name: `${data.firstName} ${data.lastName}`,
+      first_name: data.firstName,
+      last_name: data.lastName,
+      owner_type: data.ownerType,
+      real_estate_agency: data.realEstateAgency || null,
       email: data.email || null,
       phone: data.phone,
-      secondaryPhone: data.secondaryPhone || null,
+      secondary_phone: data.secondaryPhone || null,
       address: data.address || null,
-      cityId: data.cityId || null,
-      provinceId: data.provinceId || null,
-      countryId: data.countryId || null,
-      idNumber: data.idNumber || null,
-      taxId: data.taxId || null,
+      city_id: data.cityId || null,
+      province_id: data.provinceId || null,
+      country_id: data.countryId || null,
+      id_number: data.idNumber || null,
+      tax_id: data.taxId || null,
       notes: data.notes || null,
-      isActive: data.isActive,
+      is_active: data.isActive,
     }
 
     const supabase = await createAdminClient()
-    const { data: owner, error } = await supabase.from("Owner").update(ownerData).eq("id", id).select().single()
+    const { data: owner, error } = await supabase.from("owners").update(ownerData).eq("id", id).select().single()
 
     if (error) throw error
 
@@ -211,10 +221,13 @@ export async function deleteOwner(id: string) {
   try {
     const supabase = await createAdminClient()
 
-    const { count } = await supabase.from("Property").select("*", { count: "exact", head: true }).eq("ownerId", id)
+    const { count } = await supabase
+      .from("properties")
+      .select("*", { count: "exact", head: true })
+      .eq("owner_id", id)
 
     if (count && count > 0) {
-      const { error: updateError } = await supabase.from("Owner").update({ isActive: false }).eq("id", id)
+      const { error: updateError } = await supabase.from("owners").update({ is_active: false }).eq("id", id)
 
       if (updateError) throw updateError
 
@@ -225,7 +238,7 @@ export async function deleteOwner(id: string) {
       }
     }
 
-    const { error } = await supabase.from("Owner").delete().eq("id", id)
+    const { error } = await supabase.from("owners").delete().eq("id", id)
 
     if (error) throw error
 
