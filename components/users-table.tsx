@@ -17,9 +17,9 @@ export async function UsersTable({ currentUser }: UsersTableProps) {
   const supabase = await createAdminClient()
 
   const { data: users, error } = await supabase
-    .from("User")
-    .select("id, name, email, role, isActive, createdAt, avatar")
-    .order("createdAt", { ascending: false })
+    .from("users")
+    .select("id, name, email, role, is_active, created_at, avatar")
+    .order("created_at", { ascending: false })
 
   if (error || !users) {
     console.error("[v0] Error fetching users:", error)

@@ -2,14 +2,12 @@
 
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
-
 import { randomUUID } from "crypto"
 import { getCurrentUser } from "@/lib/auth"
 import { checkPermission, type Permission } from "@/lib/permissions"
-import { createAdminClient } from "@/lib/supabase/admin" // Import admin client for conflict checks to bypass RLS
+import { createAdminClient } from "@/lib/supabase/admin"
 import { serverLog } from "@/lib/server-log"
 
-// Esquema de validación para citas
 const appointmentSchema = z
   .object({
     propertyId: z.string().optional(),
@@ -45,21 +43,9 @@ type AppointmentResult = {
   conflictMessage?: string
 }
 
-// Horarios de trabajo
-const WORK_HOURS = {
-  weekday: {
-    morning: { start: 7.5, end: 12.5 }, // 7:30 - 12:30
-    afternoon: { start: 16.5, end: 20.5 }, // 16:30 - 20:30
-  },
-  saturday: {
-    morning: { start: 9, end: 12 }, // 9:00 - 12:00
-  },
-}
-
 const ARGENTINA_TIMEZONE = "America/Argentina/Buenos_Aires"
 
 function getArgentinaDateTime(date: Date): { day: number; hours: number; minutes: number } {
-  // Use Intl.DateTimeFormat to get the date/time in Argentina timezone
   const formatter = new Intl.DateTimeFormat("es-AR", {
     timeZone: ARGENTINA_TIMEZONE,
     weekday: "short",
@@ -73,38 +59,23 @@ function getArgentinaDateTime(date: Date): { day: number; hours: number; minutes
   const hour = Number.parseInt(parts.find((p) => p.type === "hour")?.value || "0")
   const minute = Number.parseInt(parts.find((p) => p.type === "minute")?.value || "0")
 
-  // Convert weekday to number (0 = Sunday, 6 = Saturday)
   const dayMap: Record<string, number> = {
-    dom: 0,
-    lun: 1,
-    mar: 2,
-    mié: 3,
-    jue: 4,
-    vie: 5,
-    sáb: 6,
+    dom: 0, lun: 1, mar: 2, mié: 3, jue: 4, vie: 5, sáb: 6,
   }
 
   const day = dayMap[weekday || ""] ?? 0
-
   return { day, hours: hour + minute / 60, minutes: minute }
 }
 
 async function isWithinWorkHours(date: Date): Promise<{ valid: boolean; message?: string }> {
   const { day, hours, minutes } = getArgentinaDateTime(date)
 
-  // Domingo siempre cerrado
   if (day === 0) {
     return { valid: false, message: "No se pueden agendar citas los domingos" }
   }
 
-  // Determinar el tipo de día
-  let dayType: "WEEKDAY" | "SATURDAY" | "HOLIDAY" = "WEEKDAY"
-  if (day === 6) {
-    dayType = "SATURDAY"
-  }
-  // TODO: Implementar detección de feriados si se requiere
-  
-  // Obtener configuración desde la base de datos
+  const dayType: "WEEKDAY" | "SATURDAY" | "HOLIDAY" = day === 6 ? "SATURDAY" : "WEEKDAY"
+
   const supabase = await createAdminClient()
   const { data: settings, error } = await supabase
     .from("appointment_settings")
@@ -129,10 +100,8 @@ async function isWithinWorkHours(date: Date): Promise<{ valid: boolean; message?
   }
 
   const currentMinutes = hours * 60 + minutes
-
   const [startHour, startMin] = s.start_time.split(":").map(Number)
   const [endHour, endMin] = s.end_time.split(":").map(Number)
-  
   const startMinutes = startHour * 60 + startMin
   const endMinutes = endHour * 60 + endMin
 
@@ -140,14 +109,10 @@ async function isWithinWorkHours(date: Date): Promise<{ valid: boolean; message?
     return { valid: true }
   }
 
-    const dayName = dayType === "SATURDAY" ? "Sábados" : "Lunes a Viernes"
-  return {
-    valid: false,
-    message: `${dayName}: ${s.start_time} a ${s.end_time}`,
-  }
+  const dayName = dayType === "SATURDAY" ? "Sábados" : "Lunes a Viernes"
+  return { valid: false, message: `${dayName}: ${s.start_time} a ${s.end_time}` }
 }
 
-// Verificar conflictos de horario para un agente
 async function checkScheduleConflict(
   agentId: string,
   scheduledAt: Date,
@@ -163,16 +128,16 @@ async function checkScheduleConflict(
 
   const supabase = createAdminClient()
   let query = supabase
-    .from("Appointment")
+    .from("appointments")
     .select(`
-      *,
-      property:Property!Appointment_propertyId_fkey(title),
-      client:Client!Appointment_clientId_fkey(name)
+      id, duration, contact_name, other_location, scheduled_date, agent_id,
+      property:properties!appointments_property_id_fkey(title),
+      client:clients!appointments_client_id_fkey(name)
     `)
-    .eq("agentId", agentId)
+    .eq("agent_id", agentId)
     .in("status", ["PENDIENTE", "CONFIRMADA"])
-    .gte("scheduledAt", dayStart.toISOString())
-    .lte("scheduledAt", dayEnd.toISOString())
+    .gte("scheduled_date", dayStart.toISOString())
+    .lte("scheduled_date", dayEnd.toISOString())
 
   if (excludeAppointmentId) {
     query = query.neq("id", excludeAppointmentId)
@@ -181,18 +146,14 @@ async function checkScheduleConflict(
   const { data: existingAppointments } = await query
 
   for (const existing of existingAppointments || []) {
-    const existingStart = new Date((existing as any).scheduledAt)
+    const existingStart = new Date((existing as any).scheduled_date)
     const existingEnd = new Date(existingStart.getTime() + existing.duration * 60000)
     const hasOverlap = scheduledAt < existingEnd && endTime > existingStart
 
     if (hasOverlap) {
-      const timeStr = existingStart.toLocaleTimeString("es-AR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-
-      const clientName = (existing.client as any)?.name || (existing as any).contactName || "un cliente"
-      const propertyTitle = (existing.property as any)?.title || (existing as any).otherLocation || "una propiedad"
+      const timeStr = existingStart.toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })
+      const clientName = (existing.client as any)?.name || (existing as any).contact_name || "un cliente"
+      const propertyTitle = (existing.property as any)?.title || (existing as any).other_location || "una propiedad"
 
       return {
         hasConflict: true,
@@ -204,7 +165,6 @@ async function checkScheduleConflict(
   return { hasConflict: false }
 }
 
-// Crear una nueva cita
 export async function createAppointment(data: AppointmentFormData): Promise<AppointmentResult> {
   try {
     const currentUser = await getCurrentUser()
@@ -212,13 +172,12 @@ export async function createAppointment(data: AppointmentFormData): Promise<Appo
       return { success: false, error: "Usuario no autenticado" }
     }
 
-    const hasPermission = await checkPermission("appointments.create")
-    if (!hasPermission) {
+    const hasPermissionResult = await checkPermission("appointments.create")
+    if (!hasPermissionResult) {
       return { success: false, error: "No tienes permisos para crear citas" }
     }
 
     const validatedData = appointmentSchema.parse(data)
-
     const scheduledDate = new Date(validatedData.scheduledAt)
 
     const now = new Date()
@@ -226,97 +185,76 @@ export async function createAppointment(data: AppointmentFormData): Promise<Appo
       return { success: false, error: "No se pueden agendar citas en el pasado" }
     }
 
-    // Verificar que la duración esté dentro de los límites configurados
     const { day } = getArgentinaDateTime(scheduledDate)
-    let dayType: "WEEKDAY" | "SATURDAY" | "HOLIDAY" = "WEEKDAY"
-    if (day === 6) {
-      dayType = "SATURDAY"
-    }
-    
+    const dayType: "WEEKDAY" | "SATURDAY" | "HOLIDAY" = day === 6 ? "SATURDAY" : "WEEKDAY"
+
     const supabase = await createAdminClient()
     const { data: daySetting } = await supabase
       .from("appointment_settings")
       .select("*")
       .eq("day_type", dayType)
       .single()
-    
+
     if (daySetting) {
       const ds = daySetting as any
       if (validatedData.duration < ds.min_duration) {
-        return {
-          success: false,
-          error: `La duración mínima permitida es de ${ds.min_duration} minutos`,
-        }
+        return { success: false, error: `La duración mínima permitida es de ${ds.min_duration} minutos` }
       }
-      
       if (validatedData.duration > ds.max_duration) {
-        return {
-          success: false,
-          error: `La duración máxima permitida es de ${ds.max_duration} minutos`,
-        }
+        return { success: false, error: `La duración máxima permitida es de ${ds.max_duration} minutos` }
       }
     }
-    
+
     const workHoursCheck = await isWithinWorkHours(scheduledDate)
     if (!workHoursCheck.valid) {
-      return {
-        success: false,
-        error: workHoursCheck.message || "Horario no disponible",
-      }
+      return { success: false, error: workHoursCheck.message || "Horario no disponible" }
     }
 
     const endTime = new Date(scheduledDate.getTime() + validatedData.duration * 60000)
     const endTimeCheck = await isWithinWorkHours(endTime)
     if (!endTimeCheck.valid) {
-      return {
-        success: false,
-        error: `La cita terminaría fuera del horario de atención (${endTimeCheck.message})`,
-      }
+      return { success: false, error: `La cita terminaría fuera del horario de atención (${endTimeCheck.message})` }
     }
 
     const conflictCheck = await checkScheduleConflict(validatedData.agentId, scheduledDate, validatedData.duration)
     if (conflictCheck.hasConflict) {
-      return {
-        success: false,
-        error: conflictCheck.message || "El agente ya tiene una cita en ese horario",
-      }
+      return { success: false, error: conflictCheck.message || "El agente ya tiene una cita en ese horario" }
     }
 
     const [propertyResult, clientResult, agentResult] = await Promise.all([
       validatedData.propertyId
-        ? supabase.from("Property").select("*").eq("id", validatedData.propertyId).single()
+        ? supabase.from("properties").select("id").eq("id", validatedData.propertyId).single()
         : { data: null },
       validatedData.clientId
-        ? supabase.from("Client").select("*").eq("id", validatedData.clientId).single()
+        ? supabase.from("clients").select("id").eq("id", validatedData.clientId).single()
         : { data: null },
-      supabase.from("User").select("*").eq("id", validatedData.agentId).single(),
+      supabase.from("users").select("id").eq("id", validatedData.agentId).single(),
     ])
 
-    const property = propertyResult.data
-    const client = clientResult.data
-    const agent = agentResult.data
-
-    if (validatedData.propertyId && !property) {
+    if (validatedData.propertyId && !propertyResult.data) {
       return { success: false, error: "La propiedad no existe" }
     }
 
-    if (!agent) {
+    if (!agentResult.data) {
       return { success: false, error: "El agente no existe" }
     }
 
     const appointmentId = randomUUID()
 
     const { data: appointment, error: insertError } = await supabase
-      .from("Appointment")
+      .from("appointments")
       .insert({
         id: appointmentId,
-        propertyId: validatedData.propertyId || null,
-        clientId: validatedData.clientId || null,
-        agentId: validatedData.agentId,
-        scheduledAt: scheduledDate.toISOString(),
+        property_id: validatedData.propertyId || null,
+        other_location: validatedData.otherLocation || null,
+        client_id: validatedData.clientId || null,
+        contact_name: validatedData.contactName || null,
+        agent_id: validatedData.agentId,
+        scheduled_date: scheduledDate.toISOString(),
         duration: validatedData.duration,
         status: validatedData.status,
         notes: validatedData.notes || null,
+        created_by: currentUser.id,
       })
       .select()
       .single()
@@ -326,26 +264,17 @@ export async function createAppointment(data: AppointmentFormData): Promise<Appo
       throw insertError
     }
 
-    // TODO: Implementar sistema de notificaciones por email si se requiere
-
     revalidatePath("/appointments")
     return { success: true, data: appointment }
   } catch (error) {
     serverLog.error("Error creating appointment:", error)
     if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: error.errors[0]?.message || "Datos inválidos",
-      }
+      return { success: false, error: error.errors[0]?.message || "Datos inválidos" }
     }
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Error al crear la cita",
-    }
+    return { success: false, error: error instanceof Error ? error.message : "Error al crear la cita" }
   }
 }
 
-// Obtener todas las citas con filtros opcionales
 export async function getAppointments(filters?: {
   agentId?: string
   clientId?: string
@@ -359,22 +288,24 @@ export async function getAppointments(filters?: {
     const supabase = await createAdminClient()
 
     let query = supabase
-      .from("Appointment")
+      .from("appointments")
       .select(`
-        id, propertyId, clientId,
-        agentId, scheduledAt, duration, status, notes, createdAt,
-        property:Property!Appointment_propertyId_fkey(id, title, address, price, images, city:City!Property_cityId_fkey(id, name)),
-        client:Client!Appointment_clientId_fkey(id, name, email, phone),
-        agent:User!Appointment_agentId_fkey(id, name, email)
+        id, property_id, client_id, contact_name, other_location,
+        agent_id, scheduled_date, duration, status, notes, created_at,
+        property:properties!appointments_property_id_fkey(id, title, address, price, images,
+          city:cities!properties_city_id_fkey(id, name)),
+        client:clients!appointments_client_id_fkey(id, name, email, phone),
+        agent:users!appointments_agent_id_fkey(id, name, email)
       `)
-      .order("scheduledAt", { ascending: true })
+      .order("scheduled_date", { ascending: true })
 
-    if (filters?.agentId) query = query.eq("agentId", filters.agentId)
-    if (filters?.clientId) query = query.eq("clientId", filters.clientId)
-    if (filters?.propertyId) query = query.eq("propertyId", filters.propertyId)
+    if (filters?.agentId) query = query.eq("agent_id", filters.agentId)
+    if (filters?.clientId) query = query.eq("client_id", filters.clientId)
+    if (filters?.contactName) query = query.ilike("contact_name", `%${filters.contactName}%`)
+    if (filters?.propertyId) query = query.eq("property_id", filters.propertyId)
     if (filters?.status) query = query.eq("status", filters.status)
-    if (filters?.startDate) query = query.gte("scheduledAt", filters.startDate)
-    if (filters?.endDate) query = query.lte("scheduledAt", filters.endDate)
+    if (filters?.startDate) query = query.gte("scheduled_date", filters.startDate)
+    if (filters?.endDate) query = query.lte("scheduled_date", filters.endDate)
 
     const { data: appointments, error } = await query
 
@@ -391,41 +322,32 @@ export async function getAppointments(filters?: {
 
         return {
           id: apt.id,
-          scheduledAt: (apt as any).scheduledAt,
+          scheduledAt: (apt as any).scheduled_date,
           duration: apt.duration,
           status: apt.status,
           notes: apt.notes,
-          contactName: (apt as any).contactName,
-          otherLocation: (apt as any).otherLocation,
+          contactName: (apt as any).contact_name,
+          otherLocation: (apt as any).other_location,
           property: property
             ? {
-                id: property.id,
-                title: property.title,
-                address: property.address,
-                price: property.price,
+                id: (property as any).id,
+                title: (property as any).title,
+                address: (property as any).address,
+                price: (property as any).price,
                 city: (() => {
-                  const cityData = property.city as any
+                  const cityData = (property as any).city
                   if (!cityData) return "Sin ciudad"
                   if (Array.isArray(cityData)) return cityData[0]?.name || "Sin ciudad"
                   return cityData.name || "Sin ciudad"
                 })(),
-                images: property.images,
+                images: (property as any).images,
               }
             : null,
           client: client
-            ? {
-                id: client.id,
-                name: client.name,
-                email: client.email,
-                phone: client.phone,
-              }
+            ? { id: (client as any).id, name: (client as any).name, email: (client as any).email, phone: (client as any).phone }
             : null,
           agent: agent
-            ? {
-                id: agent.id,
-                name: agent.name,
-                email: agent.email,
-              }
+            ? { id: (agent as any).id, name: (agent as any).name, email: (agent as any).email }
             : null,
         }
       }) || []
@@ -437,17 +359,16 @@ export async function getAppointments(filters?: {
   }
 }
 
-// Obtener una cita por ID
 export async function getAppointmentById(id: string) {
   try {
     const supabase = await createAdminClient()
     const { data: appointment } = await supabase
-      .from("Appointment")
+      .from("appointments")
       .select(`
         *,
-        property:Property!Appointment_propertyId_fkey(id, title, address, cityId, images),
-        client:Client!Appointment_clientId_fkey(id, name, email, phone),
-        agent:User!Appointment_agentId_fkey(id, name, email)
+        property:properties!appointments_property_id_fkey(id, title, address, city_id, images),
+        client:clients!appointments_client_id_fkey(id, name, email, phone),
+        agent:users!appointments_agent_id_fkey(id, name, email)
       `)
       .eq("id", id)
       .single()
@@ -456,51 +377,36 @@ export async function getAppointmentById(id: string) {
       return { success: false, error: "Cita no encontrada" }
     }
 
-    const transformedAppointment = {
-      ...appointment,
-      property: appointment.property
-        ? {
-            id: (appointment.property as any).id,
-            title: (appointment.property as any).title,
-            address: (appointment.property as any).address,
-          }
-        : null,
-      client: appointment.client
-        ? {
-            id: (appointment.client as any).id,
-            name: (appointment.client as any).name,
-            email: (appointment.client as any).email,
-            phone: (appointment.client as any).phone,
-          }
-        : null,
-      agent: appointment.agent
-        ? {
-            id: (appointment.agent as any).id,
-            name: (appointment.agent as any).name,
-            email: (appointment.agent as any).email,
-          }
-        : null,
+    return {
+      success: true,
+      data: {
+        ...appointment,
+        scheduledAt: (appointment as any).scheduled_date,
+        contactName: (appointment as any).contact_name,
+        otherLocation: (appointment as any).other_location,
+        property: appointment.property
+          ? { id: (appointment.property as any).id, title: (appointment.property as any).title, address: (appointment.property as any).address }
+          : null,
+        client: appointment.client
+          ? { id: (appointment.client as any).id, name: (appointment.client as any).name, email: (appointment.client as any).email, phone: (appointment.client as any).phone }
+          : null,
+        agent: appointment.agent
+          ? { id: (appointment.agent as any).id, name: (appointment.agent as any).name, email: (appointment.agent as any).email }
+          : null,
+      },
     }
-
-    return { success: true, data: transformedAppointment }
   } catch (error) {
     serverLog.error("Error fetching appointment:", error)
     return { success: false, error: "Error al obtener la cita" }
   }
 }
 
-// Actualizar una cita
 export async function updateAppointment(id: string, data: Partial<AppointmentInput>) {
   try {
     const supabase = await createAdminClient()
     const { data: existing } = await supabase
-      .from("Appointment")
-      .select(`
-        *,
-        property:Property!Appointment_propertyId_fkey(id, title, address, cityId, images),
-        client:Client!Appointment_clientId_fkey(id, name, email, phone),
-        agent:User!Appointment_agentId_fkey(id, name, email)
-      `)
+      .from("appointments")
+      .select("*")
       .eq("id", id)
       .single()
 
@@ -508,78 +414,66 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
       return { success: false, error: "Cita no encontrada" }
     }
 
-  if (data.scheduledAt || data.duration) {
-    const scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : new Date((existing as any).scheduledAt)
-    const duration = data.duration ?? existing.duration
-    const agentId = data.agentId ?? (existing as any).agentId ?? ""
+    if (data.scheduledAt || data.duration) {
+      const scheduledAt = data.scheduledAt ? new Date(data.scheduledAt) : new Date((existing as any).scheduled_date)
+      const duration = data.duration ?? existing.duration
+      const agentId = data.agentId ?? (existing as any).agent_id ?? ""
 
-    // Verificar que la duración esté dentro de los límites configurados
-    const { day } = getArgentinaDateTime(scheduledAt)
-    let dayType: "WEEKDAY" | "SATURDAY" | "HOLIDAY" = "WEEKDAY"
-    if (day === 6) {
-      dayType = "SATURDAY"
-    }
-    
-    const { data: daySetting } = await supabase
-      .from("appointment_settings")
-      .select("*")
-      .eq("day_type", dayType)
-      .single()
-    
-    if (daySetting) {
-      if (duration < (daySetting as any).min_duration) {
-        return {
-          success: false,
-          error: `La duración mínima permitida es de ${(daySetting as any).min_duration} minutos`,
+      const { day } = getArgentinaDateTime(scheduledAt)
+      const dayType: "WEEKDAY" | "SATURDAY" | "HOLIDAY" = day === 6 ? "SATURDAY" : "WEEKDAY"
+
+      const { data: daySetting } = await supabase
+        .from("appointment_settings")
+        .select("*")
+        .eq("day_type", dayType)
+        .single()
+
+      if (daySetting) {
+        if (duration < (daySetting as any).min_duration) {
+          return { success: false, error: `La duración mínima permitida es de ${(daySetting as any).min_duration} minutos` }
+        }
+        if (duration > (daySetting as any).max_duration) {
+          return { success: false, error: `La duración máxima permitida es de ${(daySetting as any).max_duration} minutos` }
         }
       }
-      
-      if (duration > (daySetting as any).max_duration) {
-        return {
-          success: false,
-          error: `La duración máxima permitida es de ${(daySetting as any).max_duration} minutos`,
-        }
+
+      const workHoursCheck = await isWithinWorkHours(scheduledAt)
+      if (!workHoursCheck.valid) {
+        return { success: false, error: workHoursCheck.message || "Horario no válido" }
+      }
+
+      const endTime = new Date(scheduledAt.getTime() + duration * 60000)
+      const endTimeCheck = await isWithinWorkHours(endTime)
+      if (!endTimeCheck.valid) {
+        return { success: false, error: "La cita se extiende fuera del horario de trabajo" }
+      }
+
+      const conflictCheck = await checkScheduleConflict(agentId, scheduledAt, duration, id)
+      if (conflictCheck.hasConflict) {
+        return { success: false, error: conflictCheck.message || "Conflicto de horario" }
       }
     }
-
-    const workHoursCheck = await isWithinWorkHours(scheduledAt)
-    if (!workHoursCheck.valid) {
-      return { success: false, error: workHoursCheck.message || "Horario no válido" }
-    }
-
-    const endTime = new Date(scheduledAt.getTime() + duration * 60000)
-    const endTimeCheck = await isWithinWorkHours(endTime)
-    if (!endTimeCheck.valid) {
-      return {
-        success: false,
-        error: "La cita se extiende fuera del horario de trabajo",
-      }
-    }
-
-    const conflictCheck = await checkScheduleConflict(agentId, scheduledAt, duration, id)
-    if (conflictCheck.hasConflict) {
-      return { success: false, error: conflictCheck.message || "Conflicto de horario" }
-    }
-  }
 
     const updateData: any = {}
-    if (data.propertyId !== undefined) updateData.propertyId = data.propertyId || null
-    if (data.clientId) updateData.clientId = data.clientId
-    if (data.agentId) updateData.agentId = data.agentId
-    if (data.scheduledAt) updateData.scheduledAt = new Date(data.scheduledAt).toISOString()
+    if (data.propertyId !== undefined) updateData.property_id = data.propertyId || null
+    if (data.otherLocation !== undefined) updateData.other_location = data.otherLocation || null
+    if (data.clientId !== undefined) updateData.client_id = data.clientId || null
+    if (data.contactName !== undefined) updateData.contact_name = data.contactName || null
+    if (data.agentId) updateData.agent_id = data.agentId
+    if (data.scheduledAt) updateData.scheduled_date = new Date(data.scheduledAt).toISOString()
     if (data.duration) updateData.duration = data.duration
     if (data.status) updateData.status = data.status
     if (data.notes !== undefined) updateData.notes = data.notes
 
     const { data: updatedAppointment, error } = await supabase
-      .from("Appointment")
+      .from("appointments")
       .update(updateData)
       .eq("id", id)
       .select(`
         *,
-        property:Property!Appointment_propertyId_fkey(*),
-        client:Client!Appointment_clientId_fkey(*),
-        agent:User!Appointment_agentId_fkey(id, name, email)
+        property:properties!appointments_property_id_fkey(*),
+        client:clients!appointments_client_id_fkey(*),
+        agent:users!appointments_agent_id_fkey(id, name, email)
       `)
       .single()
 
@@ -596,7 +490,6 @@ export async function updateAppointment(id: string, data: Partial<AppointmentInp
   }
 }
 
-// Eliminar una cita
 export async function deleteAppointment(id: string) {
   try {
     const user = await getCurrentUser()
@@ -604,25 +497,21 @@ export async function deleteAppointment(id: string) {
       return { success: false, error: "No autenticado" }
     }
 
-    // Check if user has the delete permission (only ADMIN should have this)
     const hasDeletePermission = await checkPermission("appointments.delete" as Permission)
-    if (!hasDeletePermission) {
-      return { success: false, error: "Solo los administradores pueden eliminar citas" }
+    if (!hasDeletePermission && user.role !== "ADMIN") {
+      return { success: false, error: "No tienes permisos para eliminar citas" }
     }
 
     const supabase = await createAdminClient()
-
-    // Verify appointment exists
-    const { data: appointment } = await supabase.from("Appointment").select("id").eq("id", id).single()
+    const { data: appointment } = await supabase.from("appointments").select("id").eq("id", id).single()
 
     if (!appointment) {
       return { success: false, error: "Cita no encontrada" }
     }
 
-    const { error } = await supabase.from("Appointment").delete().eq("id", id)
+    const { error } = await supabase.from("appointments").delete().eq("id", id)
 
     if (error) {
-      serverLog.error("Error deleting appointment:", error)
       return { success: false, error: "Error al eliminar la cita" }
     }
 
@@ -634,31 +523,30 @@ export async function deleteAppointment(id: string) {
   }
 }
 
-// Cambiar el estado de una cita
 export async function updateAppointmentStatus(id: string, status: AppointmentStatus) {
   try {
     const supabase = await createAdminClient()
+
     const { data: appointment, error } = await supabase
-      .from("Appointment")
+      .from("appointments")
       .update({ status })
       .eq("id", id)
       .select(`
         *,
-        property:Property!Appointment_propertyId_fkey(id, title, address, cityId, images),
-        client:Client!Appointment_clientId_fkey(id, name, email, phone),
-        agent:User!Appointment_agentId_fkey(id, name, email)
+        property:properties!appointments_property_id_fkey(id, title, address, city_id, images),
+        client:clients!appointments_client_id_fkey(id, name, email, phone),
+        agent:users!appointments_agent_id_fkey(id, name, email)
       `)
       .single()
 
     if (error || !appointment) {
-      serverLog.error("Error updating appointment status:", error)
-      return { success: false, error: "Error al actualizar el estado de la cita" }
+      return { success: false, error: "Error al actualizar el estado" }
     }
 
     revalidatePath("/appointments")
     return { success: true, data: appointment }
   } catch (error) {
     serverLog.error("Error updating appointment status:", error)
-    return { success: false, error: "Error al actualizar el estado de la cita" }
+    return { success: false, error: "Error al actualizar el estado" }
   }
 }

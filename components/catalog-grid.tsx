@@ -21,26 +21,26 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
   const supabase = await createAdminClient()
 
   let query = supabase
-    .from("Property")
+    .from("properties")
     .select(`
       *,
-      owner:Owner!ownerId(name, phone),
-      city:City!cityId(name),
-      province:Province!provinceId(name),
-      propertyType:PropertyType!propertyTypeId(name)
+      owner:owners!properties_owner_id_fkey(name, phone),
+      city:cities!properties_city_id_fkey(name),
+      province:provinces!properties_province_id_fkey(name),
+      property_type:property_types!properties_property_type_id_fkey(name)
     `)
-    .order("createdAt", { ascending: false })
+    .order("created_at", { ascending: false })
 
   if (search) {
     query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
   }
 
   if (propertyType) {
-    query = query.eq("propertyTypeId", propertyType)
+    query = query.eq("property_type_id", propertyType)
   }
 
   if (transactionType) {
-    query = query.eq("transactionType", transactionType)
+    query = query.eq("transaction_type", transactionType)
   }
 
   if (status) {
@@ -48,7 +48,7 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
   }
 
   if (city) {
-    query = query.eq("cityId", city)
+    query = query.eq("city_id", city)
   }
 
   if (minPrice) {

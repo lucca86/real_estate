@@ -6,7 +6,7 @@ export async function GET() {
     const supabase = await createAdminClient()
     
     const { data: properties, error } = await supabase
-      .from("Property")
+      .from("properties")
       .select("status")
     
     if (error) throw error

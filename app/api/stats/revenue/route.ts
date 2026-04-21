@@ -9,10 +9,10 @@ export async function GET() {
     const supabase = await createAdminClient()
     
     const { data: properties, error } = await supabase
-      .from("Property")
-      .select("price, updatedAt")
+      .from("properties")
+      .select("price, updated_at")
       .in("status", ["VENDIDO", "ALQUILADO"])
-      .gte("updatedAt", sixMonthsAgo.toISOString())
+      .gte("updated_at", sixMonthsAgo.toISOString())
 
     if (error) throw error
 

@@ -101,7 +101,7 @@ export async function getUserPermissions(userId: string): Promise<Record<string,
   const supabase = await createAdminClient()
 
   // Get user role
-  const { data: userData, error: userError } = await supabase.from("User").select("role").eq("id", userId).single()
+  const { data: userData, error: userError } = await supabase.from("users").select("role").eq("id", userId).single()
 
   if (userError || !userData) {
     return {}
@@ -127,7 +127,7 @@ export async function hasUserPermission(userId: string, permission: Permission):
   const supabase = await createAdminClient()
 
   // Get user role
-  const { data: userData, error: userError } = await supabase.from("User").select("role").eq("id", userId).single()
+  const { data: userData, error: userError } = await supabase.from("users").select("role").eq("id", userId).single()
 
   if (userError || !userData) {
     return false

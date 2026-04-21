@@ -7,20 +7,18 @@ import { z } from "zod"
 const propertyTypeSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
   description: z.string().optional(),
-  isActive: z.boolean().default(true),
+  is_active: z.boolean().default(true),
 })
 
 export async function getPropertyTypes() {
   try {
     const supabase = await createAdminClient()
-
     const { data: propertyTypes, error } = await supabase
-      .from("PropertyType")
+      .from("property_types")
       .select("*")
       .order("name", { ascending: true })
 
     if (error) throw error
-
     return propertyTypes || []
   } catch {
     throw new Error("Error al obtener los tipos de propiedad")
@@ -30,11 +28,10 @@ export async function getPropertyTypes() {
 export async function getActivePropertyTypes() {
   try {
     const supabase = await createAdminClient()
-
     const { data, error } = await supabase
-      .from("PropertyType")
+      .from("property_types")
       .select("*")
-      .eq("isActive", true)
+      .eq("is_active", true)
       .order("name", { ascending: true })
 
     if (error) throw error
@@ -47,11 +44,8 @@ export async function getActivePropertyTypes() {
 export async function getPropertyTypeById(id: string) {
   try {
     const supabase = await createAdminClient()
-
-    const { data, error } = await supabase.from("PropertyType").select("*").eq("id", id).single()
-
+    const { data, error } = await supabase.from("property_types").select("*").eq("id", id).single()
     if (error) throw error
-
     return data
   } catch {
     throw new Error("Error al obtener el tipo de propiedad")
@@ -63,23 +57,18 @@ export async function createPropertyType(formData: FormData) {
     const data = {
       name: formData.get("name") as string,
       description: formData.get("description") as string,
-      isActive: formData.get("isActive") === "true" || formData.get("isActive") === "on",
+      is_active: formData.get("isActive") === "true" || formData.get("isActive") === "on",
     }
 
     const validated = propertyTypeSchema.parse(data)
-
     const supabase = await createAdminClient()
-
-    const { data: propertyType, error } = await supabase.from("PropertyType").insert(validated).select().single()
+    const { data: propertyType, error } = await supabase.from("property_types").insert(validated).select().single()
 
     if (error) throw error
-
     revalidatePath("/property-types")
     return propertyType
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      throw new Error(error.errors[0].message)
-    }
+    if (error instanceof z.ZodError) throw new Error(error.errors[0].message)
     throw new Error("Error al crear el tipo de propiedad")
   }
 }
@@ -89,28 +78,24 @@ export async function updatePropertyType(id: string, formData: FormData) {
     const data = {
       name: formData.get("name") as string,
       description: formData.get("description") as string,
-      isActive: formData.get("isActive") === "true" || formData.get("isActive") === "on",
+      is_active: formData.get("isActive") === "true" || formData.get("isActive") === "on",
     }
 
     const validated = propertyTypeSchema.parse(data)
     const supabase = await createAdminClient()
-
     const { data: propertyType, error } = await supabase
-      .from("PropertyType")
+      .from("property_types")
       .update(validated)
       .eq("id", id)
       .select()
       .single()
 
     if (error) throw error
-
     revalidatePath("/property-types")
     revalidatePath(`/property-types/${id}/edit`)
     return propertyType
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      throw new Error(error.errors[0].message)
-    }
+    if (error instanceof z.ZodError) throw new Error(error.errors[0].message)
     throw new Error("Error al actualizar el tipo de propiedad")
   }
 }
@@ -118,21 +103,16 @@ export async function updatePropertyType(id: string, formData: FormData) {
 export async function deletePropertyType(id: string) {
   try {
     const supabase = await createAdminClient()
+    const { data: propertyType } = await supabase.from("property_types").select("*").eq("id", id).single()
 
-    const { data: propertyType } = await supabase.from("PropertyType").select("*").eq("id", id).single()
+    if (!propertyType) throw new Error("Tipo de propiedad no encontrado")
 
-    if (!propertyType) {
-      throw new Error("Tipo de propiedad no encontrado")
-    }
-
-    const { error } = await supabase.from("PropertyType").delete().eq("id", id)
+    const { error } = await supabase.from("property_types").delete().eq("id", id)
 
     if (error) {
       if (error.code === "23503") {
-        const { error: updateError } = await supabase.from("PropertyType").update({ isActive: false }).eq("id", id)
-
+        const { error: updateError } = await supabase.from("property_types").update({ is_active: false }).eq("id", id)
         if (updateError) throw updateError
-
         revalidatePath("/property-types")
         return {
           success: true,
@@ -146,9 +126,7 @@ export async function deletePropertyType(id: string) {
     revalidatePath("/property-types")
     return { success: true, wasDeactivated: false }
   } catch (error) {
-    if (error instanceof Error) {
-      return { success: false, error: error.message }
-    }
+    if (error instanceof Error) return { success: false, error: error.message }
     return { success: false, error: "Error al eliminar el tipo de propiedad" }
   }
 }

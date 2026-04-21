@@ -22,10 +22,10 @@ export default async function LocationsPage() {
   const supabase = await createServerClient()
 
   const [countriesResult, provincesResult, citiesResult, neighborhoodsResult] = await Promise.all([
-    supabase.from('Country').select('*').order('name', { ascending: true }),
-    supabase.from('Province').select('*, country:Country!Province_countryId_fkey(name)').order('name', { ascending: true }),
-    supabase.from('City').select('*, province:Province!City_provinceId_fkey(name)').order('name', { ascending: true }),
-    supabase.from('Neighborhood').select('*, city:City!Neighborhood_cityId_fkey(name)').order('name', { ascending: true }),
+    supabase.from('countries').select('*').order('name', { ascending: true }),
+    supabase.from('provinces').select('*, country:countries!provinces_country_id_fkey(name)').order('name', { ascending: true }),
+    supabase.from('cities').select('*, province:provinces!cities_province_id_fkey(name)').order('name', { ascending: true }),
+    supabase.from('neighborhoods').select('*, city:cities!neighborhoods_city_id_fkey(name)').order('name', { ascending: true }),
   ])
 
   const countries = countriesResult.data || []

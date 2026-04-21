@@ -34,7 +34,7 @@ export async function requestPasswordReset(formData: FormData): Promise<Password
     const supabase = await createAdminClient()
 
     const { data: user, error: userError } = await supabase
-      .from("User")
+      .from("users")
       .select("id, email, name")
       .eq("email", email)
       .single()
@@ -99,7 +99,7 @@ export async function resetPassword(formData: FormData): Promise<ResetPasswordRe
     const hashedPassword = await bcrypt.hash(password, 10)
 
     const { error: updateError } = await supabase
-      .from("User")
+      .from("users")
       .update({ password: hashedPassword })
       .eq("id", resetToken.user_id)
 
@@ -135,7 +135,7 @@ export async function changePassword(formData: FormData): Promise<ChangePassword
     }
 
     const { data: user, error: userError } = await supabase
-      .from("User")
+      .from("users")
       .select("password")
       .eq("id", currentUser.id)
       .single()
@@ -152,7 +152,7 @@ export async function changePassword(formData: FormData): Promise<ChangePassword
     const hashedPassword = await bcrypt.hash(newPassword, 10)
 
     const { error: updateError } = await supabase
-      .from("User")
+      .from("users")
       .update({ password: hashedPassword })
       .eq("id", currentUser.id)
 
