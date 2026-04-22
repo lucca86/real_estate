@@ -22,8 +22,8 @@ export default async function EditUserPage({ params }: { params: Promise<{ id: s
 
   const supabase = await createAdminClient()
   const { data: editUser, error } = await supabase
-    .from("User")
-    .select("id, name, email, role, isActive, avatar")
+    .from("users")
+    .select("id, name, email, role, is_active, avatar")
     .eq("id", id)
     .single()
 

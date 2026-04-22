@@ -42,17 +42,17 @@ export async function getRecentProperties() {
     const supabase = await createAdminClient()
 
     const { data: properties, error } = await supabase
-      .from("Property")
+      .from("properties")
       .select(`
         id,
         title,
         price,
         currency,
-        createdAt,
-        propertyType:PropertyType!propertyTypeId(name),
-        city:City!cityId(name)
+        created_at,
+        property_type:property_types!properties_property_type_id_fkey(name),
+        city:cities!properties_city_id_fkey(name)
       `)
-      .order("createdAt", { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(5)
 
     if (error || !properties) {
@@ -66,8 +66,8 @@ export async function getRecentProperties() {
       title: property.title,
       price: property.price,
       currency: property.currency,
-      created_at: (property as any).createdAt,
-      property_types: (property as any).propertyType,
+      created_at: (property as any).created_at,
+      property_types: (property as any).property_type,
       cities: (property as any).city,
     }))
   } catch (error) {

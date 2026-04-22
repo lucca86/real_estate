@@ -17,7 +17,7 @@ export default async function PropertyTypesPage() {
 
   const supabase = await createAdminClient()
   const { data: propertyTypes, error } = await supabase
-    .from("PropertyType")
+    .from("property_types")
     .select("*")
     .order("name", { ascending: true })
 

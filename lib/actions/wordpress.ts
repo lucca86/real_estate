@@ -16,19 +16,17 @@ function parseImage(img: any): any {
 }
 
 export async function syncPropertyToWordPress(propertyId: string) {
-  // This function is called from updateProperty which already verified authentication
-  // We use adminClient to bypass RLS and avoid auth session issues in Server Actions
   const adminClient = await createAdminClient()
 
   const { data: property, error } = await adminClient
-    .from("Property")
+    .from("properties")
     .select(`
       *,
-      property_type:PropertyType!propertyTypeId(name),
-      city:City!cityId(name),
-      province:Province!provinceId(name),
-      country:Country!countryId(name),
-      neighborhood:Neighborhood!neighborhoodId(name)
+      property_type:property_types!properties_property_type_id_fkey(name),
+      city:cities!properties_city_id_fkey(name),
+      province:provinces!properties_province_id_fkey(name),
+      country:countries!properties_country_id_fkey(name),
+      neighborhood:neighborhoods!properties_neighborhood_id_fkey(name)
     `)
     .eq("id", propertyId)
     .single()
@@ -54,49 +52,47 @@ export async function syncPropertyToWordPress(propertyId: string) {
     const p = property as any
     const syncData = {
       id: property.id,
-      wordpressId: p.wordpressId,
-      wordpress_id: p.wordpressId,
+      wordpressId: p.wordpress_id,
+      wordpress_id: p.wordpress_id,
       title: property.title,
       description: property.description,
       propertyType: p.property_type?.name,
-      transactionType: p.transactionType,
+      transactionType: p.transaction_type,
       status: property.status,
       address: property.address,
       city: p.city?.name,
       state: p.province?.name,
       country: p.country?.name,
-      zipCode: p.zipCode,
+      zipCode: p.zip_code,
       latitude: property.latitude,
       longitude: property.longitude,
       bedrooms: property.bedrooms,
       bathrooms: property.bathrooms,
-      parkingSpaces: p.parkingSpaces,
+      parkingSpaces: p.parking_spaces,
       area: property.area,
-      lotSize: p.lotSize,
-      yearBuilt: p.yearBuilt,
+      lotSize: p.lot_size,
+      yearBuilt: p.year_built,
       price: property.price,
       currency: property.currency,
-      pricePerM2: p.pricePerM2,
+      pricePerM2: p.price_per_m2,
       features: property.features,
       amenities: property.amenities,
       images: imagesToSync,
-      virtualTour: p.virtualTour,
-      propertyLabel: p.propertyLabel,
+      virtualTour: p.virtual_tour,
+      propertyLabel: p.property_label,
       published: property.published,
     }
 
     const result = await wordpressAPI.syncProperty(syncData)
 
-    const { error: updateError } = await adminClient
-      .from("Property")
+    await adminClient
+      .from("properties")
       .update({
-        wordpressId: result.id,
-        wordpressUrl: result.url,
-        wordpressSyncedAt: new Date().toISOString(),
+        wordpress_id: result.id,
+        wordpress_url: result.url,
+        wordpress_synced_at: new Date().toISOString(),
       })
       .eq("id", propertyId)
-
-    // Non-fatal: log suppressed to avoid serialization errors
 
     revalidatePath("/properties")
     revalidatePath(`/properties/${propertyId}`)
@@ -117,15 +113,15 @@ export async function syncAllPropertiesToWordPress() {
 
   const supabase = await createAdminClient()
   const { data: properties } = await supabase
-    .from("Property")
+    .from("properties")
     .select(`
       *,
-      property_type:PropertyType!propertyTypeId(name),
-      owner:Owner!ownerId(name),
-      city:City!cityId(name),
-      province:Province!provinceId(name),
-      country:Country!countryId(name),
-      neighborhood:Neighborhood!neighborhoodId(name)
+      property_type:property_types!properties_property_type_id_fkey(name),
+      owner:owners!properties_owner_id_fkey(name),
+      city:cities!properties_city_id_fkey(name),
+      province:provinces!properties_province_id_fkey(name),
+      country:countries!properties_country_id_fkey(name),
+      neighborhood:neighborhoods!properties_neighborhood_id_fkey(name)
     `)
     .eq("published", true)
 
@@ -150,43 +146,44 @@ export async function syncAllPropertiesToWordPress() {
         throw new Error("La propiedad debe tener al menos una imagen marcada para WordPress")
       }
 
-      const wordpressId = await wordpressAPI.syncProperty({
+      const p = property as any
+      const wordpressResult = await wordpressAPI.syncProperty({
         id: property.id,
-        wordpressId: property.wordpressId,
+        wordpressId: p.wordpress_id,
         title: property.title,
         description: property.description,
-        propertyType: property.property_type?.name,
-        transactionType: (property as any).transactionType,
+        propertyType: p.property_type?.name,
+        transactionType: p.transaction_type,
         status: property.status,
         address: property.address,
-        city: property.city?.name,
-        state: property.province?.name,
-        country: property.country?.name,
-        zipCode: (property as any).zipCode,
+        city: p.city?.name,
+        state: p.province?.name,
+        country: p.country?.name,
+        zipCode: p.zip_code,
         latitude: property.latitude,
         longitude: property.longitude,
         bedrooms: property.bedrooms,
         bathrooms: property.bathrooms,
-        parkingSpaces: (property as any).parkingSpaces,
+        parkingSpaces: p.parking_spaces,
         area: property.area,
-        lotSize: (property as any).lotSize,
-        yearBuilt: (property as any).yearBuilt,
+        lotSize: p.lot_size,
+        yearBuilt: p.year_built,
         price: property.price,
         currency: property.currency,
-        pricePerM2: (property as any).pricePerM2,
+        pricePerM2: p.price_per_m2,
         features: property.features,
         amenities: property.amenities,
         images: imagesToSync,
-        virtualTour: (property as any).virtualTour,
-        propertyLabel: (property as any).propertyLabel,
+        virtualTour: p.virtual_tour,
+        propertyLabel: p.property_label,
         published: property.published,
       })
 
       await supabase
-        .from("Property")
+        .from("properties")
         .update({
-          wordpressId: wordpressId,
-          wordpressSyncedAt: new Date().toISOString(),
+          wordpress_id: wordpressResult.id,
+          wordpress_synced_at: new Date().toISOString(),
         })
         .eq("id", property.id)
 
@@ -215,20 +212,24 @@ export async function deletePropertyFromWordPress(propertyId: string) {
   }
 
   const supabase = await createAdminClient()
-  const { data: property } = await supabase.from("Property").select("id, wordpressId").eq("id", propertyId).single()
+  const { data: property } = await supabase
+    .from("properties")
+    .select("id, wordpress_id")
+    .eq("id", propertyId)
+    .single()
 
-  if (!property || !(property as any).wordpressId) {
+  if (!property || !(property as any).wordpress_id) {
     throw new Error("Propiedad no encontrada o no sincronizada")
   }
 
   try {
-    await wordpressAPI.deleteProperty((property as any).wordpressId)
+    await wordpressAPI.deleteProperty((property as any).wordpress_id)
 
     await supabase
-      .from("Property")
+      .from("properties")
       .update({
-        wordpressId: null,
-        wordpressSyncedAt: null,
+        wordpress_id: null,
+        wordpress_synced_at: null,
       })
       .eq("id", propertyId)
 
@@ -238,46 +239,5 @@ export async function deletePropertyFromWordPress(propertyId: string) {
     return { success: true }
   } catch (error) {
     throw new Error(error instanceof Error ? error.message : "Error al eliminar de WordPress")
-  }
-}
-
-export async function testWordPressConnection() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user || user.user_metadata?.role !== "ADMIN") {
-    throw new Error("Solo los administradores pueden probar la conexión")
-  }
-
-  try {
-    const result = await wordpressAPI.testConnection()
-    return result
-  } catch (error) {
-    return {
-      success: false,
-      message: error instanceof Error ? error.message : "Error desconocido al probar la conexión",
-    }
-  }
-}
-
-export async function debugWordPressProperty(propertyId: number) {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user || user.user_metadata?.role !== "ADMIN") {
-    throw new Error("Solo los administradores pueden usar el debug")
-  }
-
-  try {
-    const result = await wordpressAPI.debugProperty(propertyId)
-    return result
-  } catch (error) {
-    return {
-      error: error instanceof Error ? error.message : "Error desconocido al inspeccionar la propiedad",
-    }
   }
 }

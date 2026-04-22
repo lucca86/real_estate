@@ -20,7 +20,7 @@ interface City {
 interface Neighborhood {
   id: string
   name: string
-  cityId: string
+  city_id: string
 }
 
 interface PropertyType {
@@ -64,17 +64,17 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
       const supabase = createBrowserClient()
 
       const { data: propertyTypesData } = await supabase
-        .from("PropertyType")
-        .select("id, name, isActive")
-        .eq("isActive", true)
+        .from("property_types")
+        .select("id, name, is_active")
+        .eq("is_active", true)
         .order("name")
 
-      const { data: citiesData } = await supabase.from("City").select("id, name").order("name")
+      const { data: citiesData } = await supabase.from("cities").select("id, name").order("name")
 
-      const { data: neighborhoodsData } = await supabase.from("Neighborhood").select("id, name, cityId").order("name")
+      const { data: neighborhoodsData } = await supabase.from("neighborhoods").select("id, name, city_id").order("name")
 
       const { data: usersData } = await supabase
-        .from("User")
+        .from("users")
         .select("id, name, role")
         .order("name")
 
@@ -89,7 +89,7 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
 
   useEffect(() => {
     if (city && city !== "all") {
-      const filtered = neighborhoods.filter((n) => n.cityId === city)
+      const filtered = neighborhoods.filter((n) => n.city_id === city)
       setFilteredNeighborhoods(filtered)
 
       if (neighborhood && !filtered.find((n) => n.id === neighborhood)) {

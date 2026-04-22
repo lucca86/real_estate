@@ -30,9 +30,9 @@ export default async function EditOwnerPage({
   const provinceIdForCities = ownerRaw.province_id || defaultProvinceId
 
   const [{ data: countries }, { data: provinces }, { data: cities }] = await Promise.all([
-    supabase.from("Country").select("id, name").eq("isActive", true).order("name"),
-    supabase.from("Province").select("id, name, countryId").eq("isActive", true).order("name"),
-    supabase.from("City").select("id, name, provinceId").eq("isActive", true).eq("provinceId", provinceIdForCities).order("name"),
+    supabase.from("countries").select("id, name").eq("is_active", true).order("name"),
+    supabase.from("provinces").select("id, name, country_id").eq("is_active", true).order("name"),
+    supabase.from("cities").select("id, name, province_id").eq("is_active", true).eq("province_id", provinceIdForCities).order("name"),
   ])
 
   const owner = {

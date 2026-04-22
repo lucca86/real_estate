@@ -82,11 +82,11 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
   }
 
   // Load all updatedBy users in a single query to avoid N+1 and stack overflow
-  const userIds = [...new Set(properties.map((p: any) => p.updatedById).filter(Boolean))]
+  const userIds = [...new Set(properties.map((p: any) => p.updated_by_id).filter(Boolean))]
   let usersMap: Record<string, { name: string }> = {}
   if (userIds.length > 0) {
     const { data: users } = await supabase
-      .from("User")
+      .from("users")
       .select("id, name")
       .in("id", userIds)
     if (users) {

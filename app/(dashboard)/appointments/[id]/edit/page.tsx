@@ -25,15 +25,15 @@ export default async function EditAppointmentPage({ params }: { params: Promise<
 
   const [propertiesResult, clientsResult, agentsResult] = await Promise.all([
     supabase
-      .from("Property")
-      .select("id, title, address, city:City!cityId(name)")
+      .from("properties")
+      .select("id, title, address, city:cities!properties_city_id_fkey(name)")
       .order("title", { ascending: true }),
     supabase
-      .from("Client")
+      .from("clients")
       .select("id, name, email, phone")
       .order("name", { ascending: true }),
     supabase
-      .from("User")
+      .from("users")
       .select("id, name, email")
       .in("role", ["ADMIN", "SUPERVISOR", "VENDEDOR"])
       .order("name", { ascending: true }),

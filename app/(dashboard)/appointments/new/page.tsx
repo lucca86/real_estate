@@ -14,20 +14,19 @@ export default async function NewAppointmentPage() {
 
   const [propertiesResult, clientsResult, agentsResult] = await Promise.all([
     supabase
-      .from("Property")
-      .select("id, title, address, city:City!cityId(name)")
+      .from("properties")
+      .select("id, title, address, city:cities!properties_city_id_fkey(name)")
       .eq("status", "ACTIVO")
       .order("title", { ascending: true }),
     supabase
-      .from("Client")
+      .from("clients")
       .select("id, name, email, phone")
-      .eq("isActive", true)
       .order("name", { ascending: true }),
     supabase
-      .from("User")
+      .from("users")
       .select("id, name, email")
       .in("role", ["ADMIN", "SUPERVISOR", "VENDEDOR"])
-      .eq("isActive", true)
+      .eq("is_active", true)
       .order("name", { ascending: true }),
   ])
 

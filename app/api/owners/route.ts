@@ -13,9 +13,9 @@ export async function GET() {
     const supabase = await createAdminClient()
     
     const { data: owners, error } = await supabase
-      .from("Owner")
+      .from("owners")
       .select("id, name")
-      .eq("isActive", true)
+      .eq("is_active", true)
       .order("name", { ascending: true })
 
     if (error) {

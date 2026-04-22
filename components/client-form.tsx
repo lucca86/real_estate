@@ -73,6 +73,7 @@ export function ClientForm({ client, userRole, agents = [] }: ClientFormProps) {
   const [countries, setCountries] = useState<Array<{ id: string; name: string }>>([])
   const [provinces, setProvinces] = useState<Array<{ id: string; name: string; country_id: string }>>([])
   const [cities, setCities] = useState<Array<{ id: string; name: string; province_id: string }>>([])
+  // snake_case columns from DB (country_id / province_id) used for filtering
   const [propertyTypes, setPropertyTypes] = useState<Array<{ id: string; name: string }>>([])
   const [selectedCountry, setSelectedCountry] = useState<string | undefined>(client?.country_id ?? undefined)
   const [selectedProvince, setSelectedProvince] = useState<string | undefined>(client?.province_id ?? undefined)
@@ -84,10 +85,10 @@ export function ClientForm({ client, userRole, agents = [] }: ClientFormProps) {
       const supabase = createBrowserClient()
 
       const [countriesRes, provincesRes, citiesRes, propertyTypesRes] = await Promise.all([
-        supabase.from("Country").select("id, name").eq("isActive", true).order("name"),
-        supabase.from("Province").select("id, name, countryId").eq("isActive", true).order("name"),
-        supabase.from("City").select("id, name, provinceId").eq("isActive", true).order("name"),
-        supabase.from("PropertyType").select("id, name").eq("isActive", true).order("name"),
+        supabase.from("countries").select("id, name").eq("is_active", true).order("name"),
+        supabase.from("provinces").select("id, name, country_id").eq("is_active", true).order("name"),
+        supabase.from("cities").select("id, name, province_id").eq("is_active", true).order("name"),
+        supabase.from("property_types").select("id, name").eq("is_active", true).order("name"),
       ])
 
       if (countriesRes.data) setCountries(countriesRes.data)
