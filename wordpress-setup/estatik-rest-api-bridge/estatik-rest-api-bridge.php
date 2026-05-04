@@ -92,7 +92,7 @@ class Estatik_REST_API_Bridge {
         ));
         
         register_rest_route('estatik-bridge/v1', '/properties/(?P<id>\d+)', array(
-            'methods' => 'PUT',
+            'methods' => 'PUT, POST',
             'callback' => array($this, 'update_property'),
             'permission_callback' => array($this, 'check_permission'),
         ));

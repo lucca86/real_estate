@@ -126,15 +126,29 @@ export class WordPressAPI {
 
   async updateProperty(wordpressId: number, property: any): Promise<void> {
     try {
+      // Try PUT first
       await this.request(`/estatik-bridge/v1/properties/${wordpressId}`, {
         method: "PUT",
         body: JSON.stringify(property),
       })
-    } catch (error) {
-      if (error instanceof Error && error.message.includes("404")) {
-        throw new Error("PROPERTY_NOT_FOUND")
+    } catch (putError) {
+      if (putError instanceof Error && putError.message.includes("404")) {
+        // Some servers block PUT — retry using POST with X-HTTP-Method-Override
+        try {
+          await this.request(`/estatik-bridge/v1/properties/${wordpressId}`, {
+            method: "POST",
+            headers: { "X-HTTP-Method-Override": "PUT" },
+            body: JSON.stringify(property),
+          })
+        } catch (postError) {
+          if (postError instanceof Error && postError.message.includes("404")) {
+            throw new Error("PROPERTY_NOT_FOUND")
+          }
+          throw postError
+        }
+      } else {
+        throw putError
       }
-      throw error
     }
   }
 
