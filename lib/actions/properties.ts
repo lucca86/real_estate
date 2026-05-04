@@ -235,6 +235,7 @@ export async function updateProperty(propertyId: string, formData: FormData) {
   const lotSize = formData.get("lotSize") as string
   const yearBuilt = formData.get("yearBuilt") as string
   const adrema = formData.get("adrema") as string
+  const internalNotes = formData.get("internalNotes") as string
 
   const parsedImages: any[] = imagesJson ? JSON.parse(imagesJson) : []
 
@@ -301,6 +302,7 @@ export async function updateProperty(propertyId: string, formData: FormData) {
       virtual_tour: virtualTour || null,
       published,
       sync_to_wordpress: syncToWordPress,
+      internal_notes: internalNotes || null,
       updated_by_id: currentUser.id,
     })
     .eq("id", propertyId)
