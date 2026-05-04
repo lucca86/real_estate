@@ -199,6 +199,29 @@ export async function syncAllPropertiesToWordPress() {
   return results
 }
 
+export async function testWordPressConnection(): Promise<{ success: boolean; message: string; user?: any }> {
+  try {
+    const result = await wordpressAPI.testConnection()
+    return result
+  } catch (error) {
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Error desconocido al conectar con WordPress",
+    }
+  }
+}
+
+export async function debugWordPressProperty(wordpressId: number): Promise<any> {
+  try {
+    const result = await wordpressAPI.debugProperty(wordpressId)
+    return result
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : "Error al inspeccionar la propiedad",
+    }
+  }
+}
+
 export async function deletePropertyFromWordPress(propertyId: string) {
   const { getCurrentUser } = await import("@/lib/auth")
   const currentUser = await getCurrentUser()
