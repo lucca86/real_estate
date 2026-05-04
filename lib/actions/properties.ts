@@ -1,8 +1,8 @@
 "use server"
 
-import { createClient, createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { getCurrentUser } from "@/lib/auth"
-import { syncPropertyToWordPress, deletePropertyFromWordPress } from "./wordpress"
+import { syncPropertyToWordPress } from "./wordpress"
 import { wordpressAPI } from "@/lib/wordpress"
 import crypto from "crypto"
 import { revalidatePath } from "next/cache"
@@ -10,16 +10,25 @@ import type { PropertyWithDetails } from "@/types"
 import type { ActionResult } from "@/types/action-result"
 import { logAudit } from "@/lib/audit"
 
+function parseArrayField(value: string | null): string[] {
+  if (!value) return []
+  try {
+    const parsed = JSON.parse(value)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
 export async function createProperty(formData: FormData): Promise<ActionResult<PropertyWithDetails>> {
   const currentUser = await getCurrentUser()
   if (!currentUser) {
     return { success: false, error: "No autenticado. Por favor inicia sesión." }
   }
 
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   try {
-
     const title = formData.get("title") as string
     const description = formData.get("description") as string
     const ownerId = formData.get("ownerId") as string
@@ -46,15 +55,12 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
     const rentalPrice = formData.get("rentalPrice") as string
     const amenities = formData.get("amenities") as string
     const imagesJson = formData.get("images") as string
-    const isFeatured = formData.get("isFeatured") === "true"
     const propertyLabel = formData.get("propertyLabel") as string
     const features = formData.get("features") as string
     const videos = formData.get("videos") as string
     const virtualTour = formData.get("virtualTour") as string
     const published = formData.get("published") === "true"
     const syncToWordPress = formData.get("syncToWordPress") === "true"
-    const frontMeters = formData.get("frontMeters") ? Number.parseFloat(formData.get("frontMeters") as string) : null
-    const backMeters = formData.get("backMeters") ? Number.parseFloat(formData.get("backMeters") as string) : null
     const adrema = formData.get("adrema") as string
 
     if (!title || !ownerId || !propertyTypeId || !status || !address || !cityId || !countryId || !provinceId) {
@@ -111,8 +117,6 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
         parking_spaces: parsedParkingSpaces,
         area: parsedArea,
         lot_size: parsedLotSize,
-        frontSize: frontMeters,
-        depthSize: backMeters,
         year_built: parsedYearBuilt,
         transaction_type: transactionType,
         rental_period: rentalPeriod || null,
@@ -126,17 +130,13 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
         property_label: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
         adrema: adrema || null,
         features: parseArrayField(features),
-      videos: videos ? JSON.parse(videos) : [],
-      virtual_tour: virtualTour || null,
-      published,
-      sync_to_wordpress: syncToWordPress,
-      is_featured: isFeatured,
-      internal_notes: formData.get("internalNotes") as string | null,
-      created_by_id: currentUser.id,
-      updated_by_id: currentUser.id,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
+        videos: videos ? JSON.parse(videos) : [],
+        virtual_tour: virtualTour || null,
+        published,
+        sync_to_wordpress: syncToWordPress,
+        created_by_id: currentUser.id,
+        updated_by_id: currentUser.id,
+      })
       .select()
       .single()
 
@@ -190,7 +190,7 @@ export async function updateProperty(propertyId: string, formData: FormData) {
     throw new Error("No estás autenticado")
   }
 
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   const { data: property, error: fetchError } = await supabase
     .from("properties")
@@ -220,15 +220,12 @@ export async function updateProperty(propertyId: string, formData: FormData) {
   const rentalPrice = formData.get("rentalPrice") as string
   const amenities = formData.get("amenities") as string
   const imagesJson = formData.get("images") as string
-  const isFeatured = formData.get("isFeatured") === "true"
   const propertyLabel = formData.get("propertyLabel") as string
   const features = formData.get("features") as string
   const videos = formData.get("videos") as string
   const virtualTour = formData.get("virtualTour") as string
   const published = formData.get("published") === "true"
   const syncToWordPress = formData.get("syncToWordPress") === "true"
-  const frontMeters = formData.get("frontMeters") ? Number.parseFloat(formData.get("frontMeters") as string) : null
-  const backMeters = formData.get("backMeters") ? Number.parseFloat(formData.get("backMeters") as string) : null
   const latitude = formData.get("latitude") as string
   const longitude = formData.get("longitude") as string
   const bedrooms = formData.get("bedrooms") as string
@@ -238,6 +235,7 @@ export async function updateProperty(propertyId: string, formData: FormData) {
   const lotSize = formData.get("lotSize") as string
   const yearBuilt = formData.get("yearBuilt") as string
   const adrema = formData.get("adrema") as string
+  const internalNotes = formData.get("internalNotes") as string
 
   const parsedImages: any[] = imagesJson ? JSON.parse(imagesJson) : []
 
@@ -287,8 +285,6 @@ export async function updateProperty(propertyId: string, formData: FormData) {
       parking_spaces: parsedParkingSpaces,
       area: parsedArea,
       lot_size: parsedLotSize,
-      frontSize: frontMeters,
-      depthSize: backMeters,
       year_built: parsedYearBuilt,
       transaction_type: transactionType,
       rental_period: rentalPeriod || null,
@@ -302,15 +298,14 @@ export async function updateProperty(propertyId: string, formData: FormData) {
       property_label: propertyLabel && propertyLabel !== "NONE" ? propertyLabel : null,
       adrema: adrema || null,
       features: parseArrayField(features),
-    videos: videos ? JSON.parse(videos) : [],
-    virtual_tour: virtualTour || null,
-    published,
-    sync_to_wordpress: syncToWordPress,
-    internal_notes: formData.get("internalNotes") as string | null,
-    updated_by_id: currentUser.id,
-    updated_at: new Date().toISOString(),
-  })
-  .eq("id", propertyId)
+      videos: videos ? JSON.parse(videos) : [],
+      virtual_tour: virtualTour || null,
+      published,
+      sync_to_wordpress: syncToWordPress,
+      internal_notes: internalNotes || null,
+      updated_by_id: currentUser.id,
+    })
+    .eq("id", propertyId)
     .select()
     .single()
 
@@ -343,11 +338,11 @@ export async function updateProperty(propertyId: string, formData: FormData) {
         .from("properties")
         .select(`
           *,
-          propertyType:property_types!property_type_id(name),
-          city:cities!city_id(name),
-          province:provinces!province_id(name),
-          country:countries!country_id(name),
-          neighborhood:neighborhoods!neighborhood_id(name)
+          property_type:property_types!properties_property_type_id_fkey(name),
+          city:cities!properties_city_id_fkey(name),
+          province:provinces!properties_province_id_fkey(name),
+          country:countries!properties_country_id_fkey(name),
+          neighborhood:neighborhoods!properties_neighborhood_id_fkey(name)
         `)
         .eq("id", updatedProperty.id)
         .single()
@@ -419,7 +414,6 @@ export async function deletePropertyImage(propertyId: string, imageId: string) {
     const currentImages: any[] = Array.isArray(property.images) ? property.images : []
     const updatedImages = currentImages.filter((img: any) => img.id !== imageId)
 
-    // If the removed image was the cover, promote the first remaining image
     const removedImage = currentImages.find((img: any) => img.id === imageId)
     if (removedImage?.isCover && updatedImages.length > 0) {
       updatedImages[0] = { ...updatedImages[0], isCover: true }
@@ -427,7 +421,7 @@ export async function deletePropertyImage(propertyId: string, imageId: string) {
 
     const { error: updateError } = await supabase
       .from("properties")
-      .update({ images: updatedImages, updated_at: new Date().toISOString() })
+      .update({ images: updatedImages })
       .eq("id", propertyId)
 
     if (updateError) {
@@ -458,7 +452,7 @@ export async function deleteProperty(propertyId: string) {
   try {
     const supabase = await createAdminClient()
 
-    const { data: property, error: fetchError} = await supabase
+    const { data: property, error: fetchError } = await supabase
       .from("properties")
       .select("*")
       .eq("id", propertyId)
@@ -468,19 +462,17 @@ export async function deleteProperty(propertyId: string) {
       return { success: false, error: "Propiedad no encontrada" }
     }
 
-    // In restricted mode, VENDEDOR can only delete their own properties
     if (currentUser.role === "VENDEDOR") {
       const { getPropertyEditMode } = await import("@/lib/actions/system-settings")
       const editMode = await getPropertyEditMode()
-      if (editMode === "restricted" && property.created_by_id && property.created_by_id !== currentUser.id) {
+      if (editMode === "restricted" && (property as any).created_by_id && (property as any).created_by_id !== currentUser.id) {
         return { success: false, error: "Solo puedes eliminar propiedades que hayas creado" }
       }
     }
 
-    // Delete from WordPress first if synced
-    if (property.wordpress_id && property.wordpress_id > 0) {
+    if ((property as any).wordpress_id && (property as any).wordpress_id > 0) {
       try {
-        await wordpressAPI.deleteProperty(property.wordpress_id)
+        await wordpressAPI.deleteProperty((property as any).wordpress_id)
       } catch {
         // Continue with local deletion even if WordPress fails
       }
@@ -492,7 +484,7 @@ export async function deleteProperty(propertyId: string) {
       if (deleteError.code === "23503") {
         const { error: updateError } = await supabase
           .from("properties")
-          .update({ is_active: false })
+          .update({ status: "ELIMINADO" })
           .eq("id", propertyId)
 
         if (updateError) return { success: false, error: `Error al desactivar propiedad: ${updateError.message}` }
@@ -526,51 +518,34 @@ export async function deleteProperty(propertyId: string) {
 }
 
 export async function getPropertyById(id: string) {
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   const { data: property, error } = await supabase
     .from("properties")
     .select(`
       *,
-      owner:owners!owner_id(
-        id, 
-        name, 
-        email, 
-        phone, 
-        secondary_phone,
-        id_number,
-        tax_id,
-        address,
-        notes,
-        is_active,
-        first_name,
-        last_name,
-        owner_type,
-        real_estate_agency,
-        city:cities!city_id(id, name),
-        province:provinces!province_id(id, name),
-        country:countries!country_id(id, name)
+      owner:owners!properties_owner_id_fkey(
+        id, name, email, phone, secondary_phone, id_number, tax_id,
+        address, notes, is_active,
+        city:cities!owners_city_id_fkey(id, name),
+        province:provinces!owners_province_id_fkey(id, name),
+        country:countries!owners_country_id_fkey(id, name)
       ),
-      city:cities!city_id(id, name),
-      province:provinces!province_id(id, name),
-      country:countries!country_id(id, name),
-      neighborhood:neighborhoods!neighborhood_id(id, name),
-      propertyType:property_types!property_type_id(id, name)
+      city:cities!properties_city_id_fkey(id, name),
+      province:provinces!properties_province_id_fkey(id, name),
+      country:countries!properties_country_id_fkey(id, name),
+      neighborhood:neighborhoods!properties_neighborhood_id_fkey(id, name),
+      property_type:property_types!properties_property_type_id_fkey(id, name)
     `)
     .eq("id", id)
     .maybeSingle()
 
   if (error) return null
-
-  if (!property) {
-    return null
-  }
-
-  // Load created_by and updated_by user data (table uses snake_case: created_by_id, updated_by_id)
-  let createdBy = null
-  let updatedBy = null
+  if (!property) return null
 
   const p = property as any
+  let createdBy = null
+  let updatedBy = null
 
   if (p.created_by_id) {
     const { data: creator } = await supabase
@@ -591,60 +566,4 @@ export async function getPropertyById(id: string) {
   }
 
   return { ...property, createdBy, updatedBy }
-}
-
-const parseArrayField = (value: any): string[] => {
-  if (!value) return []
-
-  // If it's already a clean array of strings, return it
-  if (Array.isArray(value)) {
-    // Check if array contains escaped JSON strings like ["[\"item\"]"]
-    const cleanedArray = value
-      .flatMap((item) => {
-        if (typeof item === "string") {
-          // Remove escaped quotes and brackets
-          let cleaned = item.trim()
-
-          // If it starts with [" and ends with "], it's a corrupted JSON string
-          if (cleaned.startsWith('["') || cleaned.startsWith("['")) {
-            try {
-              // Try to parse the inner JSON
-              const parsed = JSON.parse(cleaned)
-              return Array.isArray(parsed) ? parsed : [cleaned]
-            } catch {
-              // If parsing fails, clean manually
-              cleaned = cleaned.replace(/^\["|"\]$/g, "") // Remove [" and "]
-              cleaned = cleaned.replace(/^\\"|"\\/g, "") // Remove escaped quotes
-              cleaned = cleaned.replace(/\\\\/g, "") // Remove escaped backslashes
-              return cleaned
-            }
-          }
-          return cleaned
-        }
-        return item
-      })
-      .filter(Boolean)
-
-    return cleanedArray
-  }
-
-  // If it's a string, try to parse or split
-  if (typeof value === "string") {
-    // Try JSON parse first
-    try {
-      const parsed = JSON.parse(value)
-      if (Array.isArray(parsed)) {
-        // Recursively clean the parsed array
-        return parseArrayField(parsed)
-      }
-    } catch {
-      // Not JSON, try comma-separated
-      return value
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean)
-    }
-  }
-
-  return []
 }

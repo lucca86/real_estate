@@ -88,6 +88,7 @@ export default async function EditPropertyPage({
     countryId: propertyData.country_id ?? null,
     provinceId: propertyData.province_id ?? null,
     neighborhoodId: propertyData.neighborhood_id ?? null,
+    internalNotes: propertyData.internal_notes ?? null,
     // Related objects for display (name labels in dropdowns)
     owner: propertyData.owner ?? null,
     propertyType: propertyData.propertyType ?? null,
