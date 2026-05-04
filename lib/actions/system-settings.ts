@@ -8,13 +8,21 @@ import { logAudit } from "@/lib/audit"
 export type PropertyEditMode = "open" | "restricted"
 
 export async function getSystemSetting(key: string): Promise<string | null> {
-  const supabase = await createAdminClient()
-  const { data } = await supabase
-    .from("system_settings")
-    .select("value")
-    .eq("key", key)
-    .single()
-  return data?.value ?? null
+  try {
+    const supabase = await createAdminClient()
+    const { data, error } = await supabase
+      .from("system_settings")
+      .select("value")
+      .eq("key", key)
+      .maybeSingle()
+    if (error) {
+      console.error("[system-settings] Error fetching setting:", key, error.message)
+      return null
+    }
+    return data?.value ?? null
+  } catch {
+    return null
+  }
 }
 
 export async function getPropertyEditMode(): Promise<PropertyEditMode> {
@@ -31,7 +39,10 @@ export async function updateSystemSetting(key: string, value: string) {
   const supabase = await createAdminClient()
   const { error } = await supabase
     .from("system_settings")
-    .upsert({ key, value, updated_at: new Date().toISOString(), updated_by_id: user.id })
+    .upsert(
+      { key, value, updated_at: new Date().toISOString(), updated_by_id: user.id },
+      { onConflict: "key" }
+    )
 
   if (error) {
     return { success: false, error: error.message }

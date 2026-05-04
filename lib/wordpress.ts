@@ -56,7 +56,12 @@ export class WordPressAPI {
   private password: string
 
   constructor() {
-    this.baseUrl = process.env.WORDPRESS_API_URL || ""
+    let baseUrl = (process.env.WORDPRESS_API_URL || "").trim().replace(/\/$/, "")
+    // Ensure the URL includes /wp-json so endpoints resolve correctly
+    if (baseUrl && !baseUrl.endsWith("/wp-json")) {
+      baseUrl = `${baseUrl}/wp-json`
+    }
+    this.baseUrl = baseUrl
     this.username = process.env.WORDPRESS_USERNAME || ""
     this.password = process.env.WORDPRESS_APP_PASSWORD || ""
   }

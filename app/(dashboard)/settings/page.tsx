@@ -189,11 +189,12 @@ export default async function SettingsPage() {
               <h3 className="font-semibold mb-2">Instrucciones de Configuración</h3>
               <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <strong>WORDPRESS_API_URL:</strong> URL de tu sitio WordPress seguida de{" "}
-                  <code className="bg-muted px-1 rounded">/wp-json</code>
+                  <strong>WORDPRESS_API_URL:</strong> URL base de tu sitio WordPress (con o sin{" "}
+                  <code className="bg-muted px-1 rounded">/wp-json</code>, el sistema lo agrega automáticamente)
                   <br />
                   <span className="ml-6 text-xs">
-                    Ejemplo: <code className="bg-muted px-1 rounded">https://tusitio.com/wp-json</code>
+                    Ejemplo: <code className="bg-muted px-1 rounded">https://tusitio.com</code> o{" "}
+                    <code className="bg-muted px-1 rounded">https://tusitio.com/wp-json</code>
                   </span>
                 </li>
                 <li>
