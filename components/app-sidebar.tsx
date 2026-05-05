@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/lib/actions/auth"
+import { APP_VERSION } from "@/lib/version"
 import type { SessionUser } from "@/lib/auth"
 import Image from "next/image"
 import { useTheme } from "next-themes"
@@ -180,6 +181,9 @@ export function AppSidebar({ user, permissions = {}, onNavigate }: AppSidebarPro
           />
         )}
         {!mounted && <div className="h-10 w-[200px]" />}
+        <span className="ml-auto text-[10px] font-medium text-sidebar-foreground/40 leading-none">
+          v{APP_VERSION}
+        </span>
       </div>
 
       {/* Navigation */}
