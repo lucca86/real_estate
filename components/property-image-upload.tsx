@@ -9,19 +9,10 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd"
 import { deletePropertyImage } from "@/lib/actions/properties"
+import type { PropertyImage as BasePropertyImage } from "@/lib/image-utils"
 
-interface PropertyImage {
-  id: string
-  url: string
-  sizes: {
-    thumbnail: string
-    medium: string
-    large: string
-  }
-  isCover: boolean
-  syncToWordPress: boolean
-  originalName: string
-}
+// In this component, id is always present (assigned at upload time)
+type PropertyImage = BasePropertyImage & { id: string }
 
 interface PropertyImageUploadProps {
   images: PropertyImage[]
@@ -146,14 +137,17 @@ export function PropertyImageUpload({ images, onChange, maxImages = 12, canDelet
 
         const newImage: PropertyImage = {
           id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-          url: result.sizes.large.url, // URL de la versión large
+          url: result.sizes.large.url,
           sizes: {
             thumbnail: result.sizes.thumbnail.url,
             medium: result.sizes.medium.url,
             large: result.sizes.large.url,
+            // Dedicated WebP size for WordPress sync (1200x900 horizontal / 900x1200 vertical)
+            wordpress: result.sizes.wordpress?.url,
           },
           isCover: images.length === 0 && uploadedImages.length === 0,
-          syncToWordPress: !isVertical,
+          // Server detects orientation from actual pixel dimensions — use that
+          syncToWordPress: result.isVertical === true ? false : true,
           originalName: result.originalName,
         }
 
@@ -394,11 +388,12 @@ export function PropertyImageUpload({ images, onChange, maxImages = 12, canDelet
                             snapshot.isDragging ? "shadow-lg ring-2 ring-primary" : ""
                           } ${image.isCover ? "ring-2 ring-primary" : ""}`}
                         >
-                          <div className="aspect-video w-full overflow-hidden bg-muted">
+                          {/* All processed images are 4:3 canvas — uniform grid */}
+                          <div className="aspect-video w-full overflow-hidden bg-white">
                             <img
                               src={getImageUrl(image) || "/placeholder.svg"}
                               alt={image.originalName || "Property image"}
-                              className="h-full w-full object-cover"
+                              className="h-full w-full object-contain"
                             />
                           </div>
 

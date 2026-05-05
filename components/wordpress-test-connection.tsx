@@ -43,7 +43,6 @@ export function WordPressTestConnection() {
       }
       const result = await debugWordPressProperty(propertyId)
       setDebugResult(result)
-      console.log("[v0] Debug result:", JSON.stringify(result, null, 2))
     } catch (error) {
       setDebugResult({
         error: error instanceof Error ? error.message : "Error al inspeccionar la propiedad",
