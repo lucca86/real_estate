@@ -18,6 +18,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import { useTheme } from "next-themes"
+import { APP_VERSION } from "@/lib/version"
 
 interface AppHeaderProps {
   user: SessionUser
@@ -68,7 +69,12 @@ export function AppHeader({ user, onMenuClick }: AppHeaderProps) {
             priority
           />
         )}
-        <span className="hidden sm:inline-block text-lg font-semibold text-foreground">Gestión Inmobiliaria RE</span>
+        <span className="hidden sm:inline-flex items-baseline gap-2 text-lg font-semibold text-foreground">
+          Gestión Inmobiliaria RE
+          <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full leading-none tracking-wide">
+            v{APP_VERSION}
+          </span>
+        </span>
       </Link>
 
       {/* Spacer */}

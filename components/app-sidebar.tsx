@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/lib/actions/auth"
+import { APP_VERSION } from "@/lib/version"
 import type { SessionUser } from "@/lib/auth"
 import Image from "next/image"
 import { useTheme } from "next-themes"
@@ -169,17 +170,20 @@ export function AppSidebar({ user, permissions = {}, onNavigate }: AppSidebarPro
       {/* Logo */}
       <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-4">
         {mounted && (
-          <div className="relative h-10 w-[200px]">
-            <Image
-              src={logoSrc || "/placeholder.svg"}
-              alt="Gestión Inmobiliaria RE"
-              fill
-              className="object-contain object-left"
-              priority
-            />
-          </div>
+          <Image
+            src={logoSrc || "/placeholder.svg"}
+            alt="Gestión Inmobiliaria RE"
+            width={200}
+            height={40}
+            className="h-10 object-contain"
+            style={{ width: 'auto' }}
+            priority
+          />
         )}
         {!mounted && <div className="h-10 w-[200px]" />}
+        <span className="ml-auto text-[10px] font-medium text-sidebar-foreground/40 leading-none">
+          v{APP_VERSION}
+        </span>
       </div>
 
       {/* Navigation */}
