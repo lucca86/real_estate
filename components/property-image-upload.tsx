@@ -387,13 +387,24 @@ export function PropertyImageUpload({ images, onChange, maxImages = 12, canDelet
                             snapshot.isDragging ? "shadow-lg ring-2 ring-primary" : ""
                           } ${image.isCover ? "ring-2 ring-primary" : ""}`}
                         >
-                          <div className="aspect-video w-full overflow-hidden bg-muted">
-                            <img
-                              src={getImageUrl(image) || "/placeholder.svg"}
-                              alt={image.originalName || "Property image"}
-                              className="h-full w-full object-cover"
-                            />
-                          </div>
+                          {(() => {
+                            // Detect orientation from stored size metadata (new uploads)
+                            // or fall back to syncToWordPress flag (false = vertical)
+                            const thumbW = (image.sizes as any)?.thumbnail?.width
+                            const thumbH = (image.sizes as any)?.thumbnail?.height
+                            const isVert = thumbH && thumbW
+                              ? thumbH > thumbW
+                              : image.syncToWordPress === false
+                            return (
+                              <div className={`w-full overflow-hidden bg-muted ${isVert ? "aspect-[3/4]" : "aspect-video"}`}>
+                                <img
+                                  src={getImageUrl(image) || "/placeholder.svg"}
+                                  alt={image.originalName || "Property image"}
+                                  className={`h-full w-full ${isVert ? "object-contain bg-white" : "object-cover"}`}
+                                />
+                              </div>
+                            )
+                          })()}
 
                           <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-black/40 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none">
                             <div className="absolute inset-0 flex items-center justify-center gap-2 pointer-events-auto">
