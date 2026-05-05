@@ -12,6 +12,7 @@ import { DeletePropertyButton } from "@/components/delete-property-button"
 import type { SessionUser } from "@/lib/auth"
 import { normalizeImageUrl } from "@/lib/image-utils"
 import { PropertyImage as PropertyImageComponent } from "@/components/property-image"
+import { FormattedDate } from "@/components/formatted-date"
 
 interface Property {
   id: string
@@ -192,26 +193,13 @@ function PropertyCard({ property, currentUser, canDelete }: { property: Property
             {property.owner?.name && <span className="text-muted-foreground">Propietario: {property.owner.name}</span>}
             {property.updated_at && property.updatedBy?.name && (
               <span className="text-muted-foreground">
-                Actualizada: {new Date(property.updated_at).toLocaleString("es-AR", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })} por {property.updatedBy.name}
+                Actualizada: <FormattedDate date={property.updated_at} showTime /> por {property.updatedBy.name}
               </span>
             )}
             {property.wordpress_synced_at && property.wordpress_id && property.wordpress_id > 0 ? (
               <div className="flex flex-col gap-0.5">
                 <span className="text-green-600">
-                  Sincronizada:{" "}
-                  {new Date(property.wordpress_synced_at).toLocaleString("es-AR", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                  Sincronizada: <FormattedDate date={property.wordpress_synced_at} showTime />
                 </span>
                 {property.wordpress_url ? (
                   <a

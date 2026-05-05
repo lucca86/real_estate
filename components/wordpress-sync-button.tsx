@@ -18,6 +18,7 @@ import { Cloud, CloudOff, Loader2, RefreshCw, AlertCircle } from "lucide-react"
 import { syncPropertyToWordPress, deletePropertyFromWordPress } from "@/lib/actions/wordpress"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
+import { FormattedDate } from "@/components/formatted-date"
 
 type SyncResult = {
   success: boolean
@@ -102,9 +103,7 @@ export function WordPressSyncButton({
             Sincronizado
           </Badge>
           {syncedAt && (
-            <span className="text-xs text-muted-foreground">
-              {new Date(syncedAt).toLocaleDateString()} {new Date(syncedAt).toLocaleTimeString()}
-            </span>
+            <FormattedDate date={syncedAt} showTime className="text-xs text-muted-foreground" />
           )}
           {!hasImagesToSync && (
             <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-500">

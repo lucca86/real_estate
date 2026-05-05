@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { PropertyImage as PropertyImageComponent } from "@/components/property-image"
 import { Building2, MapPin, Bed, Bath, Car, Maximize, ChevronLeft, ChevronRight } from "lucide-react"
 import { normalizeImageUrl } from "@/lib/image-utils"
+import { FormattedDate } from "@/components/formatted-date"
 
 interface Property {
   id: string
@@ -238,15 +239,7 @@ export function CatalogPropertyCard({ property }: CatalogPropertyCardProps) {
           {property.wordpress_synced_at && property.wordpress_id && property.wordpress_id > 0 && (
             <div className="flex justify-between text-green-600">
               <span>Sincronizada:</span>
-              <span className="font-medium">
-                {new Date(property.wordpress_synced_at).toLocaleString("es-AR", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
+              <FormattedDate date={property.wordpress_synced_at} showTime className="font-medium" />
             </div>
           )}
           {property.wordpress_url && (
