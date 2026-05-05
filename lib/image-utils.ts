@@ -6,10 +6,14 @@ export interface PropertyImage {
     medium?: string
     large?: string
     full?: string
+    /** Dedicated WebP 1200x900 (horizontal) or 900x1200 (vertical) for WordPress sync */
+    wordpress?: string
   }
   isCover?: boolean
   syncToWordPress?: boolean
   originalName?: string
+  /** WordPress Media Library ID — set after first sync to avoid re-uploading */
+  wordpressMediaId?: number
 }
 
 export function normalizeImageUrl(image: string | PropertyImage | any): string {

@@ -163,7 +163,9 @@ export class WordPressAPI {
     })
   }
 
-  async syncProperty(property: any): Promise<{ id: number; url: string }> {
+  async syncProperty(
+    property: any,
+  ): Promise<{ id: number; url: string; updatedImages?: any[]; imagesWereUpdated?: boolean }> {
     const payload: any = {
       title: property.title,
       content: property.description || "",
@@ -242,6 +244,10 @@ export class WordPressAPI {
       }
     }
 
+    // Track whether any image got a new wordpressMediaId so we can persist back
+    const updatedImages: any[] = []
+    let imagesWereUpdated = false
+
     if (property.images && property.images.length > 0) {
       const imageIds: number[] = []
 
@@ -257,23 +263,44 @@ export class WordPressAPI {
           }
         }
 
-        // Now extract the URL
-        const imageUrl = typeof imageObj === "string" ? imageObj : imageObj?.url
+        // Prefer the dedicated 'wordpress' size (1200x900 WebP), fall back to large or root url
+        const imageUrl =
+          typeof imageObj === "string"
+            ? imageObj
+            : (imageObj?.sizes?.wordpress?.url ||
+               imageObj?.sizes?.wordpress ||
+               imageObj?.sizes?.large?.url ||
+               imageObj?.sizes?.large ||
+               imageObj?.url)
 
         if (!imageUrl || typeof imageUrl !== "string") {
+          updatedImages.push(imageObj)
           continue
         }
 
-        const filename = `property-${property.id}-${Date.now()}-${i + 1}.jpg`
+        // Use a stable filename based on property id + index (no Date.now → no duplicate uploads)
+        const ext = imageUrl.includes(".webp") ? "webp" : "jpg"
+        const filename = `property-${property.id}-${i + 1}.${ext}`
+
+        // Pass existing media ID so we can skip re-upload if the image hasn't changed
+        const existingMediaId =
+          typeof imageObj === "object" ? imageObj?.wordpressMediaId : undefined
 
         try {
-          const imageId = await this.uploadImage(imageUrl, filename)
+          const imageId = await this.uploadImage(imageUrl, filename, existingMediaId)
           if (imageId) {
             imageIds.push(imageId)
+            // Persist the new media ID back on the object if it changed
+            if (typeof imageObj === "object" && imageId !== existingMediaId) {
+              imageObj = { ...imageObj, wordpressMediaId: imageId }
+              imagesWereUpdated = true
+            }
           }
         } catch {
           // Non-fatal image upload error
         }
+
+        updatedImages.push(imageObj)
       }
 
       if (imageIds.length > 0) {
@@ -408,17 +435,19 @@ export class WordPressAPI {
     // Check for existing WordPress ID (try both property names for compatibility)
     const existingId = property.wordpress_id || property.wordpressId
     
+    const imagesMeta = imagesWereUpdated ? { updatedImages, imagesWereUpdated: true } : {}
+
     if (existingId && Number(existingId) > 0) {
       try {
         await this.updateProperty(existingId, payload)
         // Get the post URL after update
         const postData = await this.request(`/wp/v2/properties/${existingId}`)
         const url = postData.link || ""
-        return { id: existingId, url }
+        return { id: existingId, url, ...imagesMeta }
       } catch (error) {
         if (error instanceof Error && error.message === "PROPERTY_NOT_FOUND") {
           const result = await this.createProperty(payload)
-          return result
+          return { ...result, ...imagesMeta }
         }
         throw new Error(
           error instanceof Error && error.message.includes("create_failed")
@@ -431,7 +460,7 @@ export class WordPressAPI {
     } else {
       try {
         const result = await this.createProperty(payload)
-        return result
+        return { ...result, ...imagesMeta }
       } catch (error) {
         throw new Error(
           error instanceof Error && error.message.includes("create_failed")
@@ -478,8 +507,23 @@ export class WordPressAPI {
     return data
   }
 
-  async uploadImage(imageUrl: string, filename: string): Promise<number | undefined> {
+  async uploadImage(
+    imageUrl: string,
+    filename: string,
+    existingMediaId?: number,
+  ): Promise<number | undefined> {
     try {
+      // If we already have a media ID, verify it still exists in WP before re-uploading
+      if (existingMediaId && existingMediaId > 0) {
+        try {
+          await this.request(`/wp/v2/media/${existingMediaId}`)
+          // Media still exists — reuse without uploading anything
+          return existingMediaId
+        } catch {
+          // Media was deleted from WP — fall through to re-upload
+        }
+      }
+
       const imageResponse = await fetch(imageUrl)
       if (!imageResponse.ok) return undefined
 

@@ -146,11 +146,13 @@ export function PropertyImageUpload({ images, onChange, maxImages = 12, canDelet
 
         const newImage: PropertyImage = {
           id: `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-          url: result.sizes.large.url, // URL de la versión large
+          url: result.sizes.large.url,
           sizes: {
             thumbnail: result.sizes.thumbnail.url,
             medium: result.sizes.medium.url,
             large: result.sizes.large.url,
+            // Dedicated WebP size for WordPress sync (1200x900 horizontal / 900x1200 vertical)
+            wordpress: result.sizes.wordpress?.url,
           },
           isCover: images.length === 0 && uploadedImages.length === 0,
           syncToWordPress: !isVertical,

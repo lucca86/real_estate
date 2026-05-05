@@ -85,13 +85,33 @@ export async function syncPropertyToWordPress(propertyId: string) {
 
     const result = await wordpressAPI.syncProperty(syncData)
 
+    // Base update: always save WP id, url, and synced timestamp
+    const updatePayload: Record<string, any> = {
+      wordpress_id: result.id,
+      wordpress_url: result.url,
+      wordpress_synced_at: new Date().toISOString(),
+    }
+
+    // If any image got a new wordpressMediaId, persist the full updated images array
+    if (result.imagesWereUpdated && result.updatedImages) {
+      // Merge back updated imagesToSync into the full allImages array (preserve non-synced images)
+      const updatedSyncedMap = new Map(
+        result.updatedImages.map((img: any, idx: number) => [idx, img])
+      )
+      let syncedIdx = 0
+      const mergedImages = allImages.map((img: any) => {
+        if (img.syncToWordPress === true) {
+          const updated = updatedSyncedMap.get(syncedIdx++)
+          return updated ?? img
+        }
+        return img
+      })
+      updatePayload.images = mergedImages
+    }
+
     await adminClient
       .from("properties")
-      .update({
-        wordpress_id: result.id,
-        wordpress_url: result.url,
-        wordpress_synced_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq("id", propertyId)
 
     revalidatePath("/properties")
