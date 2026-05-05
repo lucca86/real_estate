@@ -75,14 +75,21 @@ export async function POST(request: Request): Promise<NextResponse> {
     const uploadedSizes: Partial<ImageSizes> = {}
 
     for (const [sizeName, dimensions] of Object.entries(sizes)) {
-      // Vertical images: keep the full image with white background padding (contain)
-      // Horizontal images: crop to fill the target ratio (cover)
-      const optimizedBuffer = await sharp(buffer)
+      // Vertical images: contain (full image preserved, white letterbox padding)
+      // Horizontal images: cover (crop to fill target ratio)
+      //
+      // For contain to render white padding correctly with WebP we must:
+      //   1. flatten() — composites any transparency onto white so Sharp
+      //      knows how to fill the canvas
+      //   2. resize with fit:"contain" and background white
+      const pipeline = sharp(buffer).flatten({ background: { r: 255, g: 255, b: 255 } })
+
+      const optimizedBuffer = await pipeline
         .resize(dimensions.width, dimensions.height, {
           fit: isVertical ? "contain" : "cover",
           position: "centre",
           withoutEnlargement: true,
-          background: { r: 255, g: 255, b: 255, alpha: 1 },
+          background: { r: 255, g: 255, b: 255 },
         })
         .webp({
           quality: qualities[sizeName],
