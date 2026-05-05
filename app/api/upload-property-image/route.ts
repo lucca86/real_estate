@@ -75,15 +75,18 @@ export async function POST(request: Request): Promise<NextResponse> {
     const uploadedSizes: Partial<ImageSizes> = {}
 
     for (const [sizeName, dimensions] of Object.entries(sizes)) {
+      // Vertical images: keep the full image with white background padding (contain)
+      // Horizontal images: crop to fill the target ratio (cover)
       const optimizedBuffer = await sharp(buffer)
         .resize(dimensions.width, dimensions.height, {
-          fit: "cover",
+          fit: isVertical ? "contain" : "cover",
           position: "centre",
-          withoutEnlargement: true, // never upscale smaller originals
+          withoutEnlargement: true,
+          background: { r: 255, g: 255, b: 255, alpha: 1 },
         })
         .webp({
           quality: qualities[sizeName],
-          effort: 4, // 0=fast…6=best — 4 is the best balance for serverless
+          effort: 4,
         })
         .toBuffer()
 

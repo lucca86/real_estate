@@ -9,19 +9,10 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
 import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd"
 import { deletePropertyImage } from "@/lib/actions/properties"
+import type { PropertyImage as BasePropertyImage } from "@/lib/image-utils"
 
-interface PropertyImage {
-  id: string
-  url: string
-  sizes: {
-    thumbnail: string
-    medium: string
-    large: string
-  }
-  isCover: boolean
-  syncToWordPress: boolean
-  originalName: string
-}
+// In this component, id is always present (assigned at upload time)
+type PropertyImage = BasePropertyImage & { id: string }
 
 interface PropertyImageUploadProps {
   images: PropertyImage[]
