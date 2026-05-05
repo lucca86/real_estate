@@ -19,6 +19,24 @@ interface OptimizedImage {
   url: string
   sizes: ImageSizes
   originalName: string
+  isVertical: boolean
+}
+
+// ALL output canvases are 4:3 (width × height). Vertical images are scaled to
+// fit inside the canvas height and padded with white on both sides.
+// This guarantees a uniform aspect ratio across the entire gallery.
+const SIZES = {
+  thumbnail: { width: 480,  height: 360  },
+  medium:    { width: 1024, height: 768  },
+  large:     { width: 1440, height: 1080 },
+  wordpress: { width: 1200, height: 900  },
+} as const
+
+const QUALITIES: Record<keyof typeof SIZES, number> = {
+  thumbnail: 75,
+  medium:    82,
+  large:     85,
+  wordpress: 80,
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
@@ -42,79 +60,54 @@ export async function POST(request: Request): Promise<NextResponse> {
     const buffer = Buffer.from(arrayBuffer)
 
     const metadata = await sharp(buffer).metadata()
-    const isVertical = (metadata.height || 0) > (metadata.width || 0)
-
-    // Optimal dimensions per size:
-    // - thumbnail: grids, cards, listings
-    // - medium:    main gallery view, internal detail
-    // - large:     fullscreen / lightbox
-    // - wordpress: dedicated size for WP sync (1200x900 WebP ~110KB)
-    const sizes = isVertical
-      ? {
-          thumbnail:  { width: 360,  height: 480  }, // 3:4
-          medium:     { width: 768,  height: 1024 }, // 3:4
-          large:      { width: 1080, height: 1440 }, // 3:4
-          wordpress:  { width: 900,  height: 1200 }, // 3:4 — WP dedicated
-        }
-      : {
-          thumbnail:  { width: 480,  height: 360  }, // 4:3
-          medium:     { width: 1024, height: 768  }, // 4:3
-          large:      { width: 1440, height: 1080 }, // 4:3  (was 1920x1080)
-          wordpress:  { width: 1200, height: 900  }, // 4:3 — WP dedicated
-        }
-
-    // WebP quality per size
-    const qualities: Record<string, number> = {
-      thumbnail: 75,
-      medium:    82,
-      large:     85,
-      wordpress: 80,
-    }
+    const isVertical = (metadata.height ?? 0) > (metadata.width ?? 0)
 
     const baseFileName = file.name.replace(/\.[^/.]+$/, "")
     const uploadedSizes: Partial<ImageSizes> = {}
 
-    for (const [sizeName, dimensions] of Object.entries(sizes)) {
-      // Vertical images: contain (full image preserved, white letterbox padding)
-      // Horizontal images: cover (crop to fill target ratio)
+    for (const [sizeName, canvas] of Object.entries(SIZES) as [keyof typeof SIZES, { width: number; height: number }][]) {
+      // Step 1 — flatten any transparency onto white (needed before extend/contain)
+      // Step 2 — resize with `contain` so the full image fits inside the canvas
+      //           while preserving aspect ratio; Sharp fills the remainder with white
+      // Step 3 — encode as WebP
       //
-      // For contain to render white padding correctly with WebP we must:
-      //   1. flatten() — composites any transparency onto white so Sharp
-      //      knows how to fill the canvas
-      //   2. resize with fit:"contain" and background white
-      const pipeline = sharp(buffer).flatten({ background: { r: 255, g: 255, b: 255 } })
-
-      const optimizedBuffer = await pipeline
-        .resize(dimensions.width, dimensions.height, {
-          fit: isVertical ? "contain" : "cover",
+      // Using `contain` for ALL images (not just verticals) ensures consistent
+      // output: horizontals that already match 4:3 fill the canvas completely,
+      // while verticals end up centred with white letterbox padding on the sides.
+      const optimizedBuffer = await sharp(buffer)
+        .flatten({ background: { r: 255, g: 255, b: 255 } })
+        .resize(canvas.width, canvas.height, {
+          fit: "contain",
           position: "centre",
           withoutEnlargement: true,
           background: { r: 255, g: 255, b: 255 },
         })
-        .webp({
-          quality: qualities[sizeName],
-          effort: 4,
-        })
+        .webp({ quality: QUALITIES[sizeName], effort: 4 })
         .toBuffer()
 
-      const blob = await put(`${baseFileName}-${sizeName}.webp`, optimizedBuffer, {
-        access: "public",
-        addRandomSuffix: true,
-        token,
-        contentType: "image/webp",
-      })
+      const blob = await put(
+        `${baseFileName}-${sizeName}.webp`,
+        optimizedBuffer,
+        {
+          access: "public",
+          addRandomSuffix: true,
+          token,
+          contentType: "image/webp",
+        },
+      )
 
-      uploadedSizes[sizeName as keyof ImageSizes] = {
+      uploadedSizes[sizeName] = {
         url: blob.url,
-        width: dimensions.width,
-        height: dimensions.height,
+        width: canvas.width,
+        height: canvas.height,
       }
     }
 
     const result: OptimizedImage = {
-      url: uploadedSizes.large!.url, // primary URL is the large version
+      url: uploadedSizes.large!.url,
       sizes: uploadedSizes as ImageSizes,
       originalName: file.name,
+      isVertical,
     }
 
     return NextResponse.json(result)
