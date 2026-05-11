@@ -14,6 +14,7 @@ import {
   MapPin,
   BookUser,
   Wrench,
+  DatabaseBackup,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -133,6 +134,12 @@ export function AppSidebar({ user, permissions = {}, onNavigate }: AppSidebarPro
       href: "/settings",
       icon: Settings,
       roles: ["ADMIN", "SUPERVISOR"],
+    },
+    {
+      name: "Herramientas",
+      href: "/settings/tools",
+      icon: DatabaseBackup,
+      roles: ["ADMIN"],
     },
   ]
 

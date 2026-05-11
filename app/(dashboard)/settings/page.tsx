@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { WordPressBulkSync } from "@/components/wordpress-bulk-sync"
 import { WordPressTestConnection } from "@/components/wordpress-test-connection"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Info, MapPin, Shield, Activity, Calendar } from "lucide-react"
+import { Info, MapPin, Shield, Activity, Calendar, DatabaseBackup } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { PropertyEditModeCard } from "@/components/property-edit-mode-card"
@@ -234,6 +234,24 @@ export default async function SettingsPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Tools shortcut — ADMIN only */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DatabaseBackup className="h-5 w-5" />
+            Herramientas
+          </CardTitle>
+          <CardDescription>
+            Backup de base de datos e imágenes, programación automática y gestión del historial.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild variant="outline">
+            <Link href="/settings/tools">Ir a Herramientas</Link>
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   )
 }
