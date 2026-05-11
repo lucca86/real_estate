@@ -39,9 +39,9 @@ import {
   deleteBackupRecord,
   type BackupRecord,
   type BackupSettings,
-  formatBytes,
 } from "@/lib/actions/backup"
 import { FormattedDate } from "@/components/formatted-date"
+import { formatBytes } from "@/lib/utils"
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
