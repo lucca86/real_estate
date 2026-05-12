@@ -124,6 +124,7 @@ export function BackupManager({ initialHistory, initialSettings }: Props) {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [progress, setProgress] = useState<ProgressState>(INITIAL_PROGRESS)
   const [isSavingSettings, setIsSavingSettings] = useState(false)
+  const [downloadingZip, setDownloadingZip] = useState<string | null>(null) // record id being downloaded
 
   function showMessage(type: "success" | "error", text: string) {
     setMessage({ type, text })
@@ -253,6 +254,33 @@ export function BackupManager({ initialHistory, initialSettings }: Props) {
     }
   }
 
+  async function handleDownloadImages(recordId: string, manifestUrl?: string) {
+    setDownloadingZip(recordId)
+    try {
+      const res = await fetch("/api/backup/download-images", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ manifestUrl }),
+      })
+      if (!res.ok) {
+        showMessage("error", "No se pudo generar el ZIP de imágenes.")
+        return
+      }
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      const dateStr = new Date().toISOString().slice(0, 10)
+      a.href = url
+      a.download = `imagenes-propiedades-${dateStr}.zip`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      showMessage("error", "Error de red al descargar las imágenes.")
+    } finally {
+      setDownloadingZip(null)
+    }
+  }
+
   function handleDelete(id: string) {
     deleteBackupRecord(id).then(() => {
       setHistory((prev) => prev.filter((r) => r.id !== id))
@@ -344,7 +372,7 @@ export function BackupManager({ initialHistory, initialSettings }: Props) {
                     <SelectItem value="images">
                       <span className="flex items-center gap-2">
                         <Images className="h-4 w-4" />
-                        Solo imagenes (ZIP)
+                        Solo imágenes (manifiesto)
                       </span>
                     </SelectItem>
                   </SelectContent>
@@ -491,15 +519,22 @@ export function BackupManager({ initialHistory, initialSettings }: Props) {
                             </a>
                           </Button>
                         )}
-                        {record.blob_url_images && (
-                          <Button variant="outline" size="sm" asChild className="gap-1.5 text-xs">
-                            <a
-                              href={record.blob_url_images}
-                              download={record.file_name_images ?? "backup-images.zip"}
-                            >
+                        {/* Images: download ZIP on demand (images already live in Blob) */}
+                        {(record.blob_url_images || record.backup_scope === "images" || record.backup_scope === "both") &&
+                          record.status === "completed" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1.5 text-xs"
+                            disabled={downloadingZip === record.id}
+                            onClick={() => handleDownloadImages(record.id, record.blob_url_images ?? undefined)}
+                          >
+                            {downloadingZip === record.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
                               <Download className="h-3.5 w-3.5" />
-                              ZIP
-                            </a>
+                            )}
+                            {downloadingZip === record.id ? "Generando..." : "Imágenes ZIP"}
                           </Button>
                         )}
                         <AlertDialog>

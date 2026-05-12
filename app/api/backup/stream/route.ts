@@ -1,5 +1,4 @@
 import { put } from "@vercel/blob"
-import JSZip from "jszip"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getCurrentUser } from "@/lib/auth"
 import { getSystemSetting } from "@/lib/actions/system-settings"
@@ -15,32 +14,20 @@ const DB_TABLES = [
   "backup_history",
 ]
 
-const IMAGE_CONCURRENCY = 5
-
 function encode(event: string, data: object) {
   return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`
 }
 
 export async function POST(req: Request) {
-  // Auth check using the custom JWT session cookie (this app does NOT use Supabase Auth)
   const currentUser = await getCurrentUser()
-
-  if (!currentUser) {
-    return new Response("Unauthorized", { status: 401 })
-  }
-
-  if (currentUser.role !== "ADMIN") {
-    return new Response("Forbidden", { status: 403 })
-  }
+  if (!currentUser) return new Response("Unauthorized", { status: 401 })
+  if (currentUser.role !== "ADMIN") return new Response("Forbidden", { status: 403 })
 
   const adminClient = createAdminClient()
-
-  const { scope } = await req.json() as { scope: "db" | "images" | "both" }
+  const { scope } = (await req.json()) as { scope: "db" | "images" | "both" }
   const token = process.env.BLOB_READ_WRITE_TOKEN
 
-  if (!token) {
-    return new Response("BLOB_READ_WRITE_TOKEN no configurado", { status: 500 })
-  }
+  if (!token) return new Response("BLOB_READ_WRITE_TOKEN no configurado", { status: 500 })
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -56,19 +43,18 @@ export async function POST(req: Request) {
       const dateStr = now.toISOString().slice(0, 10)
       const timeStr = now.toISOString().slice(11, 19).replace(/:/g, "-")
 
-      // Steps definition: [id, label, weight]
-      // weight determines visual proportion of the progress bar
+      // ── Steps ───────────────────────────────────────────────────────────────
+      // Images backup = just a JSON manifest (URLs already live in Blob).
+      // Actual ZIP download is a separate on-demand endpoint.
       type Step = { id: string; label: string }
       const dbSteps: Step[] = [
-        { id: "init", label: "Iniciando backup..." },
+        { id: "init",      label: "Iniciando backup..." },
         { id: "db_export", label: "Exportando tablas de la base de datos..." },
-        { id: "db_upload", label: "Subiendo backup de BD a Vercel Blob..." },
+        { id: "db_upload", label: "Subiendo respaldo de BD a Vercel Blob..." },
       ]
       const imgSteps: Step[] = [
-        { id: "img_query", label: "Consultando imágenes de propiedades..." },
-        { id: "img_download", label: "Descargando imágenes..." },
-        { id: "img_zip", label: "Generando archivo ZIP..." },
-        { id: "img_upload", label: "Subiendo ZIP a Vercel Blob..." },
+        { id: "img_query",    label: "Recopilando URLs de imágenes..." },
+        { id: "img_manifest", label: "Guardando manifiesto de imágenes..." },
       ]
       const finalStep: Step = { id: "done", label: "Finalizando y registrando backup..." }
 
@@ -93,7 +79,7 @@ export async function POST(req: Request) {
         })
       }
 
-      // ── Insert history row ────────────────────────────────────────────────
+      // ── Create history row ──────────────────────────────────────────────────
       progress(steps[0]) // "init"
 
       const { data: historyRow, error: historyError } = await adminClient
@@ -121,13 +107,14 @@ export async function POST(req: Request) {
       let fileNameDb: string | undefined
       let fileSizeDb: number | undefined
       let tablesCount = 0
+
       let blobUrlImages: string | undefined
       let fileNameImages: string | undefined
       let fileSizeImages: number | undefined
       let imagesCount = 0
 
       try {
-        // ── DB Backup ─────────────────────────────────────────────────────────
+        // ── DB Backup ──────────────────────────────────────────────────────────
         if (scope === "db" || scope === "both") {
           progress(steps.find((s) => s.id === "db_export")!)
 
@@ -138,7 +125,6 @@ export async function POST(req: Request) {
               dbExport[table] = data
               tablesCount++
             }
-            // Emit partial progress per table so it feels alive
             emit("detail", { message: `Exportando tabla: ${table}` })
           }
 
@@ -159,16 +145,26 @@ export async function POST(req: Request) {
           fileSizeDb = jsonBuffer.byteLength
         }
 
-        // ── Images Backup ─────────────────────────────────────────────────────
+        // ── Images Manifest ────────────────────────────────────────────────────
+        // We do NOT download images from Blob and re-upload them — they are
+        // already in Blob. We save a lightweight JSON manifest with all URLs
+        // organised by property. The actual ZIP download is a separate endpoint.
         if (scope === "images" || scope === "both") {
           progress(steps.find((s) => s.id === "img_query")!)
+
           const { data: properties } = await adminClient
             .from("properties")
-            .select("id, images")
+            .select("id, title, images")
 
-          const imageEntries: Array<{ propertyId: string; url: string }> = []
+          const manifest: Array<{
+            propertyId: string
+            propertyTitle: string
+            images: Array<{ url: string; isCover?: boolean }>
+          }> = []
+
           for (const prop of properties ?? []) {
             if (!Array.isArray(prop.images)) continue
+            const imgs: Array<{ url: string; isCover?: boolean }> = []
             for (const img of prop.images) {
               let parsed = img
               if (typeof img === "string") {
@@ -176,63 +172,36 @@ export async function POST(req: Request) {
               }
               const url = typeof parsed === "string" ? parsed : parsed?.url
               if (url && typeof url === "string" && url.startsWith("http")) {
-                imageEntries.push({ propertyId: prop.id, url })
+                imgs.push({ url, isCover: parsed?.isCover ?? false })
+                imagesCount++
               }
+            }
+            if (imgs.length > 0) {
+              manifest.push({ propertyId: prop.id, propertyTitle: prop.title ?? "", images: imgs })
             }
           }
 
-          emit("detail", { message: `${imageEntries.length} imágenes encontradas en ${properties?.length ?? 0} propiedades` })
+          emit("detail", {
+            message: `${imagesCount} imágenes en ${manifest.length} propiedades — guardando manifiesto...`,
+          })
 
-          progress(steps.find((s) => s.id === "img_download")!)
+          progress(steps.find((s) => s.id === "img_manifest")!)
 
-          // Download with progress per batch
-          const downloaded: Array<{ url: string; buffer: Buffer | null; filename: string }> = []
-          for (let i = 0; i < imageEntries.length; i += IMAGE_CONCURRENCY) {
-            const batch = imageEntries.slice(i, i + IMAGE_CONCURRENCY)
-            const results = await Promise.all(
-              batch.map(async (entry) => {
-                try {
-                  const res = await fetch(entry.url, { signal: AbortSignal.timeout(30_000) })
-                  if (!res.ok) return { url: entry.url, buffer: null, filename: "" }
-                  const ab = await res.arrayBuffer()
-                  const parts = entry.url.split("/")
-                  const filename = parts[parts.length - 1].split("?")[0]
-                  return { url: entry.url, buffer: Buffer.from(ab), filename }
-                } catch {
-                  return { url: entry.url, buffer: null, filename: "" }
-                }
-              }),
-            )
-            downloaded.push(...results)
-            const done = Math.min(i + IMAGE_CONCURRENCY, imageEntries.length)
-            emit("detail", { message: `Descargando imágenes: ${done} / ${imageEntries.length}` })
-          }
-
-          progress(steps.find((s) => s.id === "img_zip")!)
-          const zip = new JSZip()
-          const imagesFolder = zip.folder("imagenes")!
-          const urlToPropertyId = new Map(imageEntries.map((e) => [e.url, e.propertyId]))
-
-          for (const item of downloaded) {
-            if (!item.buffer || !item.filename) continue
-            const propId = urlToPropertyId.get(item.url) ?? "sin-propiedad"
-            imagesFolder.folder(`propiedad-${propId}`)!.file(item.filename, item.buffer)
-            imagesCount++
-          }
-
-          progress(steps.find((s) => s.id === "img_upload")!)
-          const zipBuffer = await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" })
-          fileNameImages = `backup-images-${dateStr}-${timeStr}.zip`
-          const blob = await put(`backups/images/${fileNameImages}`, zipBuffer, {
+          const manifestBuffer = Buffer.from(
+            JSON.stringify({ exported_at: now.toISOString(), total_images: imagesCount, properties: manifest }, null, 2),
+            "utf-8",
+          )
+          fileNameImages = `backup-images-manifest-${dateStr}-${timeStr}.json`
+          const imgBlob = await put(`backups/images/${fileNameImages}`, manifestBuffer, {
             access: "public",
             token,
-            contentType: "application/zip",
+            contentType: "application/json",
           })
-          blobUrlImages = blob.url
-          fileSizeImages = zipBuffer.byteLength
+          blobUrlImages = imgBlob.url
+          fileSizeImages = manifestBuffer.byteLength
         }
 
-        // ── Finalize ──────────────────────────────────────────────────────────
+        // ── Finalize ────────────────────────────────────────────────────────────
         progress(finalStep)
 
         await updateHistory({
