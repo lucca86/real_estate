@@ -3,7 +3,6 @@ import JSZip from "jszip"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getCurrentUser } from "@/lib/auth"
 import { getSystemSetting } from "@/lib/actions/system-settings"
-import { createClient } from "@/lib/supabase/server"
 
 const DB_TABLES = [
   "users",
@@ -23,26 +22,18 @@ function encode(event: string, data: object) {
 }
 
 export async function POST(req: Request) {
-  // Auth check using the session cookie
-  const supabase = await createClient()
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser()
+  // Auth check using the custom JWT session cookie (this app does NOT use Supabase Auth)
+  const currentUser = await getCurrentUser()
 
-  if (!authUser) {
+  if (!currentUser) {
     return new Response("Unauthorized", { status: 401 })
   }
 
-  const adminClient = createAdminClient()
-  const { data: dbUser } = await adminClient
-    .from("users")
-    .select("id, role")
-    .eq("id", authUser.id)
-    .maybeSingle()
-
-  if (!dbUser || dbUser.role !== "ADMIN") {
+  if (currentUser.role !== "ADMIN") {
     return new Response("Forbidden", { status: 403 })
   }
+
+  const adminClient = createAdminClient()
 
   const { scope } = await req.json() as { scope: "db" | "images" | "both" }
   const token = process.env.BLOB_READ_WRITE_TOKEN
@@ -111,7 +102,7 @@ export async function POST(req: Request) {
           type: "manual",
           backup_scope: scope,
           status: "running",
-          created_by_id: dbUser.id,
+          created_by_id: currentUser.id,
         })
         .select("id")
         .single()
