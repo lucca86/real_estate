@@ -87,7 +87,8 @@ export async function POST(req: Request) {
   const dateStr = new Date().toISOString().slice(0, 10)
   const filename = `imagenes-propiedades-${dateStr}.zip`
 
-  return new Response(zipBuffer, {
+  // Response BodyInit requires Uint8Array, not Node.js Buffer
+  return new Response(new Uint8Array(zipBuffer), {
     headers: {
       "Content-Type": "application/zip",
       "Content-Disposition": `attachment; filename="${filename}"`,
