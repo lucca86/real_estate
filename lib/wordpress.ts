@@ -372,7 +372,7 @@ export class WordPressAPI {
     const addressParts = [
       property.address,
       extractName(property.city),
-      extractName(property.state),
+      extractName(property.province) || extractName(property.state),
       extractName(property.country),
     ].filter(Boolean)
 
@@ -381,6 +381,40 @@ export class WordPressAPI {
     }
 
     if (property.zipCode) payload.meta.es_property_postal_code = String(property.zipCode)
+
+    // --- Location fields (WP field names from Estatik listing fields) ---
+    // These fields appear as separate meta keys, NOT embedded in es_property_address only.
+    // Field names confirmed from WP: country, province, city, es_neighborhood, postal_code
+
+    const countryName = extractName(property.country)
+    const provinceName = extractName(property.province) || extractName(property.state)
+    const cityName = extractName(property.city)
+    const neighborhoodName = extractName(property.neighborhood)
+
+    if (countryName) {
+      payload.meta.country = countryName
+      // Also map to the standard Estatik meta key
+      payload.meta.es_country = countryName
+    }
+
+    if (provinceName) {
+      payload.meta.province = provinceName
+      payload.meta.es_state = provinceName
+    }
+
+    if (cityName) {
+      payload.meta.city = cityName
+      payload.meta.es_city = cityName
+    }
+
+    if (neighborhoodName) {
+      payload.meta.es_neighborhood = neighborhoodName
+    }
+
+    // postal_code as a direct meta key (WP uses both this and es_property_postal_code)
+    if (property.zipCode) {
+      payload.meta.postal_code = String(property.zipCode)
+    }
 
     let latitude = property.latitude
     let longitude = property.longitude
