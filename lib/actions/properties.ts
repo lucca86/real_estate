@@ -63,6 +63,8 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
     const syncToWordPress = formData.get("syncToWordPress") === "true"
     const adrema = formData.get("adrema") as string
     const internalNotes = formData.get("internalNotes") as string
+    const frontMeters = formData.get("frontMeters") as string
+    const backMeters = formData.get("backMeters") as string
 
     if (!title || !ownerId || !propertyTypeId || !status || !address || !cityId || !countryId || !provinceId) {
       return { success: false, error: "Faltan campos requeridos" }
@@ -94,6 +96,8 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
     const parsedParkingSpaces = parkingSpaces ? Number.parseInt(parkingSpaces) : null
     const parsedLotSize = lotSize ? Number.parseFloat(lotSize) : null
     const parsedYearBuilt = yearBuilt ? Number.parseInt(yearBuilt) : null
+    const parsedFrontMeters = frontMeters ? Number.parseFloat(frontMeters) : null
+    const parsedBackMeters = backMeters ? Number.parseFloat(backMeters) : null
 
     const pricePerM2 = price && parsedArea ? Number.parseFloat(price) / parsedArea : null
 
@@ -118,6 +122,8 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
         parking_spaces: parsedParkingSpaces,
         area: parsedArea,
         lot_size: parsedLotSize,
+        front_size: parsedFrontMeters,
+        depth_size: parsedBackMeters,
         year_built: parsedYearBuilt,
         transaction_type: transactionType,
         rental_period: rentalPeriod || null,
@@ -238,6 +244,8 @@ export async function updateProperty(propertyId: string, formData: FormData) {
   const yearBuilt = formData.get("yearBuilt") as string
   const adrema = formData.get("adrema") as string
   const internalNotes = formData.get("internalNotes") as string
+  const frontMeters = formData.get("frontMeters") as string
+  const backMeters = formData.get("backMeters") as string
 
   const parsedImages: any[] = imagesJson ? JSON.parse(imagesJson) : []
 
@@ -264,6 +272,8 @@ export async function updateProperty(propertyId: string, formData: FormData) {
   const parsedParkingSpaces = parkingSpaces ? Number.parseInt(parkingSpaces) : null
   const parsedLotSize = lotSize ? Number.parseFloat(lotSize) : null
   const parsedYearBuilt = yearBuilt ? Number.parseInt(yearBuilt) : null
+  const parsedFrontMeters = frontMeters ? Number.parseFloat(frontMeters) : null
+  const parsedBackMeters = backMeters ? Number.parseFloat(backMeters) : null
 
   const pricePerM2 = price && parsedArea ? Number.parseFloat(price) / parsedArea : null
 
@@ -287,6 +297,8 @@ export async function updateProperty(propertyId: string, formData: FormData) {
       parking_spaces: parsedParkingSpaces,
       area: parsedArea,
       lot_size: parsedLotSize,
+      front_size: parsedFrontMeters,
+      depth_size: parsedBackMeters,
       year_built: parsedYearBuilt,
       transaction_type: transactionType,
       rental_period: rentalPeriod || null,

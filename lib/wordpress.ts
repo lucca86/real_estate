@@ -30,8 +30,11 @@ interface WordPressProperty {
     es_property_bathrooms?: string
     es_property_half_baths?: string
     es_property_total_rooms?: string
+    es_property_size?: string
     es_property_area?: string
     es_property_lot_size?: string
+    es_property_front_size?: string
+    es_property_depth_size?: string
     es_property_floors?: string
     es_property_floor_level?: string
     es_property_year_built?: string
@@ -339,8 +342,15 @@ export class WordPressAPI {
     if (property.bathrooms) payload.meta.es_property_bathrooms = String(property.bathrooms)
     if (property.halfBathrooms) payload.meta.es_property_half_baths = String(property.halfBathrooms)
     if (property.totalRooms) payload.meta.es_property_total_rooms = String(property.totalRooms)
-    if (property.area) payload.meta.es_property_area = String(property.area)
+    // es_property_size is the Estatik standard meta key for covered area (confirmed from WP listing fields)
+    if (property.area) {
+      payload.meta.es_property_size = String(property.area)
+      // Keep legacy key for backwards compatibility
+      payload.meta.es_property_area = String(property.area)
+    }
     if (property.lotSize) payload.meta.es_property_lot_size = String(property.lotSize)
+    if (property.frontSize) payload.meta.es_property_front_size = String(property.frontSize)
+    if (property.depthSize) payload.meta.es_property_depth_size = String(property.depthSize)
     if (property.floors) payload.meta.es_property_floors = String(property.floors)
     if (property.floorLevel) payload.meta.es_property_floor_level = String(property.floorLevel)
 

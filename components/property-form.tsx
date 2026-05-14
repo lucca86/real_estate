@@ -1409,7 +1409,9 @@ export function PropertyForm({
                 value={formData.area ?? ""}
                 onChange={(e) => {
                   const val = e.target.value
-                  setFormData((prev) => ({ ...prev, area: val === "" ? undefined : Number(val) }))
+                  // Use parseFloat only when the value is complete (no trailing dot), to avoid 200 → 199.99
+                  const parsed = val === "" ? undefined : (val.endsWith(".") ? Number(val + "0") : parseFloat(val))
+                  setFormData((prev) => ({ ...prev, area: parsed }))
                 }}
                 disabled={isSubmitting}
                 placeholder="Área cubierta"
@@ -1616,10 +1618,14 @@ export function PropertyForm({
                 <SelectValue placeholder="Sin etiqueta" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="NONE">Sin etiqueta</SelectItem>
-                <SelectItem value="NUEVA">Nueva</SelectItem>
-                <SelectItem value="DESTACADA">Destacada</SelectItem>
-                <SelectItem value="REBAJADA">Rebajada</SelectItem>
+                    <SelectItem value="NONE">Sin etiqueta</SelectItem>
+                    <SelectItem value="NUEVA">Nueva</SelectItem>
+                    <SelectItem value="DESTACADA">Destacada</SelectItem>
+                    <SelectItem value="REBAJADA">Rebajada</SelectItem>
+                    <SelectItem value="CASA_ABIERTA">Casa abierta</SelectItem>
+                    <SelectItem value="DE_POZO">De pozo</SelectItem>
+                    <SelectItem value="RECIEN_PUBLICADA">Recién publicada</SelectItem>
+                    <SelectItem value="SUCESION">Sucesión</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground">
