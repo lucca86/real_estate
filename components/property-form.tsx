@@ -26,7 +26,7 @@ import {
   getNeighborhoodsByCity,
 } from "@/lib/actions/locations"
 import { PropertyImageUpload } from "./property-image-upload"
-import { normalizeImages } from "@/lib/image-utils" // Fixed import to use normalizeImages from correct file
+import { normalizeImages, type PropertyImage } from "@/lib/image-utils"
 import { PropertiesMap } from "@/components/property-map" // Import PropertiesMap
 import { PropertyFeaturesSelector } from "@/components/property-features-selector"
 import {
@@ -34,20 +34,6 @@ import {
   assignFeaturesToProperty,
   getPropertyFeatureAssignments,
 } from "@/lib/actions/property-features"
-
-// Define a type for image objects
-interface PropertyImage {
-  id: string
-  url: string
-  sizes: {
-    thumbnail: string
-    medium: string
-    large: string
-  }
-  isCover: boolean
-  syncToWordPress: boolean
-  originalName: string
-}
 
 interface Property {
   id?: string
