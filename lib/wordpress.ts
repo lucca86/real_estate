@@ -30,8 +30,11 @@ interface WordPressProperty {
     es_property_bathrooms?: string
     es_property_half_baths?: string
     es_property_total_rooms?: string
+    es_property_size?: string
     es_property_area?: string
     es_property_lot_size?: string
+    es_property_front_size?: string
+    es_property_depth_size?: string
     es_property_floors?: string
     es_property_floor_level?: string
     es_property_year_built?: string
@@ -226,19 +229,18 @@ export class WordPressAPI {
     }
 
     if (property.propertyLabel) {
-      let labelSlug = ""
-      switch (property.propertyLabel) {
-        case "NUEVA":
-          labelSlug = "new"
-          break
-        case "DESTACADA":
-          labelSlug = "featured"
-          break
-        case "REBAJADA":
-          labelSlug = "reduced"
-          break
+      // Machine names confirmed from WP labels panel
+      const labelMap: Record<string, string> = {
+        NUEVA: "new",
+        DESTACADA: "featured",
+        REBAJADA: "reduced",
+        CASA_ABIERTA: "casa-abierta",
+        DE_POZO: "presentado",
+        RECIEN_PUBLICADA: "just-listed",
+        SUCESION: "juicio-hipotecario",
       }
 
+      const labelSlug = labelMap[property.propertyLabel]
       if (labelSlug) {
         payload.taxonomies.es_label = [labelSlug]
       }
@@ -340,8 +342,15 @@ export class WordPressAPI {
     if (property.bathrooms) payload.meta.es_property_bathrooms = String(property.bathrooms)
     if (property.halfBathrooms) payload.meta.es_property_half_baths = String(property.halfBathrooms)
     if (property.totalRooms) payload.meta.es_property_total_rooms = String(property.totalRooms)
-    if (property.area) payload.meta.es_property_area = String(property.area)
+    // es_property_size is the Estatik standard meta key for covered area (confirmed from WP listing fields)
+    if (property.area) {
+      payload.meta.es_property_size = String(property.area)
+      // Keep legacy key for backwards compatibility
+      payload.meta.es_property_area = String(property.area)
+    }
     if (property.lotSize) payload.meta.es_property_lot_size = String(property.lotSize)
+    if (property.frontSize) payload.meta.es_property_front_size = String(property.frontSize)
+    if (property.depthSize) payload.meta.es_property_depth_size = String(property.depthSize)
     if (property.floors) payload.meta.es_property_floors = String(property.floors)
     if (property.floorLevel) payload.meta.es_property_floor_level = String(property.floorLevel)
 
@@ -372,7 +381,7 @@ export class WordPressAPI {
     const addressParts = [
       property.address,
       extractName(property.city),
-      extractName(property.state),
+      extractName(property.province) || extractName(property.state),
       extractName(property.country),
     ].filter(Boolean)
 
@@ -381,6 +390,40 @@ export class WordPressAPI {
     }
 
     if (property.zipCode) payload.meta.es_property_postal_code = String(property.zipCode)
+
+    // --- Location fields (WP field names from Estatik listing fields) ---
+    // These fields appear as separate meta keys, NOT embedded in es_property_address only.
+    // Field names confirmed from WP: country, province, city, es_neighborhood, postal_code
+
+    const countryName = extractName(property.country)
+    const provinceName = extractName(property.province) || extractName(property.state)
+    const cityName = extractName(property.city)
+    const neighborhoodName = extractName(property.neighborhood)
+
+    if (countryName) {
+      payload.meta.country = countryName
+      // Also map to the standard Estatik meta key
+      payload.meta.es_country = countryName
+    }
+
+    if (provinceName) {
+      payload.meta.province = provinceName
+      payload.meta.es_state = provinceName
+    }
+
+    if (cityName) {
+      payload.meta.city = cityName
+      payload.meta.es_city = cityName
+    }
+
+    if (neighborhoodName) {
+      payload.meta.es_neighborhood = neighborhoodName
+    }
+
+    // postal_code as a direct meta key (WP uses both this and es_property_postal_code)
+    if (property.zipCode) {
+      payload.meta.postal_code = String(property.zipCode)
+    }
 
     let latitude = property.latitude
     let longitude = property.longitude

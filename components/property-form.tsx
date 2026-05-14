@@ -26,7 +26,7 @@ import {
   getNeighborhoodsByCity,
 } from "@/lib/actions/locations"
 import { PropertyImageUpload } from "./property-image-upload"
-import { normalizeImages } from "@/lib/image-utils" // Fixed import to use normalizeImages from correct file
+import { normalizeImages, type PropertyImage } from "@/lib/image-utils"
 import { PropertiesMap } from "@/components/property-map" // Import PropertiesMap
 import { PropertyFeaturesSelector } from "@/components/property-features-selector"
 import {
@@ -34,20 +34,6 @@ import {
   assignFeaturesToProperty,
   getPropertyFeatureAssignments,
 } from "@/lib/actions/property-features"
-
-// Define a type for image objects
-interface PropertyImage {
-  id: string
-  url: string
-  sizes: {
-    thumbnail: string
-    medium: string
-    large: string
-  }
-  isCover: boolean
-  syncToWordPress: boolean
-  originalName: string
-}
 
 interface Property {
   id?: string
@@ -468,16 +454,12 @@ export function PropertyForm({
     }
   }, [neighborhoods, formData.neighborhoodId, selectedNeighborhoodName])
 
-  // Auto-calculate lot size when front and back meters change
+  // Auto-calculate lot size ONLY when both front and back meters are set
+  // Never clear lotSize here — the user may have entered it manually or it came from the DB
   useEffect(() => {
     if (formData.frontMeters && formData.backMeters && formData.frontMeters > 0 && formData.backMeters > 0) {
       const calculated = Number((formData.frontMeters * formData.backMeters).toFixed(2))
-      
-      // Always update the calculated value when front or back meters change
       setFormData((prev) => ({ ...prev, lotSize: calculated }))
-    } else if ((!formData.frontMeters || formData.frontMeters === 0) || (!formData.backMeters || formData.backMeters === 0)) {
-      // Clear lot size if either measurement is removed
-      setFormData((prev) => ({ ...prev, lotSize: undefined }))
     }
   }, [formData.frontMeters, formData.backMeters])
 
@@ -1409,7 +1391,9 @@ export function PropertyForm({
                 value={formData.area ?? ""}
                 onChange={(e) => {
                   const val = e.target.value
-                  setFormData((prev) => ({ ...prev, area: val === "" ? undefined : Number(val) }))
+                  // Use parseFloat only when the value is complete (no trailing dot), to avoid 200 → 199.99
+                  const parsed = val === "" ? undefined : (val.endsWith(".") ? Number(val + "0") : parseFloat(val))
+                  setFormData((prev) => ({ ...prev, area: parsed }))
                 }}
                 disabled={isSubmitting}
                 placeholder="Área cubierta"
@@ -1616,10 +1600,14 @@ export function PropertyForm({
                 <SelectValue placeholder="Sin etiqueta" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="NONE">Sin etiqueta</SelectItem>
-                <SelectItem value="NUEVA">Nueva</SelectItem>
-                <SelectItem value="DESTACADA">Destacada</SelectItem>
-                <SelectItem value="REBAJADA">Rebajada</SelectItem>
+                    <SelectItem value="NONE">Sin etiqueta</SelectItem>
+                    <SelectItem value="NUEVA">Nueva</SelectItem>
+                    <SelectItem value="DESTACADA">Destacada</SelectItem>
+                    <SelectItem value="REBAJADA">Rebajada</SelectItem>
+                    <SelectItem value="CASA_ABIERTA">Casa abierta</SelectItem>
+                    <SelectItem value="DE_POZO">De pozo</SelectItem>
+                    <SelectItem value="RECIEN_PUBLICADA">Recién publicada</SelectItem>
+                    <SelectItem value="SUCESION">Sucesión</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground">
