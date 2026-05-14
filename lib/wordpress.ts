@@ -226,19 +226,18 @@ export class WordPressAPI {
     }
 
     if (property.propertyLabel) {
-      let labelSlug = ""
-      switch (property.propertyLabel) {
-        case "NUEVA":
-          labelSlug = "new"
-          break
-        case "DESTACADA":
-          labelSlug = "featured"
-          break
-        case "REBAJADA":
-          labelSlug = "reduced"
-          break
+      // Machine names confirmed from WP labels panel
+      const labelMap: Record<string, string> = {
+        NUEVA: "new",
+        DESTACADA: "featured",
+        REBAJADA: "reduced",
+        CASA_ABIERTA: "casa-abierta",
+        DE_POZO: "presentado",
+        RECIEN_PUBLICADA: "just-listed",
+        SUCESION: "juicio-hipotecario",
       }
 
+      const labelSlug = labelMap[property.propertyLabel]
       if (labelSlug) {
         payload.taxonomies.es_label = [labelSlug]
       }
