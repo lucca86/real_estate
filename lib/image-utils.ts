@@ -71,17 +71,18 @@ export function normalizeImageUrl(image: string | PropertyImage | any): string {
   return ""
 }
 
-export function normalizeImages(images: (string | PropertyImage)[]): PropertyImage[] {
+export function normalizeImages(images: (string | PropertyImage)[]): (PropertyImage & { id: string })[] {
   return images.map((img, index) => {
     if (typeof img === "string") {
-      // Try to parse as JSON first
       try {
         const parsed = JSON.parse(img)
         if (parsed && typeof parsed === "object" && parsed.url) {
-          return parsed as PropertyImage
+          return {
+            ...parsed,
+            id: parsed.id ?? `img-${index}`,
+          } as PropertyImage & { id: string }
         }
       } catch {
-        // If not JSON, treat as simple URL
         return {
           id: `img-${index}`,
           url: img,
@@ -96,7 +97,11 @@ export function normalizeImages(images: (string | PropertyImage)[]): PropertyIma
         }
       }
     }
-    return img as PropertyImage
+    const obj = img as PropertyImage
+    return {
+      ...obj,
+      id: obj.id ?? `img-${index}`,
+    } as PropertyImage & { id: string }
   })
 }
 
