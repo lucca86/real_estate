@@ -454,16 +454,12 @@ export function PropertyForm({
     }
   }, [neighborhoods, formData.neighborhoodId, selectedNeighborhoodName])
 
-  // Auto-calculate lot size when front and back meters change
+  // Auto-calculate lot size ONLY when both front and back meters are set
+  // Never clear lotSize here — the user may have entered it manually or it came from the DB
   useEffect(() => {
     if (formData.frontMeters && formData.backMeters && formData.frontMeters > 0 && formData.backMeters > 0) {
       const calculated = Number((formData.frontMeters * formData.backMeters).toFixed(2))
-      
-      // Always update the calculated value when front or back meters change
       setFormData((prev) => ({ ...prev, lotSize: calculated }))
-    } else if ((!formData.frontMeters || formData.frontMeters === 0) || (!formData.backMeters || formData.backMeters === 0)) {
-      // Clear lot size if either measurement is removed
-      setFormData((prev) => ({ ...prev, lotSize: undefined }))
     }
   }, [formData.frontMeters, formData.backMeters])
 
