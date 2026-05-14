@@ -1,5 +1,5 @@
 export interface PropertyImage {
-  id?: string
+  id: string
   url: string
   sizes?: {
     thumbnail?: string
@@ -71,7 +71,7 @@ export function normalizeImageUrl(image: string | PropertyImage | any): string {
   return ""
 }
 
-export function normalizeImages(images: (string | PropertyImage)[]): (PropertyImage & { id: string })[] {
+export function normalizeImages(images: (string | PropertyImage)[]): PropertyImage[] {
   return images.map((img, index) => {
     if (typeof img === "string") {
       try {
