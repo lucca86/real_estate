@@ -62,6 +62,7 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
     const published = formData.get("published") === "true"
     const syncToWordPress = formData.get("syncToWordPress") === "true"
     const adrema = formData.get("adrema") as string
+    const internalNotes = formData.get("internalNotes") as string
 
     if (!title || !ownerId || !propertyTypeId || !status || !address || !cityId || !countryId || !provinceId) {
       return { success: false, error: "Faltan campos requeridos" }
@@ -134,6 +135,7 @@ export async function createProperty(formData: FormData): Promise<ActionResult<P
         virtual_tour: virtualTour || null,
         published,
         sync_to_wordpress: syncToWordPress,
+        internal_notes: internalNotes || null,
         created_by_id: currentUser.id,
         updated_by_id: currentUser.id,
       })
