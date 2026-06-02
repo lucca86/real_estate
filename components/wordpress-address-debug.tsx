@@ -11,7 +11,7 @@ interface DebugResult {
   propertyId: number
   title: string
   usedEndpoint: string
-  locationMeta: Record<string, string>
+  taxonomyStatus: Record<string, { exists: boolean; hasValue: boolean; value: string }>
   ourKeysStatus: Record<string, { exists: boolean; hasValue: boolean; value: string }>
   allMetaKeys: string[]
   issues: string[]
@@ -122,38 +122,45 @@ export function WordPressAddressDebug({ wordpressIds }: { wordpressIds: { wpId: 
                   <CardContent className="pt-0 space-y-4">
 
                     {/* Issues */}
-                    {result.issues.length > 0 && (
-                      <Alert variant="destructive">
-                        <AlertDescription>
-                          <ul className="list-disc list-inside space-y-1">
-                            {result.issues.map((issue, i) => (
-                              <li key={i} className="text-sm">{issue}</li>
-                            ))}
-                          </ul>
-                        </AlertDescription>
-                      </Alert>
-                    )}
+                    <Alert variant={result.issues.some(i => i.startsWith("OK")) ? "default" : "destructive"}>
+                      <AlertDescription>
+                        <ul className="list-disc list-inside space-y-1">
+                          {result.issues.map((issue, i) => (
+                            <li key={i} className="text-sm">{issue}</li>
+                          ))}
+                        </ul>
+                      </AlertDescription>
+                    </Alert>
 
-                    {/* Recommendations */}
-                    {Object.keys(result.recommendations).length > 0 && (
+                    {/* Nota sobre taxonomías */}
+                    {result.recommendations?.nota && (
                       <Alert>
-                        <AlertDescription>
-                          <p className="font-semibold text-sm mb-2">Machine names reales detectados en WordPress:</p>
-                          <div className="grid grid-cols-2 gap-1">
-                            {Object.entries(result.recommendations).map(([campo, key]) => (
-                              <div key={campo} className="flex gap-2 text-xs">
-                                <span className="text-muted-foreground w-24">{campo}:</span>
-                                <code className="font-mono font-bold">{key}</code>
-                              </div>
-                            ))}
-                          </div>
+                        <AlertDescription className="text-sm text-muted-foreground">
+                          {result.recommendations.nota}
                         </AlertDescription>
                       </Alert>
                     )}
 
-                    {/* Estado de nuestros campos */}
+                    {/* Estado de las TAXONOMÍAS (lo que realmente usa WP) */}
                     <div>
-                      <p className="text-sm font-semibold mb-2">Estado de los campos que enviamos:</p>
+                      <p className="text-sm font-semibold mb-2">Taxonomías de ubicación (método principal):</p>
+                      <div className="grid grid-cols-1 gap-1.5">
+                        {Object.entries(result.taxonomyStatus).map(([key, status]) => (
+                          <div key={key} className="flex items-center gap-2 text-sm py-1 border-b border-muted last:border-0">
+                            {statusIcon(status.exists, status.hasValue)}
+                            <code className="font-mono text-xs w-48 shrink-0">{key}</code>
+                            {statusBadge(status.exists, status.hasValue)}
+                            <span className="text-muted-foreground text-xs truncate max-w-[200px]">
+                              {status.value}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Estado de meta keys (fallback secundario) */}
+                    <div>
+                      <p className="text-sm font-semibold mb-2">Meta keys enviados como fallback:</p>
                       <div className="grid grid-cols-1 gap-1.5">
                         {Object.entries(result.ourKeysStatus).map(([key, status]) => (
                           <div key={key} className="flex items-center gap-2 text-sm py-1 border-b border-muted last:border-0">
@@ -162,30 +169,13 @@ export function WordPressAddressDebug({ wordpressIds }: { wordpressIds: { wpId: 
                             {statusBadge(status.exists, status.hasValue)}
                             {status.hasValue && (
                               <span className="text-muted-foreground text-xs truncate max-w-[200px]">
-                                = "{status.value}"
+                                = &quot;{status.value}&quot;
                               </span>
                             )}
                           </div>
                         ))}
                       </div>
                     </div>
-
-                    {/* Todos los meta keys relacionados con dirección */}
-                    {Object.keys(result.locationMeta).length > 0 && (
-                      <div>
-                        <p className="text-sm font-semibold mb-2">Campos de ubicación encontrados en WP:</p>
-                        <div className="bg-muted rounded-md p-3 font-mono text-xs space-y-1">
-                          {Object.entries(result.locationMeta).map(([k, v]) => (
-                            <div key={k} className="flex gap-2">
-                              <span className="text-blue-600 dark:text-blue-400 min-w-0 shrink-0">{k}:</span>
-                              <span className={v ? "text-green-600 dark:text-green-400" : "text-muted-foreground italic"}>
-                                {v ? `"${v}"` : "(vacío)"}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
 
                     {/* Endpoint usado */}
                     <div className="text-xs text-muted-foreground">

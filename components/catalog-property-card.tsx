@@ -17,6 +17,7 @@ interface Property {
   images: any[] | string[]
   city: { name: string } | null
   province: { name: string } | null
+  neighborhood: { name: string } | null
   status: string
   propertyType: { name: string } | null
   transaction_type: string
@@ -168,8 +169,16 @@ export function CatalogPropertyCard({ property }: CatalogPropertyCardProps) {
         </div>
 
         <div className="mb-3 flex items-center gap-1 text-sm text-muted-foreground">
-          <MapPin className="h-3 w-3" />
-          {property.city?.name || "Sin ciudad"}, {property.province?.name || "Sin provincia"}
+          <MapPin className="h-3 w-3 shrink-0" />
+          <span className="truncate">
+            {[
+              property.neighborhood?.name,
+              property.city?.name,
+              property.province?.name,
+            ]
+              .filter(Boolean)
+              .join(", ") || "Sin ubicación"}
+          </span>
         </div>
 
         <div className="mb-3 flex flex-wrap gap-2 text-sm">
