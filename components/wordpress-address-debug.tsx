@@ -10,12 +10,14 @@ import { Bug, CheckCircle, XCircle, AlertTriangle, RefreshCw, ChevronDown, Chevr
 interface DebugResult {
   propertyId: number
   title: string
+  usedEndpoint: string
   locationMeta: Record<string, string>
   ourKeysStatus: Record<string, { exists: boolean; hasValue: boolean; value: string }>
   allMetaKeys: string[]
   issues: string[]
   recommendations: Record<string, string>
-  rawAddressFields: Record<string, string>
+  rawTopLevelKeys: string[]
+  rawData: any
 }
 
 export function WordPressAddressDebug({ wordpressIds }: { wordpressIds: { wpId: number; title: string }[] }) {
@@ -185,20 +187,34 @@ export function WordPressAddressDebug({ wordpressIds }: { wordpressIds: { wpId: 
                       </div>
                     )}
 
+                    {/* Endpoint usado */}
+                    <div className="text-xs text-muted-foreground">
+                      <span className="font-semibold">Endpoint usado:</span>{" "}
+                      <code className="font-mono">{result.usedEndpoint}</code>
+                    </div>
+
+                    {/* Top-level keys del JSON crudo */}
+                    <div>
+                      <p className="text-sm font-semibold mb-2">Top-level keys del JSON de WordPress ({result.rawTopLevelKeys.length}):</p>
+                      <div className="bg-muted rounded-md p-3 font-mono text-xs flex flex-wrap gap-2">
+                        {result.rawTopLevelKeys.map((k) => (
+                          <code key={k} className="bg-background px-1 py-0.5 rounded border text-xs">{k}</code>
+                        ))}
+                      </div>
+                    </div>
+
                     {/* Todos los meta keys (expandible) */}
                     <div>
                       <button
                         className="text-xs text-muted-foreground underline"
                         onClick={() => setShowAllKeys(!showAllKeys)}
                       >
-                        {showAllKeys ? "Ocultar" : "Ver"} todos los meta keys ({result.allMetaKeys.length})
+                        {showAllKeys ? "Ocultar" : "Ver"} JSON crudo completo
                       </button>
                       {showAllKeys && (
-                        <div className="mt-2 bg-muted rounded-md p-3 font-mono text-xs columns-2 gap-4">
-                          {result.allMetaKeys.map((k) => (
-                            <div key={k} className="truncate">{k}</div>
-                          ))}
-                        </div>
+                        <pre className="mt-2 bg-muted rounded-md p-3 font-mono text-xs overflow-auto max-h-96 whitespace-pre-wrap break-all">
+                          {JSON.stringify(result.rawData, null, 2)}
+                        </pre>
                       )}
                     </div>
 

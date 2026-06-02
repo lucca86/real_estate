@@ -139,5 +139,8 @@ export async function GET(req: NextRequest) {
     ourKeysStatus,
     issues,
     recommendations,
+    // Raw response from WP — shows the real structure returned by the bridge
+    rawTopLevelKeys: Object.keys(rawData).sort(),
+    rawData,
   })
 }
