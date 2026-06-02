@@ -30,35 +30,65 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Se requiere el parámetro id" }, { status: 400 })
   }
 
-  const rawApiUrl = (process.env.WORDPRESS_API_URL || "").trim().replace(/\/$/, "")
-  const username = process.env.WORDPRESS_USERNAME
-  const password = process.env.WORDPRESS_APP_PASSWORD
+  // Build base URL exactly as lib/wordpress.ts does
+  let baseUrl = (process.env.WORDPRESS_API_URL || "").trim().replace(/\/$/, "")
+  if (baseUrl && !baseUrl.endsWith("/wp-json")) baseUrl = `${baseUrl}/wp-json`
 
-  if (!rawApiUrl || !username || !password) {
-    return NextResponse.json({ error: "Variables de WordPress no configuradas (WORDPRESS_API_URL, WORDPRESS_USERNAME, WORDPRESS_APP_PASSWORD)" }, { status: 500 })
+  const username = process.env.WORDPRESS_USERNAME || ""
+  const password = process.env.WORDPRESS_APP_PASSWORD || ""
+
+  if (!baseUrl || !username || !password) {
+    return NextResponse.json({
+      error: "Variables de WordPress no configuradas",
+      configured: {
+        WORDPRESS_API_URL: !!process.env.WORDPRESS_API_URL,
+        WORDPRESS_USERNAME: !!process.env.WORDPRESS_USERNAME,
+        WORDPRESS_APP_PASSWORD: !!process.env.WORDPRESS_APP_PASSWORD,
+      },
+    }, { status: 500 })
   }
-
-  // Ensure /wp-json is present — same logic as lib/wordpress.ts
-  const apiUrl = rawApiUrl.endsWith("/wp-json") ? rawApiUrl : `${rawApiUrl}/wp-json`
 
   const credentials = Buffer.from(`${username}:${password}`).toString("base64")
-
-  const res = await fetch(`${apiUrl}/wp/v2/es_property/${wpId}?context=edit`, {
-    headers: {
-      Authorization: `Basic ${credentials}`,
-      "Content-Type": "application/json",
-    },
-    cache: "no-store",
-  })
-
-  if (!res.ok) {
-    const text = await res.text()
-    return NextResponse.json({ error: `WordPress respondió ${res.status}: ${text}` }, { status: res.status })
+  const headers = {
+    Authorization: `Basic ${credentials}`,
+    "Content-Type": "application/json",
   }
 
-  const data = await res.json()
-  const meta: Record<string, any> = data.meta || {}
-  const title = data.title?.rendered || data.slug || `WP #${wpId}`
+  // Try endpoints in the same order the sync uses:
+  // 1. Estatik bridge (same as createProperty/updateProperty)
+  // 2. Native WP REST es_property
+  // 3. Native WP REST properties (fallback)
+  const candidates = [
+    `${baseUrl}/estatik-bridge/v1/properties/${wpId}`,
+    `${baseUrl}/wp/v2/es_property/${wpId}?context=edit`,
+    `${baseUrl}/wp/v2/properties/${wpId}?context=edit`,
+  ]
+
+  let rawData: any = null
+  let usedEndpoint = ""
+
+  for (const url of candidates) {
+    const res = await fetch(url, { headers, cache: "no-store" })
+    if (res.ok) {
+      rawData = await res.json()
+      usedEndpoint = url
+      break
+    }
+  }
+
+  if (!rawData) {
+    return NextResponse.json({
+      error: `No se pudo leer la propiedad WP #${wpId} en ningún endpoint`,
+      testedUrls: candidates,
+    }, { status: 404 })
+  }
+
+  // Bridge returns flat object with meta nested; WP REST wraps in .meta
+  const meta: Record<string, any> = rawData.meta || rawData
+  const title: string =
+    (typeof rawData.title === "object" ? rawData.title?.rendered : rawData.title) ||
+    rawData.post_title ||
+    `WP #${wpId}`
 
   const allMetaKeys = Object.keys(meta).sort()
 
@@ -103,6 +133,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     propertyId: Number(wpId),
     title,
+    usedEndpoint,
     allMetaKeys,
     locationMeta,
     ourKeysStatus,
