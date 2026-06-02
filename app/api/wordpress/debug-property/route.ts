@@ -30,13 +30,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Se requiere el parámetro id" }, { status: 400 })
   }
 
-  const apiUrl = process.env.WORDPRESS_API_URL
+  const rawApiUrl = (process.env.WORDPRESS_API_URL || "").trim().replace(/\/$/, "")
   const username = process.env.WORDPRESS_USERNAME
   const password = process.env.WORDPRESS_APP_PASSWORD
 
-  if (!apiUrl || !username || !password) {
+  if (!rawApiUrl || !username || !password) {
     return NextResponse.json({ error: "Variables de WordPress no configuradas (WORDPRESS_API_URL, WORDPRESS_USERNAME, WORDPRESS_APP_PASSWORD)" }, { status: 500 })
   }
+
+  // Ensure /wp-json is present — same logic as lib/wordpress.ts
+  const apiUrl = rawApiUrl.endsWith("/wp-json") ? rawApiUrl : `${rawApiUrl}/wp-json`
 
   const credentials = Buffer.from(`${username}:${password}`).toString("base64")
 
