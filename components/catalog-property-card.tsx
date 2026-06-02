@@ -168,6 +168,7 @@ export function CatalogPropertyCard({ property }: CatalogPropertyCardProps) {
           </Badge>
         </div>
 
+        {typeof window !== "undefined" && console.log("[v0] card neighborhood:", property.id, property.neighborhood, (property as any).neighborhoods)}
         <div className="mb-3 flex items-center gap-1 text-sm text-muted-foreground">
           <MapPin className="h-3 w-3 shrink-0" />
           <span className="truncate">
