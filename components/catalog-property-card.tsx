@@ -20,6 +20,7 @@ interface Property {
   neighborhood: { name: string } | null
   status: string
   propertyType: { name: string } | null
+  property_type: { name: string } | null
   transaction_type: string
   bedrooms: number | null
   bathrooms: number | null
@@ -182,7 +183,7 @@ export function CatalogPropertyCard({ property }: CatalogPropertyCardProps) {
         </div>
 
         <div className="mb-3 flex flex-wrap gap-2 text-sm">
-          <Badge variant="outline">{property.propertyType?.name || "Sin tipo"}</Badge>
+          <Badge variant="outline">{(property.property_type ?? property.propertyType)?.name || "Sin tipo"}</Badge>
           <Badge
             variant="outline"
             className={transactionColors[property.transaction_type as keyof typeof transactionColors]}

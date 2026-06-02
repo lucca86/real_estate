@@ -22,14 +22,7 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
 
   let query = supabase
     .from("properties")
-    .select(`
-      *,
-      owner:owners(name, phone),
-      city:cities(name),
-      province:provinces(name),
-      neighborhood:neighborhoods(name),
-      property_type:property_types(name)
-    `)
+    .select("*")
     .order("created_at", { ascending: false })
 
   if (search) {
@@ -82,8 +75,29 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
     )
   }
 
-  // Load all updatedBy users in a single query to avoid N+1 and stack overflow
-  const userIds = [...new Set(properties.map((p: any) => p.updated_by_id).filter(Boolean))]
+  // Manual joins — avoids PostgREST FK resolution issues with text-typed IDs
+  const neighborhoodIds = [...new Set((properties as any[]).map((p) => p.neighborhood_id).filter(Boolean))]
+  const cityIds = [...new Set((properties as any[]).map((p) => p.city_id).filter(Boolean))]
+  const provinceIds = [...new Set((properties as any[]).map((p) => p.province_id).filter(Boolean))]
+  const propertyTypeIds = [...new Set((properties as any[]).map((p) => p.property_type_id).filter(Boolean))]
+  const ownerIds = [...new Set((properties as any[]).map((p) => p.owner_id).filter(Boolean))]
+
+  const [neighborhoodsRes, citiesRes, provincesRes, propertyTypesRes, ownersRes] = await Promise.all([
+    neighborhoodIds.length > 0 ? supabase.from("neighborhoods").select("id, name").in("id", neighborhoodIds) : Promise.resolve({ data: [] }),
+    cityIds.length > 0 ? supabase.from("cities").select("id, name").in("id", cityIds) : Promise.resolve({ data: [] }),
+    provinceIds.length > 0 ? supabase.from("provinces").select("id, name").in("id", provinceIds) : Promise.resolve({ data: [] }),
+    propertyTypeIds.length > 0 ? supabase.from("property_types").select("id, name").in("id", propertyTypeIds) : Promise.resolve({ data: [] }),
+    ownerIds.length > 0 ? supabase.from("owners").select("id, name, phone").in("id", ownerIds) : Promise.resolve({ data: [] }),
+  ])
+
+  const neighborhoodsMap = Object.fromEntries((neighborhoodsRes.data ?? []).map((n: any) => [String(n.id), n]))
+  const citiesMap = Object.fromEntries((citiesRes.data ?? []).map((c: any) => [String(c.id), c]))
+  const provincesMap = Object.fromEntries((provincesRes.data ?? []).map((p: any) => [String(p.id), p]))
+  const propertyTypesMap = Object.fromEntries((propertyTypesRes.data ?? []).map((t: any) => [String(t.id), t]))
+  const ownersMap2 = Object.fromEntries((ownersRes.data ?? []).map((o: any) => [String(o.id), o]))
+
+  // Load all updatedBy users
+  const userIds = [...new Set((properties as any[]).map((p: any) => p.updated_by_id).filter(Boolean))]
   let usersMap: Record<string, { name: string }> = {}
   if (userIds.length > 0) {
     const { data: users } = await supabase
@@ -95,8 +109,13 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
     }
   }
 
-  const propertiesWithUsers = properties.map((property: any) => ({
+  const propertiesWithUsers = (properties as any[]).map((property) => ({
     ...property,
+    neighborhood: property.neighborhood_id ? (neighborhoodsMap[String(property.neighborhood_id)] ?? null) : null,
+    city: property.city_id ? (citiesMap[String(property.city_id)] ?? null) : null,
+    province: property.province_id ? (provincesMap[String(property.province_id)] ?? null) : null,
+    property_type: property.property_type_id ? (propertyTypesMap[String(property.property_type_id)] ?? null) : null,
+    owner: property.owner_id ? (ownersMap2[String(property.owner_id)] ?? null) : null,
     updatedBy: property.updated_by_id ? (usersMap[property.updated_by_id] ?? null) : null,
   }))
 
