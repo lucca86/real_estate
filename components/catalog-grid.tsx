@@ -24,11 +24,11 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
     .from("properties")
     .select(`
       *,
-      owner:owners!properties_owner_id_fkey(name, phone),
-      city:cities!properties_city_id_fkey(name),
-      province:provinces!properties_province_id_fkey(name),
-      neighborhood:neighborhoods!properties_neighborhood_id_fkey(name),
-      property_type:property_types!properties_property_type_id_fkey(name)
+      owner:owners(name, phone),
+      city:cities(name),
+      province:provinces(name),
+      neighborhood:neighborhoods(name),
+      property_type:property_types(name)
     `)
     .order("created_at", { ascending: false })
 
