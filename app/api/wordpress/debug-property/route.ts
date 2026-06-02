@@ -2,49 +2,37 @@ import { getCurrentUser } from "@/lib/auth"
 import { debugWordPressProperty } from "@/lib/wordpress-debug"
 
 /**
- * GET /api/wordpress/debug-property?id=123
- * 
- * Inspecciona una propiedad en WordPress para ver exactamente qué datos de dirección
- * están guardados y compara con nuestro mapeo.
- * 
- * Solo ADMIN puede usar este endpoint.
+ * GET /api/wordpress/debug-property?id={wordpress_post_id}
+ *
+ * Inspecciona una propiedad en WordPress para ver exactamente qué meta keys
+ * de dirección están guardados y los compara con nuestro mapeo actual.
+ *
+ * Solo accesible por ADMIN.
  */
-
 export async function GET(req: Request) {
   const currentUser = await getCurrentUser()
-
   if (!currentUser || currentUser.role !== "ADMIN") {
     return new Response("Unauthorized", { status: 401 })
   }
 
   const { searchParams } = new URL(req.url)
-  const wpPostId = searchParams.get("id")
+  const rawId = searchParams.get("id")
 
-  if (!wpPostId || isNaN(Number(wpPostId))) {
+  if (!rawId || isNaN(Number(rawId))) {
     return Response.json(
-      { error: "Missing or invalid 'id' query parameter" },
+      { error: "Provide a valid WordPress post ID as ?id=123" },
       { status: 400 }
     )
   }
 
   try {
-    const result = await debugWordPressProperty(Number(wpPostId))
-    
-    return Response.json({
-      success: true,
-      debug: result,
-      summary: {
-        hasIssues: result.analysis.issues.length > 0,
-        issueCount: result.analysis.issues.length,
-        locationFieldsComplete: result.analysis.mappingMatch,
-      },
-    })
+    const result = await debugWordPressProperty(Number(rawId))
+    return Response.json({ success: true, result })
   } catch (error) {
-    console.error("[DEBUG] Error:", error)
     return Response.json(
-      { 
-        error: "Failed to debug property",
-        details: error instanceof Error ? error.message : "Unknown error"
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     )
