@@ -20,7 +20,7 @@ export default async function ToolsPage() {
   if (!user) redirect("/login")
   if (!isAdmin(user)) redirect("/dashboard")
 
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const [history, settings, wpPropertiesRes] = await Promise.all([
     getBackupHistory(50),
@@ -33,8 +33,8 @@ export default async function ToolsPage() {
       .limit(5),
   ])
 
-  const wpProperties = (wpPropertiesRes.data ?? []).map((p) => ({
-    wpId: p.wordpress_id as number,
+  const wpProperties = (wpPropertiesRes.data ?? []).map((p: { wordpress_id: number; title: string }) => ({
+    wpId: p.wordpress_id,
     title: p.title,
   }))
 
