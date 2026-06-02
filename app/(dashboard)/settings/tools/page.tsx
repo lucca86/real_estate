@@ -2,10 +2,12 @@ import { getCurrentUser, isAdmin } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { getBackupHistory, getBackupSettings } from "@/lib/actions/backup"
 import { BackupManager } from "@/components/backup-manager"
+import { WordPressAddressDebug } from "@/components/wordpress-address-debug"
 import { DatabaseBackup } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft } from "lucide-react"
+import { createClient } from "@/lib/supabase/server"
 
 export const metadata = {
   title: "Herramientas — Configuración",
@@ -18,10 +20,23 @@ export default async function ToolsPage() {
   if (!user) redirect("/login")
   if (!isAdmin(user)) redirect("/dashboard")
 
-  const [history, settings] = await Promise.all([
+  const supabase = createClient()
+
+  const [history, settings, wpPropertiesRes] = await Promise.all([
     getBackupHistory(50),
     getBackupSettings(),
+    supabase
+      .from("properties")
+      .select("wordpress_id, title")
+      .not("wordpress_id", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(5),
   ])
+
+  const wpProperties = (wpPropertiesRes.data ?? []).map((p) => ({
+    wpId: p.wordpress_id as number,
+    title: p.title,
+  }))
 
   return (
     <div className="space-y-6">
@@ -49,6 +64,11 @@ export default async function ToolsPage() {
 
       {/* Backup manager */}
       <BackupManager initialHistory={history} initialSettings={settings} />
+
+      {/* WordPress address debug */}
+      {wpProperties.length > 0 && (
+        <WordPressAddressDebug wordpressIds={wpProperties} />
+      )}
     </div>
   )
 }
