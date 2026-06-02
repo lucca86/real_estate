@@ -97,7 +97,7 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
 
   const propertiesWithUsers = properties.map((property: any) => ({
     ...property,
-    updatedBy: property.updatedById ? (usersMap[property.updatedById] ?? null) : null,
+    updatedBy: property.updated_by_id ? (usersMap[property.updated_by_id] ?? null) : null,
   }))
 
   if (propertiesWithUsers.length === 0) {
