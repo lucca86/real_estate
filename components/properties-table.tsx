@@ -25,8 +25,10 @@ interface Property {
   bedrooms: number | null
   bathrooms: number | null
   ownerId: string
+  neighborhood: { name: string } | null
   city: { name: string } | null
   province: { name: string } | null
+  property_type: { name: string } | null
   propertyType: { name: string } | null
   owner: { name: string } | null
   wordpress_id: number | null
@@ -159,11 +161,11 @@ function PropertyCard({ property, currentUser, canDelete }: { property: Property
 
         <div className="mb-3 flex items-center gap-1 text-sm text-muted-foreground">
           <MapPin className="h-3 w-3" />
-          {property.city?.name || "Sin ciudad"}, {property.province?.name || "Sin provincia"}
+          {[property.neighborhood?.name, property.city?.name, property.province?.name].filter(Boolean).join(", ")}
         </div>
 
         <div className="mb-3 flex flex-wrap gap-2">
-          <Badge variant="outline">{property.propertyType?.name || "Sin tipo"}</Badge>
+          <Badge variant="outline">{(property.property_type ?? property.propertyType)?.name || "Sin tipo"}</Badge>
           {property.transaction_type && (
             <Badge
               variant="outline"
