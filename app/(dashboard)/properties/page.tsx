@@ -5,7 +5,7 @@ import { PropertiesFilters } from "@/components/properties-filters"
 import { Button } from "@/components/ui/button"
 import { Plus, FileText } from "lucide-react"
 import Link from "next/link"
-import { createAdminClient, createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { PropertiesPagination } from "@/components/properties-pagination"
 
 export default async function PropertiesPage({
@@ -167,8 +167,6 @@ export default async function PropertiesPage({
     return <div>Error al cargar propiedades</div>
   }
 
-  const anonClient = await createClient()
-
   const allProps = properties || []
   const neighborhoodIds = [...new Set(allProps.map((p: any) => p.neighborhood_id).filter(Boolean))]
   const cityIds = [...new Set(allProps.map((p: any) => p.city_id).filter(Boolean))]
@@ -177,11 +175,13 @@ export default async function PropertiesPage({
   const ownerIds = [...new Set(allProps.map((p: any) => p.owner_id).filter(Boolean))]
   const userIds = [...new Set(allProps.map((p: any) => p.updated_by_id).filter(Boolean))]
 
+  // Use supabase (service role) for ALL lookups — this app uses custom auth,
+  // so auth.uid() is always NULL and RLS blocks the anon client
   const [nbRes, ciRes, prRes, ptRes, owRes, usRes] = await Promise.all([
-    neighborhoodIds.length ? anonClient.from("neighborhoods").select("id, name").in("id", neighborhoodIds) : { data: [] as any[] },
-    cityIds.length ? anonClient.from("cities").select("id, name").in("id", cityIds) : { data: [] as any[] },
-    provinceIds.length ? anonClient.from("provinces").select("id, name").in("id", provinceIds) : { data: [] as any[] },
-    propertyTypeIds.length ? anonClient.from("property_types").select("id, name").in("id", propertyTypeIds) : { data: [] as any[] },
+    neighborhoodIds.length ? supabase.from("neighborhoods").select("id, name").in("id", neighborhoodIds) : { data: [] as any[] },
+    cityIds.length ? supabase.from("cities").select("id, name").in("id", cityIds) : { data: [] as any[] },
+    provinceIds.length ? supabase.from("provinces").select("id, name").in("id", provinceIds) : { data: [] as any[] },
+    propertyTypeIds.length ? supabase.from("property_types").select("id, name").in("id", propertyTypeIds) : { data: [] as any[] },
     ownerIds.length ? supabase.from("owners").select("id, name, phone").in("id", ownerIds) : { data: [] as any[] },
     userIds.length ? supabase.from("users").select("id, name").in("id", userIds) : { data: [] as any[] },
   ])
