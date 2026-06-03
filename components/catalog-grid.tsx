@@ -101,8 +101,6 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
   const owMap: Record<string, any> = Object.fromEntries((owRes.data ?? []).map((r: any) => [r.id, r]))
   const usMap: Record<string, any> = Object.fromEntries((usRes.data ?? []).map((r: any) => [r.id, r]))
 
-  console.log("[v0] nbMap sample:", JSON.stringify(Object.entries(nbMap).slice(0, 3)))
-  console.log("[v0] neighborhoodIds:", neighborhoodIds.slice(0, 3))
   // Assemble final objects — explicit fields override anything from the raw Supabase row
   const propertiesWithUsers = (properties as any[]).map((p) => ({
     ...p,
@@ -113,9 +111,6 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
     owner: p.owner_id ? (owMap[p.owner_id] ?? null) : null,
     updatedBy: p.updated_by_id ? (usMap[p.updated_by_id] ?? null) : null,
   }))
-
-  console.log("[v0] first property neighborhood:", JSON.stringify(propertiesWithUsers[0]?.neighborhood))
-  console.log("[v0] first property city:", JSON.stringify(propertiesWithUsers[0]?.city))
 
   if (propertiesWithUsers.length === 0) {
     return (
