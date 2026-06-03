@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient, createClient } from "@/lib/supabase/server"
 import { CatalogPropertyCard } from "./catalog-property-card"
 import { Card, CardContent } from "@/components/ui/card"
 import { Building2 } from "lucide-react"
@@ -19,6 +19,9 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
   const bathrooms = searchParams.bathrooms as string
 
   const supabase = await createAdminClient()
+  // Use anon client for public lookup tables (neighborhoods, cities, etc.)
+  // in case SUPABASE_SERVICE_ROLE_KEY is not set in the local environment
+  const anonClient = await createClient()
 
   let query = supabase
     .from("properties")
@@ -84,11 +87,13 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
   const userIds = [...new Set((properties as any[]).map((p: any) => p.updated_by_id).filter(Boolean))]
 
   // Fetch all lookup tables in parallel
+  // Use anonClient for public tables (has RLS SELECT policies for anon)
+  // Use supabase (service role) for private tables (owners, users)
   const [nbRes, ciRes, prRes, ptRes, owRes, usRes] = await Promise.all([
-    neighborhoodIds.length ? supabase.from("neighborhoods").select("id, name").in("id", neighborhoodIds) : { data: [] as any[] },
-    cityIds.length ? supabase.from("cities").select("id, name").in("id", cityIds) : { data: [] as any[] },
-    provinceIds.length ? supabase.from("provinces").select("id, name").in("id", provinceIds) : { data: [] as any[] },
-    propertyTypeIds.length ? supabase.from("property_types").select("id, name").in("id", propertyTypeIds) : { data: [] as any[] },
+    neighborhoodIds.length ? anonClient.from("neighborhoods").select("id, name").in("id", neighborhoodIds) : { data: [] as any[] },
+    cityIds.length ? anonClient.from("cities").select("id, name").in("id", cityIds) : { data: [] as any[] },
+    provinceIds.length ? anonClient.from("provinces").select("id, name").in("id", provinceIds) : { data: [] as any[] },
+    propertyTypeIds.length ? anonClient.from("property_types").select("id, name").in("id", propertyTypeIds) : { data: [] as any[] },
     ownerIds.length ? supabase.from("owners").select("id, name, phone").in("id", ownerIds) : { data: [] as any[] },
     userIds.length ? supabase.from("users").select("id, name").in("id", userIds) : { data: [] as any[] },
   ])
