@@ -207,23 +207,302 @@ Desde la ficha de edición de una propiedad, un widget lateral muestra las tarea
 
 ---
 
+---
+
+## Fechas y Recordatorios (MODIFICACION AL PLAN ORIGINAL)
+
+### Fecha de Vencimiento Opcional
+
+La fecha de vencimiento (`due_date`) pasa a ser completamente opcional. Una tarea puede existir sin fecha. Esto se refleja tanto en el schema (columna nullable, sin cambio) como en la UI: el campo de fecha muestra "Sin fecha" por defecto con un botón para agregar una si se necesita.
+
+```sql
+-- due_date ya es TIMESTAMPTZ nullable, no se requiere cambio de schema.
+-- Solo se ajusta la validación en Server Actions: se elimina cualquier
+-- regla que requiera due_date para crear o guardar una tarea.
+```
+
+**Comportamiento en vistas:**
+- Lista: Las tareas sin fecha aparecen al final de cada grupo de estado, sin indicador de vencimiento.
+- Kanban: Los cards sin fecha simplemente no muestran el chip de vencimiento.
+
+---
+
+### Sistema de Recordatorios Programados
+
+Se agrega una tabla `task_reminders` independiente de `due_date`. Esto permite enviar avisos aunque la tarea no tenga fecha de vencimiento, o enviar múltiples recordatorios a distintos usuarios y momentos.
+
+#### Schema
+
+```sql
+CREATE TABLE task_reminders (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  task_id        UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+  notify_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  remind_at      TIMESTAMPTZ NOT NULL,
+  channels       TEXT[] NOT NULL DEFAULT ARRAY['email'],
+               -- valores posibles: 'email', 'whatsapp'
+  message        TEXT,          -- mensaje personalizado opcional
+  sent_at        TIMESTAMPTZ,   -- NULL = pendiente, filled = ya enviado
+  created_by     UUID NOT NULL REFERENCES users(id),
+  created_at     TIMESTAMPTZ DEFAULT now()
+);
+
+-- Index para que pg_cron pueda buscar recordatorios pendientes eficientemente
+CREATE INDEX idx_task_reminders_pending
+  ON task_reminders (remind_at)
+  WHERE sent_at IS NULL;
+```
+
+**Comportamiento:**
+- Un admin/supervisor puede crear un recordatorio para cualquier usuario (`notify_user_id`).
+- Un vendedor solo puede crear recordatorios para sí mismo.
+- Se pueden crear varios recordatorios por tarea (ej: "avisar a María en 2 dias" + "avisar a Juan el lunes").
+- Un recordatorio se puede crear aunque la tarea no tenga `due_date`.
+
+#### UI — Panel de recordatorios en el Sheet de detalle
+
+Dentro del Sheet de detalle de la tarea, una sección "Recordatorios":
+- Botón "Agregar recordatorio".
+- Por cada recordatorio: fecha/hora, usuario destinatario, canal (email / WhatsApp / ambos), mensaje opcional.
+- Indicador visual: pendiente (reloj) o enviado (check verde).
+
+---
+
+## Notificaciones: Canal Email
+
+### Proveedor recomendado: Resend
+
+**Por qué Resend:**
+- Integración nativa con Next.js (paquete `resend` oficial).
+- React Email para templates: los correos se diseñan como componentes React.
+- Plan gratuito: 3.000 emails/mes (100/día). Para una inmobiliaria con equipo de 5-15 personas, el plan gratuito cubre el 100% del uso.
+- Plan Pro ($20/mes): 50.000 emails. Suficiente para escalar a múltiples inmobiliarias.
+
+**Implementación:**
+
+```typescript
+// lib/notifications/email.ts
+import { Resend } from 'resend'
+import { TaskReminderEmail } from '@/emails/task-reminder'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
+
+export async function sendTaskReminderEmail({
+  to,
+  taskTitle,
+  message,
+  taskUrl,
+}: {
+  to: string
+  taskTitle: string
+  message?: string
+  taskUrl: string
+}) {
+  await resend.emails.send({
+    from: 'Gestión Inmobiliaria <no-reply@tudominio.com>',
+    to,
+    subject: `Recordatorio: ${taskTitle}`,
+    react: TaskReminderEmail({ taskTitle, message, taskUrl }),
+  })
+}
+```
+
+**Template (React Email):** Un email limpio con: nombre de la tarea, mensaje personalizado, botón "Ver tarea" que abre el Sheet directamente, y el nombre de quien generó el recordatorio.
+
+**Requerimiento:** dominio propio verificado en Resend. No funciona con Gmail genérico.
+
+---
+
+## Notificaciones: Canal WhatsApp
+
+### Análisis de Alternativas
+
+#### Opción WA-1 — Meta Cloud API directa (sin BSP intermediario)
+
+- **Costo:** Solo se paga a Meta por conversación. Las primeras 1.000 conversaciones de servicio/mes son gratuitas.
+- **Requisito:** Cuenta Meta Business verificada + número de teléfono exclusivo (no puede estar activo en WhatsApp normal o WhatsApp Business App).
+- **Complejidad:** Alta. Hay que gestionar manualmente el webhook, el token de acceso, la renovación del token, los templates, y el proceso de verificación de negocio en Meta.
+- **Adecuado para:** equipos técnicos con tiempo para mantener la integración.
+
+#### Opción WA-2 — Twilio WhatsApp (RECOMENDADO para implementación inicial)
+
+- **Costo:** Costo de Meta + $0.005 por mensaje. Sin cuota mensual fija.
+- **Ventaja:** SDK oficial Node.js (`twilio`), documentación exhaustiva, Sandbox gratuito para desarrollo sin verificar negocio, setup en menos de 1 hora.
+- **Para una inmobiliaria de 10 personas**: estimado de 200-500 mensajes/mes → costo total < $5 USD/mes + conversaciones Meta (las de servicio son gratuitas hasta 1.000).
+- **Contra:** a volumen alto (>10.000 msg/mes) sale más caro que un BSP con flat fee.
+
+```typescript
+// lib/notifications/whatsapp.ts
+import twilio from 'twilio'
+
+const client = twilio(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+)
+
+export async function sendTaskReminderWhatsApp({
+  to,          // formato: '+5491112345678'
+  taskTitle,
+  message,
+}: {
+  to: string
+  taskTitle: string
+  message?: string
+}) {
+  await client.messages.create({
+    from: 'whatsapp:+14155238886', // número de Twilio/sandbox
+    to: `whatsapp:${to}`,
+    // En producción: usar template aprobado por Meta.
+    // En Sandbox/desarrollo: mensaje libre.
+    body: message
+      ? `*Recordatorio:* ${taskTitle}\n\n${message}`
+      : `*Recordatorio de tarea:* ${taskTitle}`,
+  })
+}
+```
+
+#### Opción WA-3 — 360dialog (alternativa para escala)
+
+- **Costo:** ~€49/mes fijo + costos Meta.
+- **Ventaja:** Más barato que Twilio a partir de ~10.000 mensajes/mes. Panel de gestión incluido.
+- **Adecuado para:** cuando el uso de WhatsApp crece y se justifica el costo fijo.
+
+### Restriccion Critica de Meta — Templates Obligatorios en Producción
+
+**Este es el punto más importante del canal WhatsApp:**
+
+Meta no permite enviar mensajes de texto libre a usuarios que no han iniciado la conversación primero. Para notificaciones salientes (la inmobiliaria avisa al usuario) se requiere un **Message Template aprobado por Meta**.
+
+El proceso de aprobación tarda entre 24-48 horas y Meta puede rechazar templates.
+
+**Template ejemplo para recordatorio de tarea:**
+```
+Nombre: task_reminder
+Categoría: UTILITY
+
+Hola {{1}}, tienes un recordatorio para la tarea:
+*{{2}}*
+
+{{3}}
+
+Para ver el detalle ingresá a tu sistema de gestión.
+```
+Variables: `{{1}}` nombre del usuario, `{{2}}` título de la tarea, `{{3}}` mensaje personalizado.
+
+**Para el entorno de desarrollo:** Twilio ofrece un Sandbox donde se pueden enviar mensajes libres sin templates, lo que facilita mucho el desarrollo y las pruebas.
+
+### Prerequisito del usuario: número de WhatsApp en perfil
+
+Para que el sistema pueda enviar WhatsApp a un usuario, debe tener su número de teléfono cargado en su perfil (tabla `users`, columna `phone`). El canal WhatsApp solo se mostrará como opción si el usuario destinatario tiene teléfono registrado.
+
+```sql
+-- Verificar que users ya tiene columna phone:
+-- Si no existe: ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
+```
+
+---
+
+## Motor de Envio: pg_cron + Supabase Edge Functions
+
+El envío se realiza en background, no en el request del usuario. Flujo:
+
+```
+1. Usuario crea recordatorio → se guarda en task_reminders (sent_at = NULL)
+2. pg_cron corre cada 5 minutos → llama a Edge Function 'process-reminders'
+3. Edge Function busca recordatorios con remind_at <= now() AND sent_at IS NULL
+4. Por cada recordatorio: llama a Resend (email) y/o Twilio (WhatsApp)
+5. Marca sent_at = now() en task_reminders
+```
+
+```sql
+-- Habilitar extensiones en Supabase
+CREATE EXTENSION IF NOT EXISTS pg_net;
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+-- Job que corre cada 5 minutos
+SELECT cron.schedule(
+  'process-task-reminders',
+  '*/5 * * * *',
+  $$
+  SELECT net.http_post(
+    url := 'https://[PROJECT_REF].supabase.co/functions/v1/process-reminders',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer ' || current_setting('app.service_role_key')
+    ),
+    body := '{}'::jsonb
+  );
+  $$
+);
+```
+
+Este enfoque es confiable, no requiere servicios externos adicionales, y el costo es cero (pg_cron está incluido en Supabase).
+
+---
+
+## Variables de Entorno Requeridas
+
+```env
+# Email — Resend
+RESEND_API_KEY=re_xxxxxxxxxxxx
+
+# WhatsApp — Twilio
+TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=xxxxxxxxxxxxxxxx
+TWILIO_WHATSAPP_FROM=whatsapp:+14155238886
+```
+
+---
+
+## Tabla Comparativa de Proveedores
+
+| Criterio              | Resend (Email)         | Twilio WA          | Meta API Directa    | 360dialog          |
+|-----------------------|------------------------|--------------------|---------------------|--------------------|
+| Setup inicial         | 30 min                 | 1-2 horas          | 2-5 días            | 1-2 días           |
+| Costo mensual base    | Gratis (3k emails)     | $0 + $0.005/msg    | $0 (sin BSP)        | €49 fijo           |
+| Templates Meta req.   | No aplica              | Si (producción)    | Si                  | Si                 |
+| SDK Next.js           | Oficial                | Oficial            | HTTP manual         | HTTP manual        |
+| Sandbox dev           | Si                     | Si (gratuito)      | No                  | No                 |
+| Recomendado para      | Siempre                | Inicio + escala    | Equipos técnicos    | >10k msg/mes       |
+
+**Recomendación final:** Resend para email + Twilio para WhatsApp. Ambos tienen SDKs oficiales, sandbox de desarrollo gratuito, y costos mínimos para el volumen típico de una inmobiliaria.
+
+---
+
 ## Orden de Implementación
 
-1. **Schema DB** — Crear `tasks`, `task_comments` en Supabase. Agregar `task_view_preference` en `users`.
+### Fase 1 — Core del módulo
+1. **Schema DB** — Crear `tasks`, `task_comments`, `task_reminders` en Supabase. Agregar `task_view_preference` y verificar `phone` en `users`.
 2. **Permisos** — Agregar grupo `tasks` en `permissions-config.ts`. Insertar defaults en `role_permissions` via SQL.
 3. **Server Actions** — `lib/actions/tasks.ts` con CRUD completo y lógica de visibilidad por permiso.
 4. **Vista Lista** — `tasks-list-view.tsx` + `task-detail-sheet.tsx` + `task-filters.tsx`.
 5. **Vista Kanban** — `tasks-kanban-view.tsx` con drag & drop via `@dnd-kit/core`.
 6. **Page principal** — `app/(dashboard)/tasks/page.tsx` integrando ambas vistas con el toggle.
 7. **Sidebar** — Agregar ítem "Tareas" con badge de vencimiento condicionado al permiso.
-8. **Vinculación a Propiedades** — Tab/widget de tareas en la ficha de propiedad (segunda iteración).
+
+### Fase 2 — Recordatorios y Notificaciones
+8. **UI de recordatorios** — Sección dentro del Sheet de detalle para crear/ver/eliminar recordatorios por tarea.
+9. **Resend (Email)** — Configurar cuenta Resend, verificar dominio, crear template `TaskReminderEmail` con React Email, implementar `lib/notifications/email.ts`.
+10. **Twilio (WhatsApp)** — Configurar cuenta Twilio, activar Sandbox, crear template aprobado por Meta para producción, implementar `lib/notifications/whatsapp.ts`.
+11. **Edge Function** — `supabase/functions/process-reminders/index.ts` que procesa la tabla `task_reminders`.
+12. **pg_cron** — Configurar job cada 5 minutos en Supabase que llama a la Edge Function.
+
+### Fase 3 — Integraciones adicionales (opcional)
+13. **Vinculación a Propiedades** — Tab/widget de tareas en la ficha de propiedad.
+14. **Notificación en app** — Toast o badge cuando se le asigna una tarea al usuario logueado (sin servicios externos, via polling o Supabase Realtime).
 
 ---
 
 ## Dependencias Nuevas
 
-- `@dnd-kit/core` + `@dnd-kit/sortable` — drag & drop accesible y liviano para el Kanban.
-- Todo lo demás reutiliza shadcn/ui ya instalado en el proyecto (`Sheet`, `Badge`, `Select`, `Checkbox`, `Avatar`, etc.).
+| Paquete | Para qué |
+|---|---|
+| `@dnd-kit/core` + `@dnd-kit/sortable` | Drag & drop accesible del Kanban |
+| `resend` | Envio de emails transaccionales |
+| `react-email` + `@react-email/components` | Templates de email como componentes React |
+| `twilio` | SDK oficial para enviar WhatsApp |
+
+Todo lo demás (`Sheet`, `Badge`, `Select`, `Checkbox`, `Avatar`, `Popover`, etc.) reutiliza shadcn/ui ya instalado en el proyecto.
 
 ---
 
