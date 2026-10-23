@@ -1,22 +1,14 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getCurrentUser, isAdmin } from "@/lib/auth"
 
-const ADDRESS_KEYWORDS = [
-  "address", "city", "country", "state", "province", "region",
-  "zip", "postal", "code", "neighbor", "hood", "location",
-  "lat", "lon", "geo", "street", "suburb", "district", "area",
-]
+// Taxonomy keys Estatik uses for location (confirmed from debug output)
+const TAXONOMY_LOCATION_KEYS = ["es_locations", "es_location", "es_neighborhoods", "es_neighborhood"]
 
-// Keys we currently send in our sync
-const OUR_KEYS = [
-  "country", "es_country",
-  "province", "es_state",
-  "city", "es_city",
-  "es_neighborhood",
-  "postal_code", "es_property_postal_code",
-  "es_property_address",
-  "es_property_latitude",
-  "es_property_longitude",
+// Meta keys we also send as fallback
+const OUR_META_KEYS = [
+  "es_country", "es_state", "es_city", "es_neighborhood",
+  "es_property_postal_code", "es_property_address",
+  "es_property_latitude", "es_property_longitude",
 ]
 
 export async function GET(req: NextRequest) {
@@ -92,17 +84,19 @@ export async function GET(req: NextRequest) {
 
   const allMetaKeys = Object.keys(meta).sort()
 
-  // Filter address-related meta
-  const locationMeta: Record<string, string> = {}
-  for (const [k, v] of Object.entries(meta)) {
-    if (ADDRESS_KEYWORDS.some((kw) => k.toLowerCase().includes(kw))) {
-      locationMeta[k] = Array.isArray(v) ? (v[0] ?? "") : String(v ?? "")
-    }
+  // Check taxonomy terms (primary location storage in this WP install)
+  const taxonomyStatus: Record<string, { exists: boolean; hasValue: boolean; value: string }> = {}
+  for (const key of TAXONOMY_LOCATION_KEYS) {
+    const raw = rawData[key]
+    const exists = key in rawData
+    const ids: number[] = Array.isArray(raw) ? raw : []
+    const hasValue = ids.length > 0
+    taxonomyStatus[key] = { exists, hasValue, value: hasValue ? `[${ids.join(", ")}]` : "(vacío)" }
   }
 
-  // Status of each key we send
+  // Check meta keys (secondary fallback)
   const ourKeysStatus: Record<string, { exists: boolean; hasValue: boolean; value: string }> = {}
-  for (const key of OUR_KEYS) {
+  for (const key of OUR_META_KEYS) {
     const exists = key in meta
     const raw = meta[key]
     const value = Array.isArray(raw) ? (raw[0] ?? "") : String(raw ?? "")
@@ -110,36 +104,29 @@ export async function GET(req: NextRequest) {
     ourKeysStatus[key] = { exists, hasValue, value }
   }
 
-  // Issues
+  // Issues — now based on taxonomy terms, not meta keys
   const issues: string[] = []
-  const missingOurs = OUR_KEYS.filter((k) => !ourKeysStatus[k].exists)
-  const emptyOurs = OUR_KEYS.filter((k) => ourKeysStatus[k].exists && !ourKeysStatus[k].hasValue)
-  if (missingOurs.length > 0) issues.push(`Keys que enviamos pero NO existen en WP: ${missingOurs.join(", ")}`)
-  if (emptyOurs.length > 0) issues.push(`Keys que existen pero están VACÍOS: ${emptyOurs.join(", ")}`)
+  const locationTaxHasValue = TAXONOMY_LOCATION_KEYS.slice(0, 2).some((k) => taxonomyStatus[k]?.hasValue)
+  const neighborhoodTaxHasValue = TAXONOMY_LOCATION_KEYS.slice(2).some((k) => taxonomyStatus[k]?.hasValue)
+  if (!locationTaxHasValue) issues.push("La taxonomia de ubicación (es_location / es_locations) está vacía — la dirección no se mostrará en WordPress")
+  if (!neighborhoodTaxHasValue) issues.push("La taxonomia de barrio (es_neighborhood / es_neighborhoods) está vacía")
+  if (issues.length === 0) issues.push("OK — las taxonomías de ubicación tienen valores")
 
-  // Detect real machine names WP is using (keys that have values)
-  const recommendations: Record<string, string> = {}
-  for (const [k, v] of Object.entries(locationMeta)) {
-    if (!v) continue
-    const lk = k.toLowerCase()
-    if (lk.includes("city")) recommendations["ciudad"] = k
-    else if (lk.includes("country")) recommendations["pais"] = k
-    else if (lk.includes("province") || lk.includes("state")) recommendations["provincia"] = k
-    else if (lk.includes("neighbor") || lk.includes("hood")) recommendations["barrio"] = k
-    else if (lk.includes("postal") || lk.includes("zip")) recommendations["codigo_postal"] = k
-    else if (lk.includes("address")) recommendations["direccion"] = k
+  const recommendations: Record<string, string> = {
+    nota: "Esta instalación usa TAXONOMÍAS para la ubicación, no meta keys. Los términos se asignan via es_location (ciudad/provincia) y es_neighborhood (barrio).",
   }
 
   return NextResponse.json({
     propertyId: Number(wpId),
     title,
     usedEndpoint,
-    allMetaKeys,
-    locationMeta,
+    // Taxonomy check (primary — what WP actually uses)
+    taxonomyStatus,
+    // Meta key check (secondary fallback)
     ourKeysStatus,
+    allMetaKeys,
     issues,
     recommendations,
-    // Raw response from WP — shows the real structure returned by the bridge
     rawTopLevelKeys: Object.keys(rawData).sort(),
     rawData,
   })

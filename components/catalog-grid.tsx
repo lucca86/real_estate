@@ -22,14 +22,7 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
 
   let query = supabase
     .from("properties")
-    .select(`
-      *,
-      owner:owners!owner_id(name, phone),
-      city:cities!city_id(name),
-      province:provinces!province_id(name),
-      propertyType:property_types!property_type_id(name)
-    `)
-    .eq("is_active", true)
+    .select("*")
     .order("created_at", { ascending: false })
 
   if (search) {
@@ -82,22 +75,42 @@ export async function CatalogGrid({ searchParams }: CatalogGridProps) {
     )
   }
 
-  // Load all updatedBy users in a single query to avoid N+1 and stack overflow
-  const userIds = [...new Set(properties.map((p: any) => p.updated_by_id).filter(Boolean))]
-  let usersMap: Record<string, { name: string }> = {}
-  if (userIds.length > 0) {
-    const { data: users } = await supabase
-      .from("users")
-      .select("id, name")
-      .in("id", userIds)
-    if (users) {
-      usersMap = Object.fromEntries(users.map((u) => [u.id, { name: u.name }]))
-    }
-  }
+  // Collect all IDs needed for related lookups
+  const neighborhoodIds = [...new Set((properties as any[]).map((p) => p.neighborhood_id).filter(Boolean))]
+  const cityIds = [...new Set((properties as any[]).map((p) => p.city_id).filter(Boolean))]
+  const provinceIds = [...new Set((properties as any[]).map((p) => p.province_id).filter(Boolean))]
+  const propertyTypeIds = [...new Set((properties as any[]).map((p) => p.property_type_id).filter(Boolean))]
+  const ownerIds = [...new Set((properties as any[]).map((p) => p.owner_id).filter(Boolean))]
+  const userIds = [...new Set((properties as any[]).map((p: any) => p.updated_by_id).filter(Boolean))]
 
-  const propertiesWithUsers = properties.map((property: any) => ({
-    ...property,
-    updatedBy: property.updated_by_id ? (usersMap[property.updated_by_id] ?? null) : null,
+  // Use supabase (service role) for ALL lookups — this app uses custom auth,
+  // so auth.uid() is always NULL and RLS blocks any non-service-role client
+  const [nbRes, ciRes, prRes, ptRes, owRes, usRes] = await Promise.all([
+    neighborhoodIds.length ? supabase.from("neighborhoods").select("id, name").in("id", neighborhoodIds) : { data: [] as any[] },
+    cityIds.length ? supabase.from("cities").select("id, name").in("id", cityIds) : { data: [] as any[] },
+    provinceIds.length ? supabase.from("provinces").select("id, name").in("id", provinceIds) : { data: [] as any[] },
+    propertyTypeIds.length ? supabase.from("property_types").select("id, name").in("id", propertyTypeIds) : { data: [] as any[] },
+    ownerIds.length ? supabase.from("owners").select("id, name, phone").in("id", ownerIds) : { data: [] as any[] },
+    userIds.length ? supabase.from("users").select("id, name").in("id", userIds) : { data: [] as any[] },
+  ])
+
+  // Build lookup maps
+  const nbMap: Record<string, any> = Object.fromEntries((nbRes.data ?? []).map((r: any) => [r.id, r]))
+  const ciMap: Record<string, any> = Object.fromEntries((ciRes.data ?? []).map((r: any) => [r.id, r]))
+  const prMap: Record<string, any> = Object.fromEntries((prRes.data ?? []).map((r: any) => [r.id, r]))
+  const ptMap: Record<string, any> = Object.fromEntries((ptRes.data ?? []).map((r: any) => [r.id, r]))
+  const owMap: Record<string, any> = Object.fromEntries((owRes.data ?? []).map((r: any) => [r.id, r]))
+  const usMap: Record<string, any> = Object.fromEntries((usRes.data ?? []).map((r: any) => [r.id, r]))
+
+  // Assemble final objects — explicit fields override anything from the raw Supabase row
+  const propertiesWithUsers = (properties as any[]).map((p) => ({
+    ...p,
+    neighborhood: p.neighborhood_id ? (nbMap[p.neighborhood_id] ?? null) : null,
+    city: p.city_id ? (ciMap[p.city_id] ?? null) : null,
+    province: p.province_id ? (prMap[p.province_id] ?? null) : null,
+    property_type: p.property_type_id ? (ptMap[p.property_type_id] ?? null) : null,
+    owner: p.owner_id ? (owMap[p.owner_id] ?? null) : null,
+    updatedBy: p.updated_by_id ? (usMap[p.updated_by_id] ?? null) : null,
   }))
 
   if (propertiesWithUsers.length === 0) {

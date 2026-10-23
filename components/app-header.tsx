@@ -1,6 +1,7 @@
 "use client"
 
-import { Menu } from "lucide-react"
+import { Menu, PanelLeft, Sparkles } from "lucide-react"
+import { WhatsNewDialog } from "@/components/whats-new-dialog"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -23,10 +24,13 @@ import { APP_VERSION } from "@/lib/version"
 interface AppHeaderProps {
   user: SessionUser
   onMenuClick?: () => void
+  onToggleSidebar?: () => void
+  sidebarCollapsed?: boolean
 }
 
-export function AppHeader({ user, onMenuClick }: AppHeaderProps) {
+export function AppHeader({ user, onMenuClick, onToggleSidebar, sidebarCollapsed }: AppHeaderProps) {
   const [mounted, setMounted] = useState(false)
+  const [whatsNewOpen, setWhatsNewOpen] = useState(false)
   const { theme, resolvedTheme } = useTheme()
 
   useEffect(() => {
@@ -52,10 +56,20 @@ export function AppHeader({ user, onMenuClick }: AppHeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 flex h-16 items-center gap-4 border-b border-border bg-background px-6">
-      {/* Mobile menu button */}
+      {/* Sidebar controls */}
       <Button variant="ghost" size="icon" className="md:hidden" onClick={onMenuClick}>
         <Menu className="h-5 w-5" />
-        <span className="sr-only">Toggle menu</span>
+        <span className="sr-only">Abrir menú</span>
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="hidden md:inline-flex"
+        onClick={onToggleSidebar}
+        aria-label={sidebarCollapsed ? "Expandir menú lateral" : "Contraer menú lateral"}
+        title={sidebarCollapsed ? "Expandir menú lateral" : "Contraer menú lateral"}
+      >
+        <PanelLeft className="h-5 w-5" />
       </Button>
 
       <Link href="/dashboard" className="flex items-center gap-3">
@@ -71,14 +85,31 @@ export function AppHeader({ user, onMenuClick }: AppHeaderProps) {
         )}
         <span className="hidden sm:inline-flex items-baseline gap-2 text-lg font-semibold text-foreground">
           Gestión Inmobiliaria RE
-          <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full leading-none tracking-wide">
-            v{APP_VERSION}
-          </span>
         </span>
       </Link>
+      <button
+        type="button"
+        onClick={() => setWhatsNewOpen(true)}
+        className="hidden sm:inline-flex items-center rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium leading-none tracking-wide text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        aria-label={`Ver novedades de la versión ${APP_VERSION}`}
+      >
+        v{APP_VERSION}
+      </button>
 
       {/* Spacer */}
       <div className="flex-1" />
+
+      {/* What's new */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setWhatsNewOpen(true)}
+        aria-label="Lo nuevo"
+        title="Lo nuevo"
+      >
+        <Sparkles className="h-5 w-5" />
+      </Button>
+      <WhatsNewDialog open={whatsNewOpen} onOpenChange={setWhatsNewOpen} />
 
       {/* Theme toggle */}
       <ThemeToggle />

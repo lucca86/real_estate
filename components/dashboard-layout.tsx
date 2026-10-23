@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { cn } from "@/lib/utils"
 import { AppSidebar } from "@/components/app-sidebar"
 import { AppHeader } from "@/components/app-header"
 import { AppFooter } from "@/components/app-footer"
@@ -14,14 +15,25 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, user, permissions }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = React.useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false)
 
   const closeSidebar = () => setSidebarOpen(false)
 
   return (
     <div className="relative flex h-screen w-full overflow-hidden bg-background">
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex md:w-64 md:shrink-0 md:flex-col md:border-r">
-        <AppSidebar user={user} permissions={permissions} />
+      <aside
+        className={cn(
+          "hidden shrink-0 flex-col overflow-hidden border-r transition-[width] duration-200 ease-in-out md:flex",
+          sidebarCollapsed ? "md:w-16" : "md:w-64",
+        )}
+      >
+        <AppSidebar
+          user={user}
+          permissions={permissions}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
+        />
       </aside>
 
       {/* Mobile Sidebar Overlay */}
@@ -36,7 +48,12 @@ export function DashboardLayout({ children, user, permissions }: DashboardLayout
 
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
-        <AppHeader user={user} onMenuClick={() => setSidebarOpen((prev) => !prev)} />
+        <AppHeader
+          user={user}
+          onMenuClick={() => setSidebarOpen((prev) => !prev)}
+          onToggleSidebar={() => setSidebarCollapsed((prev) => !prev)}
+          sidebarCollapsed={sidebarCollapsed}
+        />
         <div className="flex flex-1 flex-col overflow-hidden">
           <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">{children}</main>
           <AppFooter />
