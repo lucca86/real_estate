@@ -4,13 +4,15 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Combobox } from "@/components/ui/combobox"
-import { X } from "lucide-react"
+import { ChevronDown, SlidersHorizontal, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { createBrowserClient } from "@/lib/supabase/client"
+import { cn } from "@/lib/utils"
 
 interface City {
   id: string
@@ -58,6 +60,21 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
   const [filteredNeighborhoods, setFilteredNeighborhoods] = useState<Neighborhood[]>([])
   const [propertyTypes, setPropertyTypes] = useState<PropertyType[]>([])
   const [users, setUsers] = useState<User[]>([])
+  const [open, setOpen] = useState(false)
+
+  const activeCount = [
+    "search",
+    "propertyType",
+    "transactionType",
+    "status",
+    "city",
+    "neighborhood",
+    "minPrice",
+    "maxPrice",
+    "bedrooms",
+    "bathrooms",
+    "updatedBy",
+  ].filter((key) => searchParams.get(key)).length
 
   useEffect(() => {
     const loadData = async () => {
@@ -117,6 +134,7 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
     if (syncedOnly) params.set("syncedOnly", "true")
     if (updatedBy && updatedBy !== "all") params.set("updatedBy", updatedBy)
 
+    setOpen(false)
     router.push(`/properties?${params.toString()}`)
   }
 
@@ -134,22 +152,22 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
     setActiveOnly(true)
     setSyncedOnly(false)
     setUpdatedBy("all")
+    setOpen(false)
     router.push("/properties")
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Filtros</CardTitle>
+    <Card className="gap-0 py-0 @7xl:sticky @7xl:top-4 @7xl:max-h-[calc(100svh-8rem)] @7xl:overflow-y-auto">
+      <CardContent className="flex flex-wrap items-center gap-x-6 gap-y-4 p-4 @7xl:flex-col @7xl:flex-nowrap @7xl:items-stretch @7xl:p-6">
+        <div className="order-0 hidden w-full items-center justify-between @7xl:flex">
+          <h2 className="text-lg font-semibold leading-none">Filtros</h2>
           <Button variant="ghost" size="sm" onClick={clearFilters}>
             <X className="mr-1 h-4 w-4" />
             Limpiar
           </Button>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4 p-4 sm:p-6">
-        <div className="flex items-center justify-between space-x-2">
+
+        <div className="order-2 flex items-center gap-3 @7xl:order-1 @7xl:w-full @7xl:justify-between">
           <Label htmlFor="active-only" className="text-sm font-medium">
             Solo propiedades activas
           </Label>
@@ -169,7 +187,7 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
           />
         </div>
 
-        <div className="flex items-center justify-between space-x-2">
+        <div className="order-2 flex items-center gap-3 @7xl:order-1 @7xl:w-full @7xl:justify-between">
           <Label htmlFor="synced-only" className="text-sm font-medium">
             Solo sincronizadas con WordPress
           </Label>
@@ -189,17 +207,52 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="search">Buscar</Label>
-          <Input
-            id="search"
-            placeholder="Título, descripción..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && applyFilters()}
-          />
+        <div className="order-1 flex w-full items-end gap-2 @7xl:order-2 @7xl:block">
+          <div className="min-w-0 flex-1 space-y-2">
+            <Label htmlFor="search" className="@max-7xl:sr-only">
+              Buscar
+            </Label>
+            <Input
+              id="search"
+              placeholder="Buscar por título o descripción..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && applyFilters()}
+            />
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="shrink-0 @7xl:hidden"
+            onClick={() => setOpen((prev) => !prev)}
+            aria-expanded={open}
+            aria-controls="properties-filters-panel"
+          >
+            <SlidersHorizontal className="mr-2 h-4 w-4" />
+            Filtros
+            {activeCount > 0 && <Badge className="ml-2 h-5 min-w-5 px-1.5">{activeCount}</Badge>}
+            <ChevronDown className={cn("ml-1 h-4 w-4 transition-transform", open && "rotate-180")} />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="shrink-0 @7xl:hidden"
+            onClick={clearFilters}
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Limpiar filtros</span>
+          </Button>
         </div>
 
+        <div
+          id="properties-filters-panel"
+          className={cn(
+            "order-3 w-full grid-cols-1 gap-4 @md:grid-cols-2 @2xl:grid-cols-3 @4xl:grid-cols-4 [&>div]:min-w-0",
+            open ? "grid" : "hidden",
+            "@7xl:flex @7xl:flex-col",
+          )}
+        >
         <div className="space-y-2">
           <Label htmlFor="propertyType">Tipo de Propiedad</Label>
           <Select value={propertyType} onValueChange={setPropertyType}>
@@ -349,9 +402,10 @@ export function PropertiesFilters({ activeOnly: initialActiveOnly = true }: { ac
           </Select>
         </div>
 
-        <Button onClick={applyFilters} className="w-full">
+        <Button onClick={applyFilters} className="w-full @md:col-span-full">
           Aplicar Filtros
         </Button>
+        </div>
       </CardContent>
     </Card>
   )

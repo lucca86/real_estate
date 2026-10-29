@@ -13,6 +13,7 @@ import type { SessionUser } from "@/lib/auth"
 import { normalizeImageUrl } from "@/lib/image-utils"
 import { PropertyImage as PropertyImageComponent } from "@/components/property-image"
 import { FormattedDate } from "@/components/formatted-date"
+import { cn } from "@/lib/utils"
 
 interface Property {
   id: string
@@ -25,10 +26,8 @@ interface Property {
   bedrooms: number | null
   bathrooms: number | null
   ownerId: string
-  neighborhood: { name: string } | null
   city: { name: string } | null
   province: { name: string } | null
-  property_type: { name: string } | null
   propertyType: { name: string } | null
   owner: { name: string } | null
   wordpress_id: number | null
@@ -151,21 +150,21 @@ function PropertyCard({ property, currentUser, canDelete }: { property: Property
 
       <div className="p-4">
         <div className="mb-2 flex items-start justify-between gap-2">
-          <Link href={`/properties/${property.id}`} className="flex-1">
-            <h3 className="font-semibold leading-tight text-balance hover:text-primary">{property.title}</h3>
+          <Link href={`/properties/${property.id}`} className="min-w-0 flex-1">
+            <h3 className="break-words font-semibold leading-tight text-balance hover:text-primary">{property.title}</h3>
           </Link>
-          <Badge variant="secondary" className={statusColors[property.status] || ""}>
+          <Badge variant="secondary" className={cn("shrink-0", statusColors[property.status])}>
             {statusLabels[property.status] || property.status}
           </Badge>
         </div>
 
         <div className="mb-3 flex items-center gap-1 text-sm text-muted-foreground">
           <MapPin className="h-3 w-3" />
-          {[property.neighborhood?.name, property.city?.name, property.province?.name].filter(Boolean).join(", ")}
+          {property.city?.name || "Sin ciudad"}, {property.province?.name || "Sin provincia"}
         </div>
 
         <div className="mb-3 flex flex-wrap gap-2">
-          <Badge variant="outline">{(property.property_type ?? property.propertyType)?.name || "Sin tipo"}</Badge>
+          <Badge variant="outline">{property.propertyType?.name || "Sin tipo"}</Badge>
           {property.transaction_type && (
             <Badge
               variant="outline"
@@ -190,8 +189,8 @@ function PropertyCard({ property, currentUser, canDelete }: { property: Property
           </span>
         </div>
 
-        <div className="flex items-center justify-between border-t border-border pt-3">
-          <div className="flex flex-col gap-0.5 text-xs">
+        <div className="flex items-center justify-between gap-2 border-t border-border pt-3">
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5 break-words text-xs">
             {property.owner?.name && <span className="text-muted-foreground">Propietario: {property.owner.name}</span>}
             {property.updated_at && property.updatedBy?.name && (
               <span className="text-muted-foreground">
@@ -241,7 +240,7 @@ function PropertyCard({ property, currentUser, canDelete }: { property: Property
 export function PropertiesTable({ properties, currentUser, canDelete = false }: PropertiesTableProps) {
   return (
     <Card>
-      <CardContent className="p-4 sm:p-6">
+      <CardContent className="@container p-4 sm:p-6">
         {properties.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Building2 className="h-16 w-16 text-muted-foreground/50" />
@@ -255,7 +254,7 @@ export function PropertiesTable({ properties, currentUser, canDelete = false }: 
             </Button>
           </div>
         ) : (
-          <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 @lg:grid-cols-2 @3xl:grid-cols-3 @6xl:grid-cols-4">
             {properties.map((property) => (
               <PropertyCard key={property.id} property={property} currentUser={currentUser} canDelete={canDelete} />
             ))}

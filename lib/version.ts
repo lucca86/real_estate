@@ -1,2 +1,4 @@
-/** App version — injected from package.json at build time via next.config.mjs */
-export const APP_VERSION: string = process.env.NEXT_PUBLIC_APP_VERSION ?? "1.0.0"
+import { version } from "../package.json"
+
+/** Versión de la app — se lee directamente de package.json, única fuente de verdad. */
+export const APP_VERSION: string = version
